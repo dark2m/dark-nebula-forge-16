@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Code, Bot, User } from 'lucide-react';
+import { Shield, Code, Bot, User, Users, MessageCircle } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
@@ -10,6 +10,8 @@ const Navigation = () => {
     { name: 'هكر ببجي موبايل', path: '/pubg-hacks', icon: Shield },
     { name: 'برمجة مواقع', path: '/web-development', icon: Code },
     { name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: Bot },
+    { name: 'من نحن', path: '/about', icon: Users },
+    { name: 'تواصل معنا', path: '/contact', icon: MessageCircle },
   ];
 
   return (
@@ -24,7 +26,7 @@ const Navigation = () => {
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8 rtl:space-x-reverse">
+          <div className="hidden md:flex items-center space-x-6 rtl:space-x-reverse">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -35,8 +37,8 @@ const Navigation = () => {
                     location.pathname === item.path ? 'text-blue-400' : ''
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-sm">{item.name}</span>
                 </Link>
               );
             })}

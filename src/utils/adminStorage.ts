@@ -5,8 +5,8 @@ export interface Product {
   name: string;
   price: number;
   category: string;
-  images: string[]; // Changed from single image to array
-  videos: string[]; // Added videos support
+  images: string[];
+  videos: string[];
   description: string;
   features: string[];
   backgroundColor?: string;
@@ -19,12 +19,13 @@ export interface AdminUser {
   id: number;
   username: string;
   password: string;
-  role: string;
+  role: 'مدير عام' | 'مبرمج' | 'مشرف';
 }
 
 export interface SiteSettings {
   title: string;
   titleSize: 'small' | 'medium' | 'large' | 'xl';
+  description: string;
   colors: {
     primary: string;
     secondary: string;
@@ -35,12 +36,28 @@ export interface SiteSettings {
     type: 'color' | 'image';
     value: string;
   };
+  navigation: Array<{
+    id: string;
+    name: string;
+    path: string;
+    icon: string;
+    visible: boolean;
+  }>;
+  contactInfo: {
+    telegram: string;
+    discord: string;
+    whatsapp: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
 }
 
 class AdminStorage {
   private static PRODUCTS_KEY = 'admin_products';
   private static USERS_KEY = 'admin_users';
   private static SETTINGS_KEY = 'site_settings';
+  private static CURRENT_USER_KEY = 'current_admin_user';
 
   // Authentication
   static authenticateAdmin(username: string, password: string): boolean {
@@ -48,14 +65,28 @@ class AdminStorage {
     const user = users.find(u => u.username === username && u.password === password);
     if (user) {
       localStorage.setItem('adminToken', JSON.stringify({ userId: user.id, timestamp: Date.now() }));
+      localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(user));
       return true;
     }
     return false;
   }
 
+  static getCurrentUser(): AdminUser | null {
+    const stored = localStorage.getItem(this.CURRENT_USER_KEY);
+    return stored ? JSON.parse(stored) : null;
+  }
+
   static isAdminAuthenticated(): boolean {
     const token = localStorage.getItem('adminToken');
     return !!token;
+  }
+
+  static hasPermission(requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) return false;
+    
+    const roleHierarchy = { 'مدير عام': 3, 'مبرمج': 2, 'مشرف': 1 };
+    return roleHierarchy[currentUser.role] >= roleHierarchy[requiredRole];
   }
 
   // Products management
@@ -65,7 +96,6 @@ class AdminStorage {
       return JSON.parse(stored);
     }
     
-    // Default products if none exist
     const defaultProducts: Product[] = [
       { 
         id: 1, 
@@ -78,30 +108,6 @@ class AdminStorage {
         features: ['ESP للاعبين', 'ESP للأسلحة', 'ESP للسيارات', 'آمن 100%'],
         textSize: 'medium',
         titleSize: 'large'
-      },
-      { 
-        id: 2, 
-        name: 'Aimbot Pro', 
-        price: 35, 
-        category: 'pubg',
-        images: [],
-        videos: [],
-        description: 'تصويب تلقائي دقيق مع إعدادات متقدمة',
-        features: ['تصويب تلقائي', 'تصويب ناعم', 'تخصيص المفاتيح', 'مكافحة الارتداد'],
-        textSize: 'medium',
-        titleSize: 'large'
-      },
-      { 
-        id: 3, 
-        name: 'الحزمة الكاملة', 
-        price: 50, 
-        category: 'pubg',
-        images: [],
-        videos: [],
-        description: 'جميع الهاكات في حزمة واحدة بسعر مخفض',
-        features: ['ESP متقدم', 'Aimbot Pro', 'Speed Hack', 'دعم مدى الحياة'],
-        textSize: 'medium',
-        titleSize: 'large'
       }
     ];
     
@@ -110,7 +116,12 @@ class AdminStorage {
   }
 
   static saveProducts(products: Product[]): void {
-    localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
+    try {
+      localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
+    } catch (error) {
+      console.error('خطأ في حفظ المنتجات:', error);
+      throw new Error('تم تجاوز حد التخزين المسموح');
+    }
   }
 
   static addProduct(product: Omit<Product, 'id'>): Product {
@@ -147,7 +158,8 @@ class AdminStorage {
     
     const defaultUsers: AdminUser[] = [
       { id: 1, username: 'admin', password: 'dark123', role: 'مدير عام' },
-      { id: 2, username: 'moderator', password: 'mod456', role: 'مشرف' },
+      { id: 2, username: 'dev', password: 'dev456', role: 'مبرمج' },
+      { id: 3, username: 'mod', password: 'mod789', role: 'مشرف' },
     ];
     
     this.saveAdminUsers(defaultUsers);
@@ -193,6 +205,7 @@ class AdminStorage {
     const defaultSettings: SiteSettings = {
       title: 'DARK',
       titleSize: 'xl',
+      description: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
       colors: {
         primary: '#3b82f6',
         secondary: '#8b5cf6',
@@ -202,6 +215,21 @@ class AdminStorage {
       backgroundSettings: {
         type: 'color',
         value: '#000000'
+      },
+      navigation: [
+        { id: 'pubg', name: 'هكر ببجي موبايل', path: '/pubg-hacks', icon: 'Shield', visible: true },
+        { id: 'web', name: 'برمجة مواقع', path: '/web-development', icon: 'Code', visible: true },
+        { id: 'discord', name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: 'Bot', visible: true },
+        { id: 'about', name: 'من نحن', path: '/about', icon: 'Users', visible: true },
+        { id: 'contact', name: 'تواصل معنا', path: '/contact', icon: 'MessageCircle', visible: true }
+      ],
+      contactInfo: {
+        telegram: '@DarkTeam_Support',
+        discord: 'Discord Server',
+        whatsapp: '+966 XX XXX XXXX',
+        email: 'support@dark.com',
+        phone: '+966 XX XXX XXXX',
+        address: 'المملكة العربية السعودية'
       }
     };
     

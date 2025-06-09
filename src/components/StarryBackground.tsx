@@ -7,12 +7,12 @@ const StarryBackground = () => {
   useEffect(() => {
     const generateStars = () => {
       const starArray = [];
-      for (let i = 0; i < 150; i++) {
+      for (let i = 0; i < 100; i++) {
         starArray.push({
           id: i,
           left: Math.random() * 100,
           top: Math.random() * 100,
-          size: Math.random() * 3 + 1
+          size: Math.random() * 2 + 0.5
         });
       }
       setStars(starArray);
@@ -38,13 +38,14 @@ const StarryBackground = () => {
         ))}
       </div>
       
-      {/* 30 colorful long meteors */}
-      {Array.from({ length: 30 }, (_, i) => (
+      {/* Random small meteors */}
+      {Array.from({ length: 15 }, (_, i) => (
         <div 
           key={`meteor-${i}`} 
-          className="meteor-long" 
+          className={`meteor-small meteor-direction-${i % 4}`}
           style={{
-            animationDelay: `${Math.random() * 20}s`,
+            animationDelay: `${Math.random() * 10}s`,
+            animationDuration: `${3 + Math.random() * 4}s`,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
           }}

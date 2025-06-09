@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
 import PubgHacks from "./pages/PubgHacks";
 import WebDevelopment from "./pages/WebDevelopment";
 import DiscordBots from "./pages/DiscordBots";
@@ -29,6 +31,18 @@ const App = () => (
               <>
                 <Navigation />
                 <Home />
+              </>
+            } />
+            <Route path="/about" element={
+              <>
+                <Navigation />
+                <AboutUs />
+              </>
+            } />
+            <Route path="/contact" element={
+              <>
+                <Navigation />
+                <ContactUs />
               </>
             } />
             <Route path="/pubg-hacks" element={

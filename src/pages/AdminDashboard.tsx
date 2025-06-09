@@ -13,7 +13,11 @@ import {
   Key,
   Type,
   Image as ImageIcon,
-  CheckCircle
+  CheckCircle,
+  Navigation as NavigationIcon,
+  MessageCircle,
+  Shield,
+  AlertTriangle
 } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import ProductFeaturesManager from '../components/ProductFeaturesManager';
@@ -26,6 +30,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
+  const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   
   // Load data from storage
   const [products, setProducts] = useState<Product[]>([]);
@@ -34,32 +39,67 @@ const AdminDashboard = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     title: 'DARK',
     titleSize: 'xl',
+    description: '',
     colors: { primary: '#3b82f6', secondary: '#8b5cf6', accent: '#06b6d4' },
     globalTextSize: 'medium',
-    backgroundSettings: { type: 'color', value: '#000000' }
+    backgroundSettings: { type: 'color', value: '#000000' },
+    navigation: [],
+    contactInfo: {
+      telegram: '',
+      discord: '',
+      whatsapp: '',
+      email: '',
+      phone: '',
+      address: ''
+    }
   });
 
   // Load data on component mount
   useEffect(() => {
+    const user = AdminStorage.getCurrentUser();
+    if (!user) {
+      navigate('/admin/login');
+      return;
+    }
+    setCurrentUser(user);
+    
     setProducts(AdminStorage.getProducts());
     const users = AdminStorage.getAdminUsers();
     setAdminUsers(users);
     setTempAdminUsers([...users]);
     const loadedSettings = AdminStorage.getSiteSettings();
-    // Ensure backgroundSettings exists with proper defaults
     setSiteSettings({
       ...loadedSettings,
-      backgroundSettings: loadedSettings.backgroundSettings || { type: 'color', value: '#000000' }
+      backgroundSettings: loadedSettings.backgroundSettings || { type: 'color', value: '#000000' },
+      navigation: loadedSettings.navigation || [],
+      contactInfo: loadedSettings.contactInfo || {
+        telegram: '',
+        discord: '',
+        whatsapp: '',
+        email: '',
+        phone: '',
+        address: ''
+      }
     });
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('current_admin_user');
     navigate('/admin/login');
   };
 
   // Products management
   const addProduct = () => {
+    if (!AdminStorage.hasPermission('مبرمج')) {
+      toast({
+        title: "غير مسموح",
+        description: "ليس لديك صلاحية لإضافة المنتجات",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const newProduct = AdminStorage.addProduct({
       name: 'منتج جديد',
       price: 0,
@@ -79,15 +119,41 @@ const AdminDashboard = () => {
   };
 
   const updateProduct = (id: number, updates: Partial<Product>) => {
-    AdminStorage.updateProduct(id, updates);
-    setProducts(AdminStorage.getProducts());
-    toast({
-      title: "تم تحديث المنتج",
-      description: "تم حفظ التغييرات بنجاح"
-    });
+    if (!AdminStorage.hasPermission('مبرمج')) {
+      toast({
+        title: "غير مسموح",
+        description: "ليس لديك صلاحية لتعديل المنتجات",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      AdminStorage.updateProduct(id, updates);
+      setProducts(AdminStorage.getProducts());
+      toast({
+        title: "تم تحديث المنتج",
+        description: "تم حفظ التغييرات بنجاح"
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في الحفظ",
+        description: "تم تجاوز حد التخزين المسموح. يرجى تقليل حجم الصور أو الفيديوهات.",
+        variant: "destructive"
+      });
+    }
   };
 
   const deleteProduct = (id: number) => {
+    if (!AdminStorage.hasPermission('مبرمج')) {
+      toast({
+        title: "غير مسموح",
+        description: "ليس لديك صلاحية لحذف المنتجات",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     AdminStorage.deleteProduct(id);
     setProducts(AdminStorage.getProducts());
     toast({
@@ -96,8 +162,17 @@ const AdminDashboard = () => {
     });
   };
 
-  // Admin users management
+  // Admin users management (only for مدير عام)
   const addAdminUser = () => {
+    if (!AdminStorage.hasPermission('مدير عام')) {
+      toast({
+        title: "غير مسموح",
+        description: "فقط المدير العام يمكنه إدارة المستخدمين",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const newUser: AdminUser = {
       id: Date.now(),
       username: 'مستخدم جديد',
@@ -109,6 +184,14 @@ const AdminDashboard = () => {
   };
 
   const updateTempAdminUser = (id: number, updates: Partial<AdminUser>) => {
+    if (!AdminStorage.hasPermission('مدير عام')) {
+      toast({
+        title: "غير مسموح",
+        description: "فقط المدير العام يمكنه تعديل المستخدمين",
+        variant: "destructive"
+      });
+      return;
+    }
     const updatedUsers = tempAdminUsers.map(user => 
       user.id === id ? { ...user, ...updates } : user
     );
@@ -116,6 +199,14 @@ const AdminDashboard = () => {
   };
 
   const saveTempAdminUser = (id: number) => {
+    if (!AdminStorage.hasPermission('مدير عام')) {
+      toast({
+        title: "غير مسموح",
+        description: "فقط المدير العام يمكنه حفظ المستخدمين",
+        variant: "destructive"
+      });
+      return;
+    }
     const userToSave = tempAdminUsers.find(u => u.id === id);
     if (userToSave) {
       if (adminUsers.find(u => u.id === id)) {
@@ -136,6 +227,14 @@ const AdminDashboard = () => {
   };
 
   const deleteTempAdminUser = (id: number) => {
+    if (!AdminStorage.hasPermission('مدير عام')) {
+      toast({
+        title: "غير مسموح",
+        description: "فقط المدير العام يمكنه حذف المستخدمين",
+        variant: "destructive"
+      });
+      return;
+    }
     const updatedUsers = tempAdminUsers.filter(u => u.id !== id);
     setTempAdminUsers(updatedUsers);
     if (adminUsers.find(u => u.id === id)) {
@@ -150,6 +249,15 @@ const AdminDashboard = () => {
 
   // Site settings management
   const saveSiteSettings = () => {
+    if (!AdminStorage.hasPermission('مدير عام')) {
+      toast({
+        title: "غير مسموح",
+        description: "فقط المدير العام يمكنه تعديل إعدادات الموقع",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     AdminStorage.saveSiteSettings(siteSettings);
     toast({
       title: "تم حفظ الإعدادات",
@@ -158,6 +266,14 @@ const AdminDashboard = () => {
   };
 
   const handleBackgroundImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!AdminStorage.hasPermission('مدير عام')) {
+      toast({
+        title: "غير مسموح",
+        description: "فقط المدير العام يمكنه تعديل الخلفية",
+        variant: "destructive"
+      });
+      return;
+    }
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -175,15 +291,23 @@ const AdminDashboard = () => {
     }
   };
 
+  const canAccess = (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف') => {
+    return AdminStorage.hasPermission(requiredRole);
+  };
+
   const tabs = [
-    { id: 'overview', name: 'نظرة عامة', icon: BarChart3 },
-    { id: 'products', name: 'إدارة المنتجات', icon: Package },
-    { id: 'passwords', name: 'إدارة كلمات المرور', icon: Key },
-    { id: 'design', name: 'تخصيص التصميم', icon: Palette },
-    { id: 'typography', name: 'التحكم في النصوص', icon: Type },
-    { id: 'users', name: 'إدارة المستخدمين', icon: Users },
-    { id: 'settings', name: 'الإعدادات', icon: Settings },
+    { id: 'overview', name: 'نظرة عامة', icon: BarChart3, requiredRole: 'مشرف' as const },
+    { id: 'products', name: 'إدارة المنتجات', icon: Package, requiredRole: 'مبرمج' as const },
+    { id: 'passwords', name: 'إدارة كلمات المرور', icon: Key, requiredRole: 'مدير عام' as const },
+    { id: 'design', name: 'تخصيص التصميم', icon: Palette, requiredRole: 'مدير عام' as const },
+    { id: 'typography', name: 'التحكم في النصوص', icon: Type, requiredRole: 'مدير عام' as const },
+    { id: 'navigation', name: 'إدارة التنقل', icon: NavigationIcon, requiredRole: 'مدير عام' as const },
+    { id: 'contact', name: 'إعدادات التواصل', icon: MessageCircle, requiredRole: 'مدير عام' as const },
+    { id: 'users', name: 'إدارة المستخدمين', icon: Users, requiredRole: 'مشرف' as const },
+    { id: 'settings', name: 'الإعدادات', icon: Settings, requiredRole: 'مدير عام' as const },
   ];
+
+  const visibleTabs = tabs.filter(tab => canAccess(tab.requiredRole));
 
   return (
     <div className="min-h-screen relative">
@@ -194,7 +318,14 @@ const AdminDashboard = () => {
         <div className="bg-black/80 backdrop-blur-lg border-b border-white/10">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-white">لوحة تحكم الإدارة</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-white">لوحة تحكم الإدارة</h1>
+                {currentUser && (
+                  <p className="text-gray-400 text-sm">
+                    مرحباً {currentUser.username} - {currentUser.role}
+                  </p>
+                )}
+              </div>
               <button
                 onClick={handleLogout}
                 className="flex items-center space-x-2 rtl:space-x-reverse text-red-400 hover:text-red-300 transition-colors"
@@ -212,7 +343,7 @@ const AdminDashboard = () => {
             <div className="lg:col-span-1">
               <div className="admin-card rounded-xl p-6">
                 <nav className="space-y-2">
-                  {tabs.map((tab) => {
+                  {visibleTabs.map((tab) => {
                     const Icon = tab.icon;
                     return (
                       <button
@@ -230,12 +361,22 @@ const AdminDashboard = () => {
                     );
                   })}
                 </nav>
+
+                {/* Role Info */}
+                <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <h3 className="text-blue-400 font-semibold mb-2">دورك الحالي:</h3>
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <Shield className="w-4 h-4 text-blue-400" />
+                    <span className="text-white">{currentUser?.role}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Main Content */}
             <div className="lg:col-span-3">
-              {activeTab === 'overview' && (
+              {/* Overview Tab */}
+              {activeTab === 'overview' && canAccess('مشرف') && (
                 <div className="space-y-6">
                   <h2 className="text-3xl font-bold text-white">نظرة عامة</h2>
                   
@@ -273,7 +414,8 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {activeTab === 'products' && (
+              {/* Products Tab */}
+              {activeTab === 'products' && canAccess('مبرمج') && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-3xl font-bold text-white">إدارة المنتجات</h2>
@@ -392,7 +534,8 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {activeTab === 'passwords' && (
+              {/* Passwords Tab */}
+              {activeTab === 'passwords' && canAccess('مدير عام') && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h2 className="text-3xl font-bold text-white">إدارة كلمات المرور</h2>
@@ -436,8 +579,8 @@ const AdminDashboard = () => {
                                 className="w-full bg-white/10 text-white border border-white/20 rounded py-2 px-3 focus:outline-none focus:border-blue-400"
                               >
                                 <option value="مدير عام">مدير عام</option>
+                                <option value="مبرمج">مبرمج</option>
                                 <option value="مشرف">مشرف</option>
-                                <option value="محرر">محرر</option>
                               </select>
                             </div>
                             <div className="flex items-end gap-2">
@@ -463,7 +606,8 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {activeTab === 'design' && (
+              {/* Design Tab */}
+              {activeTab === 'design' && canAccess('مدير عام') && (
                 <div className="space-y-6">
                   <h2 className="text-3xl font-bold text-white">تخصيص التصميم</h2>
                   
@@ -583,7 +727,8 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {activeTab === 'typography' && (
+              {/* Typography Tab */}
+              {activeTab === 'typography' && canAccess('مدير عام') && (
                 <div className="space-y-6">
                   <h2 className="text-3xl font-bold text-white">التحكم في النصوص</h2>
                   
@@ -652,7 +797,8 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {activeTab === 'users' && (
+              {/* Users Tab */}
+              {activeTab === 'users' && canAccess('مشرف') && (
                 <div className="space-y-6">
                   <h2 className="text-3xl font-bold text-white">إدارة المستخدمين</h2>
                   
@@ -678,7 +824,8 @@ const AdminDashboard = () => {
                 </div>
               )}
 
-              {activeTab === 'settings' && (
+              {/* Settings Tab */}
+              {activeTab === 'settings' && canAccess('مدير عام') && (
                 <div className="space-y-6">
                   <h2 className="text-3xl font-bold text-white">الإعدادات</h2>
                   
@@ -700,6 +847,186 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Contact Settings Tab */}
+              {activeTab === 'contact' && canAccess('مدير عام') && (
+                <div className="space-y-6">
+                  <h2 className="text-3xl font-bold text-white">إعدادات التواصل</h2>
+                  
+                  <div className="admin-card rounded-xl p-6">
+                    <div className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-gray-300 text-sm font-medium mb-2">تيليجرام</label>
+                          <input
+                            type="text"
+                            value={siteSettings.contactInfo?.telegram || ''}
+                            onChange={(e) => setSiteSettings({
+                              ...siteSettings,
+                              contactInfo: { ...siteSettings.contactInfo, telegram: e.target.value }
+                            })}
+                            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
+                            placeholder="@username"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-300 text-sm font-medium mb-2">ديسكورد</label>
+                          <input
+                            type="text"
+                            value={siteSettings.contactInfo?.discord || ''}
+                            onChange={(e) => setSiteSettings({
+                              ...siteSettings,
+                              contactInfo: { ...siteSettings.contactInfo, discord: e.target.value }
+                            })}
+                            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
+                            placeholder="Discord Server"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-300 text-sm font-medium mb-2">واتساب</label>
+                          <input
+                            type="text"
+                            value={siteSettings.contactInfo?.whatsapp || ''}
+                            onChange={(e) => setSiteSettings({
+                              ...siteSettings,
+                              contactInfo: { ...siteSettings.contactInfo, whatsapp: e.target.value }
+                            })}
+                            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
+                            placeholder="+966 XX XXX XXXX"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-300 text-sm font-medium mb-2">البريد الإلكتروني</label>
+                          <input
+                            type="email"
+                            value={siteSettings.contactInfo?.email || ''}
+                            onChange={(e) => setSiteSettings({
+                              ...siteSettings,
+                              contactInfo: { ...siteSettings.contactInfo, email: e.target.value }
+                            })}
+                            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
+                            placeholder="support@dark.com"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={saveSiteSettings}
+                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>حفظ إعدادات التواصل</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation Management Tab */}
+              {activeTab === 'navigation' && canAccess('مدير عام') && (
+                <div className="space-y-6">
+                  <h2 className="text-3xl font-bold text-white">إدارة شريط التنقل</h2>
+                  
+                  <div className="admin-card rounded-xl p-6">
+                    <div className="space-y-4">
+                      {siteSettings.navigation?.map((item, index) => (
+                        <div key={item.id} className="border border-white/10 rounded-lg p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-1">الاسم</label>
+                              <input
+                                type="text"
+                                value={item.name}
+                                onChange={(e) => {
+                                  const newNavigation = [...siteSettings.navigation];
+                                  newNavigation[index] = { ...item, name: e.target.value };
+                                  setSiteSettings({ ...siteSettings, navigation: newNavigation });
+                                }}
+                                className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-1">المسار</label>
+                              <input
+                                type="text"
+                                value={item.path}
+                                onChange={(e) => {
+                                  const newNavigation = [...siteSettings.navigation];
+                                  newNavigation[index] = { ...item, path: e.target.value };
+                                  setSiteSettings({ ...siteSettings, navigation: newNavigation });
+                                }}
+                                className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-1">الأيقونة</label>
+                              <input
+                                type="text"
+                                value={item.icon}
+                                onChange={(e) => {
+                                  const newNavigation = [...siteSettings.navigation];
+                                  newNavigation[index] = { ...item, icon: e.target.value };
+                                  setSiteSettings({ ...siteSettings, navigation: newNavigation });
+                                }}
+                                className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                              />
+                            </div>
+
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={item.visible}
+                                onChange={(e) => {
+                                  const newNavigation = [...siteSettings.navigation];
+                                  newNavigation[index] = { ...item, visible: e.target.checked };
+                                  setSiteSettings({ ...siteSettings, navigation: newNavigation });
+                                }}
+                                className="ml-2"
+                              />
+                              <label className="text-gray-300">مرئي</label>
+                            </div>
+
+                            <div className="flex justify-end">
+                              <button
+                                onClick={() => {
+                                  const newNavigation = siteSettings.navigation.filter((_, i) => i !== index);
+                                  setSiteSettings({ ...siteSettings, navigation: newNavigation });
+                                }}
+                                className="text-red-400 hover:text-red-300 transition-colors p-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={saveSiteSettings}
+                      className="w-full glow-button mt-6"
+                    >
+                      حفظ إعدادات التنقل
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Access Denied Message */}
+              {!canAccess(tabs.find(t => t.id === activeTab)?.requiredRole || 'مشرف') && (
+                <div className="admin-card rounded-xl p-8 text-center">
+                  <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">غير مسموح</h3>
+                  <p className="text-gray-300">
+                    ليس لديك الصلاحية للوصول إلى هذا القسم
+                  </p>
                 </div>
               )}
             </div>
