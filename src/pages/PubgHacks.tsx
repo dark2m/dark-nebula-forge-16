@@ -5,6 +5,7 @@ import StarryBackground from '../components/StarryBackground';
 import AdminStorage, { Product } from '../utils/adminStorage';
 import { Button } from '@/components/ui/button';
 import GlobalCart from '../components/GlobalCart';
+import ProductImageViewer from '../components/ProductImageViewer';
 
 const PubgHacks = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -67,12 +68,20 @@ const PubgHacks = () => {
                   ))}
                 </div>
 
-                <Button 
-                  onClick={() => addToCart(product)}
-                  className="w-full glow-button"
-                >
-                  {cartTexts.addToCartButton}
-                </Button>
+                <div className="space-y-3">
+                  <div className="flex gap-2 justify-center">
+                    <Button 
+                      onClick={() => addToCart(product)}
+                      className="flex-1 glow-button"
+                    >
+                      {cartTexts.addToCartButton}
+                    </Button>
+                    <ProductImageViewer 
+                      images={product.images || []} 
+                      productName={product.name}
+                    />
+                  </div>
+                </div>
               </div>
             ))}
           </div>

@@ -133,9 +133,9 @@ const AdminDashboard = () => {
     navigate('/admin/login');
   };
 
-  // Products management
+  // Products management - المدير العام له تحكم كامل
   const addProduct = () => {
-    if (!AdminStorage.hasPermission('مبرمج')) {
+    if (currentUser?.role !== 'مدير عام' && !AdminStorage.hasPermission('مبرمج')) {
       toast({
         title: "غير مسموح",
         description: "ليس لديك صلاحية لإضافة المنتجات",
@@ -163,7 +163,7 @@ const AdminDashboard = () => {
   };
 
   const updateProduct = (id: number, updates: Partial<Product>) => {
-    if (!AdminStorage.hasPermission('مبرمج')) {
+    if (currentUser?.role !== 'مدير عام' && !AdminStorage.hasPermission('مبرمج')) {
       toast({
         title: "غير مسموح",
         description: "ليس لديك صلاحية لتعديل المنتجات",
@@ -189,7 +189,7 @@ const AdminDashboard = () => {
   };
 
   const deleteProduct = (id: number) => {
-    if (!AdminStorage.hasPermission('مبرمج')) {
+    if (currentUser?.role !== 'مدير عام' && !AdminStorage.hasPermission('مبرمج')) {
       toast({
         title: "غير مسموح",
         description: "ليس لديك صلاحية لحذف المنتجات",
@@ -206,17 +206,8 @@ const AdminDashboard = () => {
     });
   };
 
-  // Site settings management
+  // Site settings management - المدير العام له تحكم كامل
   const saveSiteSettings = () => {
-    if (currentUser?.role !== 'مدير عام') {
-      toast({
-        title: "غير مسموح",
-        description: "فقط المدير العام يمكنه تعديل إعدادات الموقع",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     AdminStorage.saveSiteSettings(siteSettings);
     toast({
       title: "تم حفظ الإعدادات",
@@ -225,11 +216,68 @@ const AdminDashboard = () => {
   };
 
   const canAccess = (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean => {
+    // المدير العام له تحكم كامل في كل شيء
     if (currentUser?.role === 'مدير عام') return true;
     return AdminStorage.hasPermission(requiredRole);
   };
 
   const renderTabContent = () => {
+    // المدير العام يمكنه الوصول لكل شيء
+    if (currentUser?.role === 'مدير عام') {
+      switch (activeTab) {
+        case 'overview':
+          return <OverviewTab products={products} />;
+        case 'products':
+          return (
+            <ProductsTab 
+              products={products}
+              addProduct={addProduct}
+              updateProduct={updateProduct}
+              deleteProduct={deleteProduct}
+            />
+          );
+        case 'background':
+          return (
+            <BackgroundTab 
+              siteSettings={siteSettings}
+              setSiteSettings={setSiteSettings}
+              saveSiteSettings={saveSiteSettings}
+            />
+          );
+        case 'contact':
+          return (
+            <ContactTab 
+              siteSettings={siteSettings}
+              setSiteSettings={setSiteSettings}
+              saveSiteSettings={saveSiteSettings}
+            />
+          );
+        case 'navigation':
+          return (
+            <NavigationTab 
+              siteSettings={siteSettings}
+              setSiteSettings={setSiteSettings}
+              saveSiteSettings={saveSiteSettings}
+            />
+          );
+        case 'passwords':
+          return <PasswordsTab />;
+        case 'design':
+          return <DesignTab />;
+        case 'typography':
+          return <TypographyTab />;
+        case 'users':
+          return <UsersTab />;
+        case 'settings':
+          return <SettingsTab />;
+        case 'texts':
+          return <TextsTab />;
+        default:
+          return <OverviewTab products={products} />;
+      }
+    }
+
+    // للأدوار الأخرى، استخدم نظام الصلاحيات العادي
     switch (activeTab) {
       case 'overview':
         return canAccess('مشرف') ? <OverviewTab products={products} /> : <AccessDenied />;
@@ -308,6 +356,9 @@ const AdminDashboard = () => {
                 {currentUser && (
                   <p className="text-gray-400 text-sm">
                     مرحباً {currentUser.username} - {currentUser.role}
+                    {currentUser.role === 'مدير عام' && (
+                      <span className="text-green-400 mr-2">• تحكم كامل</span>
+                    )}
                   </p>
                 )}
               </div>

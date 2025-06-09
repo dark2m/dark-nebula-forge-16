@@ -30,6 +30,9 @@ class AuthService {
     const currentUser = this.getCurrentUser();
     if (!currentUser) return false;
     
+    // المدير العام له تحكم كامل في كل شيء
+    if (currentUser.role === 'مدير عام') return true;
+    
     const roleHierarchy = { 'مدير عام': 3, 'مبرمج': 2, 'مشرف': 1 };
     return roleHierarchy[currentUser.role] >= roleHierarchy[requiredRole];
   }
