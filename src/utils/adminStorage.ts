@@ -67,7 +67,7 @@ class AdminStorage {
         meteorOpacity: 0.7,
         meteorDirection: 'down' as const,
         meteorColors: ['#4ecdc4', '#45b7d1', '#ffeaa7', '#fd79a8', '#a8e6cf', '#81ecec'],
-        animationSpeed: 'medium' as const
+        animationSpeed: 'normal' as const
       },
       navigation: [],
       contactInfo: {
