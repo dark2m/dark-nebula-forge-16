@@ -38,7 +38,12 @@ const StarryBackground = () => {
         ))}
       </div>
       
-      {/* Meteors */}
+      {/* More meteors */}
+      <div className="meteor"></div>
+      <div className="meteor"></div>
+      <div className="meteor"></div>
+      <div className="meteor"></div>
+      <div className="meteor"></div>
       <div className="meteor"></div>
       <div className="meteor"></div>
       <div className="meteor"></div>

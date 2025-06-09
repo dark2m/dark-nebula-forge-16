@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -11,7 +12,9 @@ import {
   Plus,
   Trash2,
   Save,
-  Key
+  Key,
+  Upload,
+  Image
 } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 
@@ -25,9 +28,30 @@ const AdminDashboard = () => {
   });
   const [siteTitle, setSiteTitle] = useState('DARK');
   const [products, setProducts] = useState([
-    { id: 1, name: 'هكر ESP المتقدم', price: 25, category: 'pubg' },
-    { id: 2, name: 'Aimbot Pro', price: 35, category: 'pubg' },
-    { id: 3, name: 'بوت الموسيقى المتقدم', price: 30, category: 'discord' },
+    { 
+      id: 1, 
+      name: 'هكر ESP المتقدم', 
+      price: 25, 
+      category: 'pubg',
+      image: '',
+      description: 'رؤية الأعداء من خلال الجدران مع معلومات مفصلة'
+    },
+    { 
+      id: 2, 
+      name: 'Aimbot Pro', 
+      price: 35, 
+      category: 'pubg',
+      image: '',
+      description: 'تصويب تلقائي دقيق مع إعدادات متقدمة'
+    },
+    { 
+      id: 3, 
+      name: 'بوت الموسيقى المتقدم', 
+      price: 30, 
+      category: 'discord',
+      image: '',
+      description: 'بوت ديسكورد متطور للموسيقى'
+    },
   ]);
   const [adminUsers, setAdminUsers] = useState([
     { id: 1, username: 'admin', password: 'dark123', role: 'مدير عام' },
@@ -49,13 +73,29 @@ const AdminDashboard = () => {
       id: Date.now(),
       name: 'منتج جديد',
       price: 0,
-      category: 'pubg'
+      category: 'pubg',
+      image: '',
+      description: 'وصف المنتج'
     };
     setProducts([...products, newProduct]);
   };
 
   const deleteProduct = (id: number) => {
     setProducts(products.filter(p => p.id !== id));
+  };
+
+  const handleImageUpload = (productId: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const updated = products.map(p => 
+          p.id === productId ? { ...p, image: e.target?.result as string } : p
+        );
+        setProducts(updated);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const addAdminUser = () => {
@@ -183,10 +223,35 @@ const AdminDashboard = () => {
                   </div>
                   
                   <div className="admin-card rounded-xl p-6">
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {products.map((product) => (
-                        <div key={product.id} className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                          <div className="flex-1">
+                        <div key={product.id} className="grid grid-cols-1 lg:grid-cols-6 gap-4 p-4 bg-white/5 rounded-lg">
+                          <div className="lg:col-span-1">
+                            <label className="block text-gray-400 text-sm mb-1">صورة المنتج</label>
+                            <div className="space-y-2">
+                              {product.image && (
+                                <img src={product.image} alt="Product" className="image-preview" />
+                              )}
+                              <div className="relative">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => handleImageUpload(product.id, e)}
+                                  className="hidden"
+                                  id={`image-${product.id}`}
+                                />
+                                <label
+                                  htmlFor={`image-${product.id}`}
+                                  className="flex items-center justify-center w-full p-2 border border-white/20 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
+                                >
+                                  <Upload className="w-4 h-4 text-gray-400" />
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="lg:col-span-2">
+                            <label className="block text-gray-400 text-sm mb-1">اسم المنتج</label>
                             <input
                               type="text"
                               value={product.name}
@@ -196,10 +261,27 @@ const AdminDashboard = () => {
                                 );
                                 setProducts(updated);
                               }}
-                              className="bg-transparent text-white border-b border-white/20 focus:outline-none focus:border-blue-400"
+                              className="w-full bg-transparent text-white border-b border-white/20 focus:outline-none focus:border-blue-400 py-2"
                             />
                           </div>
-                          <div className="mx-4">
+                          
+                          <div className="lg:col-span-2">
+                            <label className="block text-gray-400 text-sm mb-1">الوصف</label>
+                            <input
+                              type="text"
+                              value={product.description}
+                              onChange={(e) => {
+                                const updated = products.map(p => 
+                                  p.id === product.id ? { ...p, description: e.target.value } : p
+                                );
+                                setProducts(updated);
+                              }}
+                              className="w-full bg-transparent text-white border-b border-white/20 focus:outline-none focus:border-blue-400 py-2"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-1">السعر ($)</label>
                             <input
                               type="number"
                               value={product.price}
@@ -209,16 +291,18 @@ const AdminDashboard = () => {
                                 );
                                 setProducts(updated);
                               }}
-                              className="w-20 bg-transparent text-white border-b border-white/20 focus:outline-none focus:border-blue-400"
+                              className="w-full bg-transparent text-white border-b border-white/20 focus:outline-none focus:border-blue-400 py-2"
                             />
-                            <span className="text-gray-400 mr-2">$</span>
                           </div>
-                          <button
-                            onClick={() => deleteProduct(product.id)}
-                            className="text-red-400 hover:text-red-300 transition-colors"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                          
+                          <div className="flex items-end justify-center">
+                            <button
+                              onClick={() => deleteProduct(product.id)}
+                              className="text-red-400 hover:text-red-300 transition-colors p-2"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -376,7 +460,23 @@ const AdminDashboard = () => {
                   <h2 className="text-3xl font-bold text-white">إدارة المستخدمين</h2>
                   
                   <div className="admin-card rounded-xl p-6">
-                    <p className="text-gray-300">قسم إدارة المستخدمين قيد التطوير...</p>
+                    <div className="text-center py-8">
+                      <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-white mb-2">إدارة المستخدمين</h3>
+                      <p className="text-gray-300 mb-4">
+                        هذا القسم مخصص لإدارة حسابات العملاء والمستخدمين المسجلين في الموقع
+                      </p>
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-right">
+                        <h4 className="text-blue-400 font-semibold mb-2">معنى إدارة المستخدمين:</h4>
+                        <ul className="text-gray-300 space-y-1 text-sm">
+                          <li>• عرض قائمة بجميع المستخدمين المسجلين</li>
+                          <li>• إدارة حالات الحسابات (نشط، محظور، معلق)</li>
+                          <li>• عرض تفاصيل المستخدمين وسجل النشاط</li>
+                          <li>• إدارة الصلاحيات والأدوار</li>
+                          <li>• إرسال إشعارات للمستخدمين</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
