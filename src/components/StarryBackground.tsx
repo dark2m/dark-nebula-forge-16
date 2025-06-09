@@ -4,37 +4,30 @@ import AdminStorage from '../utils/adminStorage';
 
 const StarryBackground = () => {
   const [stars, setStars] = useState<Array<{ id: number; left: number; top: number; size: number }>>([]);
-  const [backgroundSettings, setBackgroundSettings] = useState(AdminStorage.getSiteSettings()?.backgroundSettings);
+  const [backgroundSettings, setBackgroundSettings] = useState(AdminStorage.getSiteSettings().backgroundSettings);
 
   useEffect(() => {
-    const settings = AdminStorage.getSiteSettings()?.backgroundSettings;
-    if (settings) {
-      setBackgroundSettings(settings);
+    const settings = AdminStorage.getSiteSettings().backgroundSettings;
+    setBackgroundSettings(settings);
 
-      const generateStars = () => {
-        const starArray = [];
-        const starCount = settings.starCount || 80;
-        const starSizeMultiplier = settings.starSize === 'small' ? 0.5 : settings.starSize === 'large' ? 1.5 : 1;
-        
-        for (let i = 0; i < starCount; i++) {
-          starArray.push({
-            id: i,
-            left: Math.random() * 100,
-            top: Math.random() * 100,
-            size: (Math.random() * 2 + 0.5) * starSizeMultiplier
-          });
-        }
-        setStars(starArray);
-      };
+    const generateStars = () => {
+      const starArray = [];
+      const starCount = settings.starCount || 80;
+      const starSizeMultiplier = settings.starSize === 'small' ? 0.5 : settings.starSize === 'large' ? 1.5 : 1;
+      
+      for (let i = 0; i < starCount; i++) {
+        starArray.push({
+          id: i,
+          left: Math.random() * 100,
+          top: Math.random() * 100,
+          size: (Math.random() * 2 + 0.5) * starSizeMultiplier
+        });
+      }
+      setStars(starArray);
+    };
 
-      generateStars();
-    }
+    generateStars();
   }, []);
-
-  // Add safety check for backgroundSettings
-  if (!backgroundSettings) {
-    return <div className="starry-background" style={{ background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' }} />;
-  }
 
   const getAnimationDuration = () => {
     switch (backgroundSettings.animationSpeed) {
