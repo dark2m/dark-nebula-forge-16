@@ -1,139 +1,86 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bot, Music, Shield, Users, ShoppingCart, ExternalLink } from 'lucide-react';
+import { Bot, Music, Shield, Users } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import AdminStorage, { Product } from '../utils/adminStorage';
+import AdminStorage from '../utils/adminStorage';
+import GlobalCart from '../components/GlobalCart';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import type { Product } from '../types/admin';
 
 const DiscordBots = () => {
-  const [cart, setCart] = useState<Array<{id: number, name: string, price: string}>>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
 
   useEffect(() => {
     const loadedProducts = AdminStorage.getProducts().filter(p => p.category === 'discord');
     setProducts(loadedProducts);
+    setSiteSettings(AdminStorage.getSiteSettings());
   }, []);
 
   const addToCart = (product: Product) => {
-    setCart([...cart, { id: product.id, name: product.name, price: `${product.price}$` }]);
-  };
-
-  const removeFromCart = (id: number) => {
-    setCart(cart.filter(item => item.id !== id));
-  };
-
-  const handlePurchase = () => {
-    window.open('https://discord.gg/CaQW7RWuG8', '_blank');
+    AdminStorage.addToCart(product);
   };
 
   const bots = [
     {
       id: 1,
       name: 'بوت الموسيقى المتقدم',
-      price: '30$',
+      price: 30,
       description: 'بوت موسيقى بجودة عالية مع مميزات متقدمة',
       features: ['تشغيل من يوتيوب وسبوتيفاي', 'قوائم تشغيل', 'تحكم بالصوت', 'واجهة تفاعلية'],
-      icon: Music
+      icon: Music,
+      category: 'discord',
+      images: [],
+      videos: [],
+      textSize: 'medium' as const,
+      titleSize: 'large' as const
     },
     {
       id: 2,
       name: 'بوت الحماية والإدارة',
-      price: '40$',
+      price: 40,
       description: 'بوت شامل لحماية وإدارة السيرفر',
       features: ['حماية من السبام', 'نظام تحذيرات', 'إدارة الأدوار', 'لوقات تلقائية'],
-      icon: Shield
+      icon: Shield,
+      category: 'discord',
+      images: [],
+      videos: [],
+      textSize: 'medium' as const,
+      titleSize: 'large' as const
     },
     {
       id: 3,
       name: 'بوت متعدد الوظائف',
-      price: '60$',
+      price: 60,
       description: 'بوت شامل يجمع جميع المميزات في مكان واحد',
       features: ['موسيقى + حماية', 'ألعاب تفاعلية', 'نظام اقتصادي', 'إحصائيات متقدمة'],
       icon: Bot,
-      popular: true
+      popular: true,
+      category: 'discord',
+      images: [],
+      videos: [],
+      textSize: 'medium' as const,
+      titleSize: 'large' as const
     }
   ];
 
   // دمج المنتجات من الإدارة مع البوتات الافتراضية
   const allBots = products.length > 0 ? products : bots;
+  const pageTexts = siteSettings.pageTexts.discordBots;
+  const cartTexts = siteSettings.pageTexts.cart;
 
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
-      
-      {/* Cart Button */}
-      <div className="fixed top-20 right-6 z-50">
-        <Button
-          onClick={() => setIsCartOpen(true)}
-          className="glow-button relative"
-        >
-          <ShoppingCart className="w-5 h-5" />
-          {cart.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-              {cart.length}
-            </span>
-          )}
-        </Button>
-      </div>
-
-      {/* Cart Dialog */}
-      <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">السلة</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {cart.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">السلة فارغة</p>
-            ) : (
-              <>
-                {cart.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                    <div>
-                      <h4 className="font-semibold">{item.name}</h4>
-                      <p className="text-blue-400">{item.price}</p>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      حذف
-                    </Button>
-                  </div>
-                ))}
-                <div className="pt-4 border-t border-gray-700">
-                  <Button
-                    onClick={handlePurchase}
-                    className="w-full glow-button flex items-center justify-center gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    شراء عبر الديسكورد
-                  </Button>
-                  <p className="text-xs text-gray-400 text-center mt-2">
-                    سيتم توجيهك إلى الديسكورد لإتمام الشراء
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <GlobalCart />
       
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6">
           <h1 className="text-5xl font-bold text-center text-white mb-4">
-            برمجة بوتات ديسكورد
+            {pageTexts.pageTitle}
           </h1>
           <p className="text-xl text-gray-300 text-center mb-12 max-w-2xl mx-auto">
-            بوتات ديسكورد مخصصة ومتطورة لتحسين تجربة سيرفرك
+            {pageTexts.pageSubtitle}
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -161,7 +108,7 @@ const DiscordBots = () => {
                     <h3 className="text-2xl font-bold text-white mb-2">{bot.name}</h3>
                     <p className="text-gray-300 mb-4">{bot.description}</p>
                     <div className="text-3xl font-bold text-purple-400 mb-6">
-                      {bot.price || `${bot.price}$`}
+                      ${bot.price}
                     </div>
                   </div>
 
@@ -178,8 +125,7 @@ const DiscordBots = () => {
                     onClick={() => addToCart(bot)}
                     className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
                   >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    أضف للسلة
+                    {cartTexts.addToCartButton}
                   </Button>
                 </div>
               );

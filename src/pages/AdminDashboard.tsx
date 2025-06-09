@@ -16,8 +16,9 @@ import UsersTab from '../components/admin/UsersTab';
 import TypographyTab from '../components/admin/TypographyTab';
 import DesignTab from '../components/admin/DesignTab';
 import TextsTab from '../components/admin/TextsTab';
-import AdminStorage, { Product, AdminUser, SiteSettings } from '../utils/adminStorage';
+import AdminStorage from '../utils/adminStorage';
 import { useToast } from '@/hooks/use-toast';
+import type { Product, AdminUser, SiteSettings } from '../types/admin';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();

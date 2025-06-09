@@ -2,137 +2,83 @@
 import React, { useState, useEffect } from 'react';
 import { Code, Smartphone, Globe, Zap, ShoppingCart, ExternalLink } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import AdminStorage, { Product } from '../utils/adminStorage';
+import AdminStorage from '../utils/adminStorage';
+import GlobalCart from '../components/GlobalCart';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import type { Product } from '../types/admin';
 
 const WebDevelopment = () => {
-  const [cart, setCart] = useState<Array<{id: number, name: string, price: string}>>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
+  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
 
   useEffect(() => {
     const loadedProducts = AdminStorage.getProducts().filter(p => p.category === 'web');
     setProducts(loadedProducts);
+    setSiteSettings(AdminStorage.getSiteSettings());
   }, []);
 
   const addToCart = (product: Product) => {
-    setCart([...cart, { id: product.id, name: product.name, price: `${product.price}$` }]);
-  };
-
-  const removeFromCart = (id: number) => {
-    setCart(cart.filter(item => item.id !== id));
-  };
-
-  const handlePurchase = () => {
-    window.open('https://discord.gg/CaQW7RWuG8', '_blank');
+    AdminStorage.addToCart(product);
   };
 
   const services = [
     {
       id: 1,
       name: 'تطوير مواقع ووردبريس',
-      price: '150$',
+      price: 150,
       description: 'مواقع ووردبريس احترافية مع تصميم مخصص',
       features: ['تصميم مخصص', 'SEO محسن', 'سرعة عالية', 'لوحة تحكم سهلة'],
-      icon: Globe
+      icon: Globe,
+      category: 'web',
+      images: [],
+      videos: [],
+      textSize: 'medium' as const,
+      titleSize: 'large' as const
     },
     {
       id: 2,
       name: 'تطبيقات الويب',
-      price: '300$',
+      price: 300,
       description: 'تطبيقات ويب تفاعلية مع React و Node.js',
       features: ['React.js', 'قاعدة بيانات', 'API مخصص', 'لوحة إدارة'],
-      icon: Code
+      icon: Code,
+      category: 'web',
+      images: [],
+      videos: [],
+      textSize: 'medium' as const,
+      titleSize: 'large' as const
     },
     {
       id: 3,
       name: 'مواقع متجاوبة',
-      price: '200$',
+      price: 200,
       description: 'مواقع تعمل بشكل مثالي على جميع الأجهزة',
       features: ['تصميم متجاوب', 'تحسين الأداء', 'UX/UI متقدم', 'دعم جميع المتصفحات'],
-      icon: Smartphone
+      icon: Smartphone,
+      category: 'web',
+      images: [],
+      videos: [],
+      textSize: 'medium' as const,
+      titleSize: 'large' as const
     }
   ];
 
   // دمج المنتجات من الإدارة مع الخدمات الافتراضية
   const allServices = products.length > 0 ? products : services;
+  const pageTexts = siteSettings.pageTexts.webDevelopment;
 
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
-      
-      {/* Cart Button */}
-      <div className="fixed top-20 right-6 z-50">
-        <Button
-          onClick={() => setIsCartOpen(true)}
-          className="glow-button relative"
-        >
-          <ShoppingCart className="w-5 h-5" />
-          {cart.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-              {cart.length}
-            </span>
-          )}
-        </Button>
-      </div>
-
-      {/* Cart Dialog */}
-      <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">السلة</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {cart.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">السلة فارغة</p>
-            ) : (
-              <>
-                {cart.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                    <div>
-                      <h4 className="font-semibold">{item.name}</h4>
-                      <p className="text-blue-400">{item.price}</p>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      حذف
-                    </Button>
-                  </div>
-                ))}
-                <div className="pt-4 border-t border-gray-700">
-                  <Button
-                    onClick={handlePurchase}
-                    className="w-full glow-button flex items-center justify-center gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    شراء عبر الديسكورد
-                  </Button>
-                  <p className="text-xs text-gray-400 text-center mt-2">
-                    سيتم توجيهك إلى الديسكورد لإتمام الشراء
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <GlobalCart />
       
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6">
           <h1 className="text-5xl font-bold text-center text-white mb-4">
-            برمجة مواقع الويب
+            {pageTexts.pageTitle}
           </h1>
           <p className="text-xl text-gray-300 text-center mb-12 max-w-2xl mx-auto">
-            نطور لك مواقع احترافية عصرية بأحدث التقنيات وأفضل الممارسات
+            {pageTexts.pageSubtitle}
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -147,7 +93,7 @@ const WebDevelopment = () => {
                     <h3 className="text-2xl font-bold text-white mb-2">{service.name}</h3>
                     <p className="text-gray-300 mb-4">{service.description}</p>
                     <div className="text-3xl font-bold text-blue-400 mb-6">
-                      {service.price || `${service.price}$`}
+                      ${service.price}
                     </div>
                   </div>
 
@@ -165,7 +111,7 @@ const WebDevelopment = () => {
                     className="w-full glow-button"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    أضف للسلة
+                    {siteSettings.pageTexts.cart.addToCartButton}
                   </Button>
                 </div>
               );

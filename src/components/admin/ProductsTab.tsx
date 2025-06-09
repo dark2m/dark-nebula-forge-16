@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { Product } from '../../utils/adminStorage';
 import ProductFeaturesManager from '../ProductFeaturesManager';
 import MediaManager from '../MediaManager';
+import type { Product } from '../../types/admin';
 
 interface ProductsTabProps {
   products: Product[];

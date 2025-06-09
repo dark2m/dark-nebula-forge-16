@@ -13,7 +13,7 @@ import {
   Shield,
   Monitor
 } from 'lucide-react';
-import { AdminUser } from '../../utils/adminStorage';
+import type { AdminUser } from '../../types/admin';
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -39,6 +39,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'contact', name: 'إعدادات التواصل', icon: MessageCircle, requiredRole: 'مدير عام' as const },
     { id: 'users', name: 'إدارة المستخدمين', icon: Users, requiredRole: 'مدير عام' as const },
     { id: 'settings', name: 'الإعدادات', icon: Settings, requiredRole: 'مدير عام' as const },
+    { id: 'texts', name: 'إدارة النصوص', icon: Type, requiredRole: 'مدير عام' as const },
   ];
 
   // Show all tabs for general manager

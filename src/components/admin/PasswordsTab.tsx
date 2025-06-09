@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Plus, Trash2, Key } from 'lucide-react';
-import AdminStorage, { AdminUser } from '../../utils/adminStorage';
+import AdminStorage from '../../utils/adminStorage';
 import { useToast } from '@/hooks/use-toast';
+import type { AdminUser } from '../../types/admin';
 
 const PasswordsTab = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
