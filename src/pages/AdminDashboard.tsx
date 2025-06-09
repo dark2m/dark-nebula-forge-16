@@ -146,7 +146,8 @@ const AdminDashboard = () => {
 
   // Site settings management
   const saveSiteSettings = () => {
-    if (!AdminStorage.hasPermission('مدير عام')) {
+    // Allow general manager access to all settings
+    if (!AdminStorage.hasPermission('مدير عام') && currentUser?.role !== 'مدير عام') {
       toast({
         title: "غير مسموح",
         description: "فقط المدير العام يمكنه تعديل إعدادات الموقع",
@@ -163,6 +164,8 @@ const AdminDashboard = () => {
   };
 
   const canAccess = (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean => {
+    // General manager has access to everything
+    if (currentUser?.role === 'مدير عام') return true;
     return AdminStorage.hasPermission(requiredRole);
   };
 
@@ -182,7 +185,7 @@ const AdminDashboard = () => {
         ) : <AccessDenied />;
       
       case 'background':
-        return canAccess('مدير عام') ? (
+        return canAccess('مبرمج') ? (
           <BackgroundTab 
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
@@ -206,6 +209,56 @@ const AdminDashboard = () => {
             setSiteSettings={setSiteSettings}
             saveSiteSettings={saveSiteSettings}
           />
+        ) : <AccessDenied />;
+
+      case 'passwords':
+        return canAccess('مدير عام') ? (
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-white">إدارة كلمات المرور</h2>
+            <div className="admin-card rounded-xl p-6">
+              <p className="text-gray-300">قسم إدارة كلمات المرور سيتم إضافته قريباً</p>
+            </div>
+          </div>
+        ) : <AccessDenied />;
+
+      case 'design':
+        return canAccess('مدير عام') ? (
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-white">تخصيص التصميم</h2>
+            <div className="admin-card rounded-xl p-6">
+              <p className="text-gray-300">قسم تخصيص التصميم سيتم إضافته قريباً</p>
+            </div>
+          </div>
+        ) : <AccessDenied />;
+
+      case 'typography':
+        return canAccess('مدير عام') ? (
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-white">التحكم في النصوص</h2>
+            <div className="admin-card rounded-xl p-6">
+              <p className="text-gray-300">قسم التحكم في النصوص سيتم إضافته قريباً</p>
+            </div>
+          </div>
+        ) : <AccessDenied />;
+
+      case 'users':
+        return canAccess('مدير عام') ? (
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-white">إدارة المستخدمين</h2>
+            <div className="admin-card rounded-xl p-6">
+              <p className="text-gray-300">قسم إدارة المستخدمين سيتم إضافته قريباً</p>
+            </div>
+          </div>
+        ) : <AccessDenied />;
+
+      case 'settings':
+        return canAccess('مدير عام') ? (
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-white">الإعدادات العامة</h2>
+            <div className="admin-card rounded-xl p-6">
+              <p className="text-gray-300">قسم الإعدادات العامة سيتم إضافته قريباً</p>
+            </div>
+          </div>
         ) : <AccessDenied />;
       
       default:

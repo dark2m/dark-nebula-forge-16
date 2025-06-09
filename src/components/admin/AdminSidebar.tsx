@@ -31,7 +31,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const tabs = [
     { id: 'overview', name: 'نظرة عامة', icon: BarChart3, requiredRole: 'مشرف' as const },
     { id: 'products', name: 'إدارة المنتجات', icon: Package, requiredRole: 'مبرمج' as const },
-    { id: 'background', name: 'تخصيص الخلفية', icon: Monitor, requiredRole: 'مدير عام' as const },
+    { id: 'background', name: 'تخصيص الخلفية', icon: Monitor, requiredRole: 'مبرمج' as const },
     { id: 'passwords', name: 'إدارة كلمات المرور', icon: Key, requiredRole: 'مدير عام' as const },
     { id: 'design', name: 'تخصيص التصميم', icon: Palette, requiredRole: 'مدير عام' as const },
     { id: 'typography', name: 'التحكم في النصوص', icon: Type, requiredRole: 'مدير عام' as const },
@@ -41,7 +41,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'settings', name: 'الإعدادات', icon: Settings, requiredRole: 'مدير عام' as const },
   ];
 
-  const visibleTabs = tabs.filter(tab => canAccess(tab.requiredRole));
+  // Show all tabs for general manager
+  const visibleTabs = currentUser?.role === 'مدير عام' 
+    ? tabs 
+    : tabs.filter(tab => canAccess(tab.requiredRole));
 
   return (
     <div className="lg:col-span-1">

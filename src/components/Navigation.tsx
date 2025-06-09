@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Code, Bot, User, Users, MessageCircle } from 'lucide-react';
+import { Shield, Code, Bot, User, Users } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
@@ -10,8 +10,7 @@ const Navigation = () => {
     { name: 'هكر ببجي موبايل', path: '/pubg-hacks', icon: Shield },
     { name: 'برمجة مواقع', path: '/web-development', icon: Code },
     { name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: Bot },
-    { name: 'من نحن', path: '/about', icon: Users },
-    { name: 'تواصل معنا', path: '/contact', icon: MessageCircle },
+    { name: 'الصفحة الرسمية', path: '/official', icon: Users },
   ];
 
   return (

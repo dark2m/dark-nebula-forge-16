@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Star, Download, ExternalLink, ShoppingCart } from 'lucide-react';
+import { Shield, Download, ExternalLink, ShoppingCart } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage, { Product } from '../utils/adminStorage';
 import { Button } from '@/components/ui/button';
@@ -32,24 +32,6 @@ const PubgHacks = () => {
   const handlePurchase = () => {
     window.open('https://discord.gg/CaQW7RWuG8', '_blank');
   };
-
-  const features = [
-    {
-      title: 'ESP متقدم',
-      description: 'رؤية الأعداء من خلال الجدران',
-      icon: Shield
-    },
-    {
-      title: 'ايمبوت ذكي',
-      description: 'تصويب تلقائي دقيق وسريع',
-      icon: Star
-    },
-    {
-      title: 'بايباس الحماية',
-      description: 'تجاوز جميع أنظمة الحماية',
-      icon: Download
-    }
-  ];
 
   return (
     <div className="min-h-screen relative">
@@ -122,22 +104,6 @@ const PubgHacks = () => {
           <p className="text-xl text-gray-300 text-center mb-12 max-w-2xl mx-auto">
             أحدث الهاكات والأدوات المتقدمة لببجي موبايل مع ضمان الأمان والجودة
           </p>
-
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="product-card rounded-xl p-6 text-center">
-                  <div className="inline-flex p-3 rounded-full bg-red-500/20 mb-4">
-                    <Icon className="w-8 h-8 text-red-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                  <p className="text-gray-300">{feature.description}</p>
-                </div>
-              );
-            })}
-          </div>
 
           {/* Products */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
