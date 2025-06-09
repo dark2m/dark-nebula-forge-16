@@ -45,7 +45,12 @@ const AdminDashboard = () => {
     const users = AdminStorage.getAdminUsers();
     setAdminUsers(users);
     setTempAdminUsers([...users]);
-    setSiteSettings(AdminStorage.getSiteSettings());
+    const loadedSettings = AdminStorage.getSiteSettings();
+    // Ensure backgroundSettings exists with proper defaults
+    setSiteSettings({
+      ...loadedSettings,
+      backgroundSettings: loadedSettings.backgroundSettings || { type: 'color', value: '#000000' }
+    });
   }, []);
 
   const handleLogout = () => {
@@ -286,7 +291,6 @@ const AdminDashboard = () => {
                       {products.map((product) => (
                         <div key={product.id} className="border border-white/10 rounded-lg p-6 space-y-6">
                           <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
-                            {/* Product Name */}
                             <div className="lg:col-span-2">
                               <label className="block text-gray-400 text-sm mb-2">اسم المنتج</label>
                               <input
@@ -297,7 +301,6 @@ const AdminDashboard = () => {
                               />
                             </div>
                             
-                            {/* Product Description */}
                             <div className="lg:col-span-2">
                               <label className="block text-gray-400 text-sm mb-2">الوصف</label>
                               <textarea
@@ -307,7 +310,6 @@ const AdminDashboard = () => {
                               />
                             </div>
                             
-                            {/* Product Price */}
                             <div>
                               <label className="block text-gray-400 text-sm mb-2">السعر ($)</label>
                               <input
@@ -318,7 +320,6 @@ const AdminDashboard = () => {
                               />
                             </div>
 
-                            {/* Text Size */}
                             <div>
                               <label className="block text-gray-400 text-sm mb-2">حجم النص</label>
                               <select
@@ -333,7 +334,6 @@ const AdminDashboard = () => {
                             </div>
                           </div>
 
-                          {/* Background Settings */}
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-gray-400 text-sm mb-2">لون الخلفية</label>
@@ -364,7 +364,6 @@ const AdminDashboard = () => {
                             </div>
                           </div>
 
-                          {/* Media Manager */}
                           <MediaManager
                             images={product.images || []}
                             videos={product.videos || []}
@@ -372,13 +371,11 @@ const AdminDashboard = () => {
                             onVideosChange={(videos) => updateProduct(product.id, { videos })}
                           />
 
-                          {/* Product Features */}
                           <ProductFeaturesManager
                             features={product.features || []}
                             onFeaturesChange={(features) => updateProduct(product.id, { features })}
                           />
 
-                          {/* Delete Button */}
                           <div className="flex justify-end">
                             <button
                               onClick={() => deleteProduct(product.id)}
@@ -525,7 +522,7 @@ const AdminDashboard = () => {
                             نوع الخلفية
                           </label>
                           <select
-                            value={siteSettings.backgroundSettings.type}
+                            value={siteSettings.backgroundSettings?.type || 'color'}
                             onChange={(e) => setSiteSettings({
                               ...siteSettings,
                               backgroundSettings: {
@@ -540,18 +537,19 @@ const AdminDashboard = () => {
                           </select>
                         </div>
 
-                        {siteSettings.backgroundSettings.type === 'color' ? (
+                        {(siteSettings.backgroundSettings?.type || 'color') === 'color' ? (
                           <div>
                             <label className="block text-gray-300 text-sm font-medium mb-2">
                               لون الخلفية
                             </label>
                             <input
                               type="color"
-                              value={siteSettings.backgroundSettings.value}
+                              value={siteSettings.backgroundSettings?.value || '#000000'}
                               onChange={(e) => setSiteSettings({
                                 ...siteSettings,
                                 backgroundSettings: {
                                   ...siteSettings.backgroundSettings,
+                                  type: 'color',
                                   value: e.target.value
                                 }
                               })}
