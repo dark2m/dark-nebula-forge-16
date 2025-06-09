@@ -1,10 +1,18 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Code, Bot, ArrowLeft } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
+import AdminStorage from '../utils/adminStorage';
 
 const Home = () => {
+  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+
+  useEffect(() => {
+    const loadedSettings = AdminStorage.getSiteSettings();
+    setSiteSettings(loadedSettings);
+  }, []);
+
   const services = [
     {
       title: 'هكر ببجي موبايل',
@@ -29,6 +37,8 @@ const Home = () => {
     }
   ];
 
+  const visibleFeatures = siteSettings.homePage.features.filter(feature => feature.visible);
+
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
@@ -37,10 +47,10 @@ const Home = () => {
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-blue-400 bg-clip-text text-transparent">
-            مرحباً بك في DARK
+            {siteSettings.homePage.heroTitle}
           </h1>
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-            نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة
+            {siteSettings.homePage.heroSubtitle}
           </p>
           
           {/* Services Grid */}
@@ -74,30 +84,24 @@ const Home = () => {
       </div>
 
       {/* Features Section */}
-      <div className="relative z-10 py-20 bg-black/30">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-white mb-12">
-            لماذا تختار DARK؟
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-6">
-              <div className="text-blue-400 text-4xl mb-4">⚡</div>
-              <h3 className="text-xl font-bold text-white mb-4">سرعة التسليم</h3>
-              <p className="text-gray-300">نلتزم بتسليم جميع الطلبات في الوقت المحدد</p>
-            </div>
-            <div className="p-6">
-              <div className="text-blue-400 text-4xl mb-4">🛡️</div>
-              <h3 className="text-xl font-bold text-white mb-4">الأمان والحماية</h3>
-              <p className="text-gray-300">جميع منتجاتنا آمنة ومحمية ضد الاكتشاف</p>
-            </div>
-            <div className="p-6">
-              <div className="text-blue-400 text-4xl mb-4">💎</div>
-              <h3 className="text-xl font-bold text-white mb-4">جودة عالية</h3>
-              <p className="text-gray-300">نقدم أفضل جودة في السوق بأسعار منافسة</p>
+      {visibleFeatures.length > 0 && (
+        <div className="relative z-10 py-20 bg-black/30">
+          <div className="container mx-auto px-6 text-center">
+            <h2 className="text-4xl font-bold text-white mb-12">
+              {siteSettings.homePage.featuresTitle}
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {visibleFeatures.map((feature) => (
+                <div key={feature.id} className="p-6">
+                  <div className="text-blue-400 text-4xl mb-4">{feature.icon}</div>
+                  <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
+                  <p className="text-gray-300">{feature.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

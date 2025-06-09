@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
@@ -9,10 +10,13 @@ import NavigationTab from '../components/admin/NavigationTab';
 import BackgroundTab from '../components/admin/BackgroundTab';
 import AccessDenied from '../components/admin/AccessDenied';
 import OverviewTab from '../components/admin/OverviewTab';
-import AdminStorage, { Product, AdminUser, SiteSettings } from '../utils/adminStorage';
-import { useToast } from '@/hooks/use-toast';
 import PasswordsTab from '../components/admin/PasswordsTab';
 import SettingsTab from '../components/admin/SettingsTab';
+import UsersTab from '../components/admin/UsersTab';
+import TypographyTab from '../components/admin/TypographyTab';
+import DesignTab from '../components/admin/DesignTab';
+import AdminStorage, { Product, AdminUser, SiteSettings } from '../utils/adminStorage';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -37,6 +41,24 @@ const AdminDashboard = () => {
       email: '',
       phone: '',
       address: ''
+    },
+    homePage: {
+      heroTitle: 'مرحباً بك في DARK',
+      heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
+      featuresTitle: 'لماذا تختار DARK؟',
+      features: []
+    },
+    typography: {
+      fontFamily: 'system',
+      headingWeight: 'bold',
+      bodyWeight: 'normal',
+      lineHeight: 'normal'
+    },
+    design: {
+      borderRadius: 'medium',
+      shadows: 'medium',
+      spacing: 'normal',
+      animations: true
     }
   });
 
@@ -62,6 +84,24 @@ const AdminDashboard = () => {
         email: '',
         phone: '',
         address: ''
+      },
+      homePage: loadedSettings.homePage || {
+        heroTitle: 'مرحباً بك في DARK',
+        heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
+        featuresTitle: 'لماذا تختار DARK؟',
+        features: []
+      },
+      typography: loadedSettings.typography || {
+        fontFamily: 'system',
+        headingWeight: 'bold',
+        bodyWeight: 'normal',
+        lineHeight: 'normal'
+      },
+      design: loadedSettings.design || {
+        borderRadius: 'medium',
+        shadows: 'medium',
+        spacing: 'normal',
+        animations: true
       }
     });
   }, [navigate]);
@@ -147,8 +187,7 @@ const AdminDashboard = () => {
 
   // Site settings management
   const saveSiteSettings = () => {
-    // Allow general manager access to all settings
-    if (!AdminStorage.hasPermission('مدير عام') && currentUser?.role !== 'مدير عام') {
+    if (currentUser?.role !== 'مدير عام') {
       toast({
         title: "غير مسموح",
         description: "فقط المدير العام يمكنه تعديل إعدادات الموقع",
@@ -165,7 +204,6 @@ const AdminDashboard = () => {
   };
 
   const canAccess = (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean => {
-    // General manager has access to everything
     if (currentUser?.role === 'مدير عام') return true;
     return AdminStorage.hasPermission(requiredRole);
   };
@@ -216,34 +254,13 @@ const AdminDashboard = () => {
         return canAccess('مدير عام') ? <PasswordsTab /> : <AccessDenied />;
 
       case 'design':
-        return canAccess('مدير عام') ? (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-white">تخصيص التصميم</h2>
-            <div className="admin-card rounded-xl p-6">
-              <p className="text-gray-300">قسم تخصيص التصميم سيتم إضافته قريباً</p>
-            </div>
-          </div>
-        ) : <AccessDenied />;
+        return canAccess('مدير عام') ? <DesignTab /> : <AccessDenied />;
 
       case 'typography':
-        return canAccess('مدير عام') ? (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-white">التحكم في النصوص</h2>
-            <div className="admin-card rounded-xl p-6">
-              <p className="text-gray-300">قسم التحكم في النصوص سيتم إضافته قريباً</p>
-            </div>
-          </div>
-        ) : <AccessDenied />;
+        return canAccess('مدير عام') ? <TypographyTab /> : <AccessDenied />;
 
       case 'users':
-        return canAccess('مدير عام') ? (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-white">إدارة المستخدمين</h2>
-            <div className="admin-card rounded-xl p-6">
-              <p className="text-gray-300">قسم إدارة المستخدمين سيتم إضافته قريباً</p>
-            </div>
-          </div>
-        ) : <AccessDenied />;
+        return canAccess('مدير عام') ? <UsersTab /> : <AccessDenied />;
 
       case 'settings':
         return canAccess('مدير عام') ? <SettingsTab /> : <AccessDenied />;
