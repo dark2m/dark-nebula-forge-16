@@ -8,22 +8,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminStorage from '../utils/adminStorage';
 
 const GlobalCart = () => {
-  const [cart, setCart] = useState<Array<{id: number, name: string, price: string, category: string}>>([]);
+  const [cartItems, setCartItems] = useState<{[key: string]: Array<{id: number, name: string, price: string, category: string}>}>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
 
   useEffect(() => {
-    const loadCart = () => {
-      const cartData = AdminStorage.getCart();
-      console.log('Loading cart data:', cartData);
-      setCart(Array.isArray(cartData) ? cartData : []);
+    const loadCarts = () => {
+      const categories = ['pubg', 'web', 'discord'];
+      const newCartItems: {[key: string]: any[]} = {};
+      
+      categories.forEach(category => {
+        const cartData = AdminStorage.getCart(category);
+        newCartItems[category] = Array.isArray(cartData) ? cartData : [];
+      });
+      
+      setCartItems(newCartItems);
     };
     
-    loadCart();
-    const interval = setInterval(loadCart, 1000);
+    loadCarts();
+    const interval = setInterval(loadCarts, 1000);
     
     return () => clearInterval(interval);
   }, []);
@@ -32,10 +39,13 @@ const GlobalCart = () => {
     setSiteSettings(AdminStorage.getSiteSettings());
   }, []);
 
-  const removeFromCart = (id: number) => {
-    AdminStorage.removeFromCart(id);
-    const updatedCart = AdminStorage.getCart();
-    setCart(Array.isArray(updatedCart) ? updatedCart : []);
+  const removeFromCart = (id: number, category: string) => {
+    AdminStorage.removeFromCart(id, category);
+    const updatedCart = AdminStorage.getCart(category);
+    setCartItems(prev => ({
+      ...prev,
+      [category]: Array.isArray(updatedCart) ? updatedCart : []
+    }));
   };
 
   const handlePurchase = () => {
@@ -43,6 +53,13 @@ const GlobalCart = () => {
   };
 
   const cartTexts = siteSettings.pageTexts.cart;
+  const totalItems = Object.values(cartItems).reduce((total, items) => total + items.length, 0);
+
+  const categoryNames = {
+    pubg: 'هكر ببجي',
+    web: 'برمجة مواقع', 
+    discord: 'بوتات ديسكورد'
+  };
 
   return (
     <>
@@ -53,9 +70,9 @@ const GlobalCart = () => {
           className="glow-button relative"
         >
           <ShoppingCart className="w-5 h-5" />
-          {cart.length > 0 && (
+          {totalItems > 0 && (
             <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-              {cart.length}
+              {totalItems}
             </span>
           )}
         </Button>
@@ -63,46 +80,71 @@ const GlobalCart = () => {
 
       {/* Cart Dialog */}
       <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">{cartTexts.cartTitle}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            {cart.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">{cartTexts.emptyCartMessage}</p>
-            ) : (
-              <>
-                {cart.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                    <div>
-                      <h4 className="font-semibold">{item.name}</h4>
-                      <p className="text-blue-400">{item.price}</p>
-                      <p className="text-xs text-gray-400">{item.category}</p>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      {cartTexts.removeButton}
-                    </Button>
-                  </div>
+          
+          {totalItems === 0 ? (
+            <p className="text-gray-500 text-center py-8">{cartTexts.emptyCartMessage}</p>
+          ) : (
+            <Tabs defaultValue="pubg" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-3">
+                {Object.entries(categoryNames).map(([key, name]) => (
+                  <TabsTrigger key={key} value={key} className="relative">
+                    {name}
+                    {cartItems[key]?.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
+                        {cartItems[key].length}
+                      </span>
+                    )}
+                  </TabsTrigger>
                 ))}
+              </TabsList>
+
+              {Object.entries(categoryNames).map(([category, name]) => (
+                <TabsContent key={category} value={category} className="space-y-4">
+                  <h3 className="text-lg font-semibold text-center">{name}</h3>
+                  {cartItems[category]?.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">لا توجد منتجات في هذا القسم</p>
+                  ) : (
+                    <>
+                      {cartItems[category]?.map((item, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                          <div>
+                            <h4 className="font-semibold">{item.name}</h4>
+                            <p className="text-blue-400">{item.price}</p>
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeFromCart(item.id, category)}
+                          >
+                            {cartTexts.removeButton}
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        onClick={handlePurchase}
+                        className="w-full glow-button flex items-center justify-center gap-2"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        {cartTexts.purchaseButton}
+                      </Button>
+                    </>
+                  )}
+                </TabsContent>
+              ))}
+              
+              {totalItems > 0 && (
                 <div className="pt-4 border-t border-gray-700">
-                  <Button
-                    onClick={handlePurchase}
-                    className="w-full glow-button flex items-center justify-center gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    {cartTexts.purchaseButton}
-                  </Button>
-                  <p className="text-xs text-gray-400 text-center mt-2">
+                  <p className="text-xs text-gray-400 text-center">
                     {cartTexts.purchaseNote}
                   </p>
                 </div>
-              </>
-            )}
-          </div>
+              )}
+            </Tabs>
+          )}
         </DialogContent>
       </Dialog>
     </>

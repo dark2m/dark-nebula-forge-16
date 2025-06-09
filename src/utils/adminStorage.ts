@@ -1,4 +1,3 @@
-
 // Main AdminStorage class that combines all services
 import AuthService from './auth';
 import CartService from './cartService';
@@ -16,11 +15,22 @@ class AdminStorage {
   static isAdminAuthenticated = AuthService.isAdminAuthenticated;
   static hasPermission = AuthService.hasPermission;
 
-  // Cart methods
-  static getCart = CartService.getCart;
+  // Cart methods - محدثة لدعم الفئات المنفصلة
+  static getCart(category?: string) {
+    return CartService.getCart(category);
+  }
+  
   static addToCart = CartService.addToCart;
-  static removeFromCart = CartService.removeFromCart;
+  
+  static removeFromCart(id: number, category: string) {
+    return CartService.removeFromCart(id, category);
+  }
+  
   static clearCart = CartService.clearCart;
+  
+  static getCartCount(category?: string) {
+    return CartService.getCartCount(category);
+  }
 
   // Product methods
   static getProducts = ProductService.getProducts;

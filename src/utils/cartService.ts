@@ -2,11 +2,31 @@
 import { Product, CartItem } from '../types/admin';
 
 class CartService {
-  private static CART_KEY = 'global_cart';
+  private static getCartKey(category: string): string {
+    return `cart_${category}`;
+  }
 
-  static getCart(): CartItem[] {
+  static getCart(category?: string): CartItem[] {
     try {
-      const stored = localStorage.getItem(this.CART_KEY);
+      if (!category) {
+        // إرجاع جميع العناصر من جميع الفئات
+        const allCategories = ['pubg', 'web', 'discord'];
+        const allItems: CartItem[] = [];
+        
+        allCategories.forEach(cat => {
+          const stored = localStorage.getItem(this.getCartKey(cat));
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              allItems.push(...parsed);
+            }
+          }
+        });
+        
+        return allItems;
+      }
+
+      const stored = localStorage.getItem(this.getCartKey(category));
       if (!stored) {
         return [];
       }
@@ -20,7 +40,7 @@ class CartService {
 
   static addToCart(product: Product): void {
     try {
-      const cart = this.getCart();
+      const cart = this.getCart(product.category);
       const cartItem: CartItem = {
         id: product.id,
         name: product.name,
@@ -28,27 +48,39 @@ class CartService {
         category: product.category
       };
       cart.push(cartItem);
-      localStorage.setItem(this.CART_KEY, JSON.stringify(cart));
+      localStorage.setItem(this.getCartKey(product.category), JSON.stringify(cart));
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
   }
 
-  static removeFromCart(id: number): void {
+  static removeFromCart(id: number, category: string): void {
     try {
-      const cart = this.getCart().filter(item => item.id !== id);
-      localStorage.setItem(this.CART_KEY, JSON.stringify(cart));
+      const cart = this.getCart(category).filter(item => item.id !== id);
+      localStorage.setItem(this.getCartKey(category), JSON.stringify(cart));
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
   }
 
-  static clearCart(): void {
+  static clearCart(category?: string): void {
     try {
-      localStorage.removeItem(this.CART_KEY);
+      if (!category) {
+        // مسح جميع السلال
+        const allCategories = ['pubg', 'web', 'discord'];
+        allCategories.forEach(cat => {
+          localStorage.removeItem(this.getCartKey(cat));
+        });
+      } else {
+        localStorage.removeItem(this.getCartKey(category));
+      }
     } catch (error) {
       console.error('Error clearing cart:', error);
     }
+  }
+
+  static getCartCount(category?: string): number {
+    return this.getCart(category).length;
   }
 }
 
