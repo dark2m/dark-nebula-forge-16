@@ -17,7 +17,9 @@ const GlobalCart = () => {
 
   useEffect(() => {
     const loadCart = () => {
-      setCart(AdminStorage.getCart());
+      const cartData = AdminStorage.getCart();
+      console.log('Loading cart data:', cartData);
+      setCart(Array.isArray(cartData) ? cartData : []);
     };
     
     loadCart();
@@ -32,7 +34,8 @@ const GlobalCart = () => {
 
   const removeFromCart = (id: number) => {
     AdminStorage.removeFromCart(id);
-    setCart(AdminStorage.getCart());
+    const updatedCart = AdminStorage.getCart();
+    setCart(Array.isArray(updatedCart) ? updatedCart : []);
   };
 
   const handlePurchase = () => {
