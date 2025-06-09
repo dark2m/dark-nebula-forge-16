@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Save, Settings, Palette, Type, Globe } from 'lucide-react';
 import AdminStorage, { SiteSettings } from '../../utils/adminStorage';
-import { useToast } = from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const SettingsTab = () => {
   const [settings, setSettings] = useState<SiteSettings>(AdminStorage.getSiteSettings());
