@@ -1,4 +1,3 @@
-
 // نظام تخزين بيانات الإدارة
 export interface Product {
   id: number;
@@ -190,9 +189,7 @@ class AdminStorage {
     }
     
     const defaultUsers: AdminUser[] = [
-      { id: 1, username: 'darkadmin', password: 'admin2024!', role: 'مدير عام' },
-      { id: 2, username: 'developer', password: 'dev2024!', role: 'مبرمج' },
-      { id: 3, username: 'support', password: 'support2024!', role: 'مشرف' },
+      { id: 1, username: 'dark', password: 'dark', role: 'مدير عام' },
     ];
     
     this.saveAdminUsers(defaultUsers);

@@ -122,14 +122,6 @@ const AdminLogin = () => {
               {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
             </button>
           </form>
-
-          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <h3 className="text-blue-400 font-semibold mb-2">بيانات الدخول الافتراضية:</h3>
-            <div className="text-gray-300 text-sm space-y-1">
-              <p>المدير: admin / dark123</p>
-              <p>المشرف: moderator / mod456</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
