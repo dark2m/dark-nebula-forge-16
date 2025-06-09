@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, X } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import AdminStorage from '../utils/adminStorage';
+import AuthService from '../utils/auth';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
@@ -19,7 +19,7 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const isAuthenticated = AdminStorage.authenticateAdmin(username, password);
+      const isAuthenticated = AuthService.authenticateAdmin(username, password);
       
       if (isAuthenticated) {
         toast({
