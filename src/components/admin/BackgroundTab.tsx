@@ -166,7 +166,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
               <label className="block text-gray-400 text-sm mb-2">حجم النجوم</label>
               <select
                 value={backgroundSettings.starSize}
-                onChange={(e) => updateBackgroundSettings({ starSize: e.target.value })}
+                onChange={(e) => updateBackgroundSettings({ starSize: e.target.value as 'small' | 'medium' | 'large' })}
                 className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
               >
                 <option value="small">صغير</option>
@@ -216,7 +216,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
               <label className="block text-gray-400 text-sm mb-2">حجم الشهب</label>
               <select
                 value={backgroundSettings.meteorSize}
-                onChange={(e) => updateBackgroundSettings({ meteorSize: e.target.value })}
+                onChange={(e) => updateBackgroundSettings({ meteorSize: e.target.value as 'small' | 'medium' | 'large' })}
                 className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
               >
                 <option value="small">صغير</option>
@@ -237,7 +237,7 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
               <label className="block text-gray-400 text-sm mb-2">سرعة الحركة</label>
               <select
                 value={backgroundSettings.animationSpeed}
-                onChange={(e) => updateBackgroundSettings({ animationSpeed: e.target.value })}
+                onChange={(e) => updateBackgroundSettings({ animationSpeed: e.target.value as 'slow' | 'normal' | 'fast' })}
                 className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
               >
                 <option value="slow">بطيئة</option>
