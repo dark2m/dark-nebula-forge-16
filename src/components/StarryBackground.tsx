@@ -38,14 +38,15 @@ const StarryBackground = () => {
         ))}
       </div>
       
-      {/* 30 meteors as requested */}
+      {/* 30 colorful long meteors */}
       {Array.from({ length: 30 }, (_, i) => (
         <div 
           key={`meteor-${i}`} 
-          className="meteor" 
+          className="meteor-long" 
           style={{
             animationDelay: `${Math.random() * 20}s`,
             left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
           }}
         />
       ))}

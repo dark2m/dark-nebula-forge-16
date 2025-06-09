@@ -93,37 +93,44 @@
   50% { opacity: 1; transform: scale(1.2); }
 }
 
-.meteor {
+/* Long colorful meteors */
+.meteor-long {
   position: absolute;
-  width: 2px;
-  height: 2px;
-  background: linear-gradient(45deg, #fff, #00bfff);
-  border-radius: 50%;
-  box-shadow: 0 0 10px #00bfff;
-  animation: meteor-fall 6s linear infinite;
+  width: 4px;
+  height: 120px;
+  background: linear-gradient(180deg, transparent 0%, #ff6b6b 20%, #4ecdc4 40%, #45b7d1 60%, #96ceb4 80%, #ffeaa7 100%);
+  border-radius: 50px;
+  animation: meteor-fall-long 8s linear infinite;
+  box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
 }
 
-@keyframes meteor-fall {
+.meteor-long:nth-child(even) {
+  background: linear-gradient(180deg, transparent 0%, #a8e6cf 20%, #dcedc1 40%, #ffd3a5 60%, #fd9853 80%, #e056fd 100%);
+  box-shadow: 0 0 20px rgba(168, 230, 207, 0.8);
+}
+
+.meteor-long:nth-child(3n) {
+  background: linear-gradient(180deg, transparent 0%, #667eea 20%, #764ba2 40%, #f093fb 60%, #f5576c 80%, #4facfe 100%);
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+  height: 150px;
+}
+
+.meteor-long:nth-child(5n) {
+  background: linear-gradient(180deg, transparent 0%, #43e97b 20%, #38f9d7 40%, #84fab0 60%, #8fd3f4 80%, #a8edea 100%);
+  box-shadow: 0 0 20px rgba(67, 233, 123, 0.8);
+  height: 100px;
+}
+
+@keyframes meteor-fall-long {
   0% {
-    transform: translateX(-100px) translateY(-100px);
+    transform: translateX(-200px) translateY(-200px) rotate(45deg);
     opacity: 1;
   }
   100% {
-    transform: translateX(calc(100vw + 100px)) translateY(calc(100vh + 100px));
+    transform: translateX(calc(100vw + 200px)) translateY(calc(100vh + 200px)) rotate(45deg);
     opacity: 0;
   }
 }
-
-.meteor:nth-child(1) { animation-delay: 0s; top: 5%; left: 5%; }
-.meteor:nth-child(2) { animation-delay: 1s; top: 15%; left: 15%; }
-.meteor:nth-child(3) { animation-delay: 2s; top: 25%; left: 25%; }
-.meteor:nth-child(4) { animation-delay: 3s; top: 10%; left: 50%; }
-.meteor:nth-child(5) { animation-delay: 1.5s; top: 35%; left: 70%; }
-.meteor:nth-child(6) { animation-delay: 4s; top: 45%; left: 80%; }
-.meteor:nth-child(7) { animation-delay: 0.5s; top: 55%; left: 20%; }
-.meteor:nth-child(8) { animation-delay: 2.5s; top: 65%; left: 60%; }
-.meteor:nth-child(9) { animation-delay: 3.5s; top: 75%; left: 40%; }
-.meteor:nth-child(10) { animation-delay: 4.5s; top: 85%; left: 90%; }
 
 /* Navigation styles */
 .nav-link {

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, X } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage from '../utils/adminStorage';
 import { useToast } from '@/hooks/use-toast';
@@ -45,9 +45,22 @@ const AdminLogin = () => {
     }
   };
 
+  const handleBackToHome = () => {
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
+      
+      {/* Back to Home Button */}
+      <button
+        onClick={handleBackToHome}
+        className="fixed top-6 right-6 z-20 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all duration-300 hover:scale-110"
+        title="العودة للموقع"
+      >
+        <X className="w-6 h-6" />
+      </button>
       
       <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
         <div className="admin-card rounded-xl p-8 w-full max-w-md">
