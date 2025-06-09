@@ -1,9 +1,38 @@
 
-import React from 'react';
-import { Code, Smartphone, Globe, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Code, Smartphone, Globe, Zap, ShoppingCart, ExternalLink } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
+import AdminStorage, { Product } from '../utils/adminStorage';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const WebDevelopment = () => {
+  const [cart, setCart] = useState<Array<{id: number, name: string, price: string}>>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const loadedProducts = AdminStorage.getProducts().filter(p => p.category === 'web');
+    setProducts(loadedProducts);
+  }, []);
+
+  const addToCart = (product: Product) => {
+    setCart([...cart, { id: product.id, name: product.name, price: `${product.price}$` }]);
+  };
+
+  const removeFromCart = (id: number) => {
+    setCart(cart.filter(item => item.id !== id));
+  };
+
+  const handlePurchase = () => {
+    window.open('https://discord.gg/CaQW7RWuG8', '_blank');
+  };
+
   const services = [
     {
       id: 1,
@@ -31,9 +60,71 @@ const WebDevelopment = () => {
     }
   ];
 
+  // دمج المنتجات من الإدارة مع الخدمات الافتراضية
+  const allServices = products.length > 0 ? products : services;
+
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
+      
+      {/* Cart Button */}
+      <div className="fixed top-20 right-6 z-50">
+        <Button
+          onClick={() => setIsCartOpen(true)}
+          className="glow-button relative"
+        >
+          <ShoppingCart className="w-5 h-5" />
+          {cart.length > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+              {cart.length}
+            </span>
+          )}
+        </Button>
+      </div>
+
+      {/* Cart Dialog */}
+      <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">السلة</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {cart.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">السلة فارغة</p>
+            ) : (
+              <>
+                {cart.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                    <div>
+                      <h4 className="font-semibold">{item.name}</h4>
+                      <p className="text-blue-400">{item.price}</p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      حذف
+                    </Button>
+                  </div>
+                ))}
+                <div className="pt-4 border-t border-gray-700">
+                  <Button
+                    onClick={handlePurchase}
+                    className="w-full glow-button flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    شراء عبر الديسكورد
+                  </Button>
+                  <p className="text-xs text-gray-400 text-center mt-2">
+                    سيتم توجيهك إلى الديسكورد لإتمام الشراء
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6">
@@ -45,8 +136,8 @@ const WebDevelopment = () => {
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {services.map((service) => {
-              const Icon = service.icon;
+            {allServices.map((service) => {
+              const Icon = service.icon || Code;
               return (
                 <div key={service.id} className="product-card rounded-xl p-6">
                   <div className="text-center mb-6">
@@ -55,11 +146,13 @@ const WebDevelopment = () => {
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-2">{service.name}</h3>
                     <p className="text-gray-300 mb-4">{service.description}</p>
-                    <div className="text-3xl font-bold text-blue-400 mb-6">{service.price}</div>
+                    <div className="text-3xl font-bold text-blue-400 mb-6">
+                      {service.price || `${service.price}$`}
+                    </div>
                   </div>
 
                   <div className="space-y-3 mb-6">
-                    {service.features.map((feature, index) => (
+                    {(service.features || []).map((feature, index) => (
                       <div key={index} className="flex items-center text-gray-300">
                         <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
                         <span>{feature}</span>
@@ -67,9 +160,13 @@ const WebDevelopment = () => {
                     ))}
                   </div>
 
-                  <button className="w-full glow-button">
-                    اطلب الخدمة
-                  </button>
+                  <Button 
+                    onClick={() => addToCart(service)}
+                    className="w-full glow-button"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    أضف للسلة
+                  </Button>
                 </div>
               );
             })}

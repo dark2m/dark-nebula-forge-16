@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Star, Zap, RotateCcw, Palette, Eye } from 'lucide-react';
+import { Star, Zap, RotateCcw, Palette, Eye, X } from 'lucide-react';
 import { SiteSettings } from '../../utils/adminStorage';
 
 interface BackgroundTabProps {
@@ -39,6 +39,14 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
         meteorSize: 'medium'
       }
     });
+  };
+
+  const removeStars = () => {
+    updateBackgroundSettings({ starCount: 0 });
+  };
+
+  const removeMeteors = () => {
+    updateBackgroundSettings({ meteorCount: 0 });
   };
 
   const backgroundSettings = {
@@ -128,10 +136,19 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
 
           {/* Stars Settings */}
           <div className="space-y-6">
-            <h3 className="text-xl font-bold text-white flex items-center">
-              <Star className="w-5 h-5 mr-2" />
-              إعدادات النجوم
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white flex items-center">
+                <Star className="w-5 h-5 mr-2" />
+                إعدادات النجوم
+              </h3>
+              <button
+                onClick={removeStars}
+                className="flex items-center space-x-2 rtl:space-x-reverse px-3 py-1 bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors text-sm"
+              >
+                <X className="w-4 h-4" />
+                <span>إزالة النجوم</span>
+              </button>
+            </div>
             
             <div>
               <label className="block text-gray-400 text-sm mb-2">
@@ -178,10 +195,19 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
 
           {/* Meteors Settings */}
           <div className="space-y-6">
-            <h3 className="text-xl font-bold text-white flex items-center">
-              <Zap className="w-5 h-5 mr-2" />
-              إعدادات الشهب
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white flex items-center">
+                <Zap className="w-5 h-5 mr-2" />
+                إعدادات الشهب
+              </h3>
+              <button
+                onClick={removeMeteors}
+                className="flex items-center space-x-2 rtl:space-x-reverse px-3 py-1 bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors text-sm"
+              >
+                <X className="w-4 h-4" />
+                <span>إزالة الشهب</span>
+              </button>
+            </div>
             
             <div>
               <label className="block text-gray-400 text-sm mb-2">

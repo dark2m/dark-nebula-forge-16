@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Star, Shield, Eye, Target, ExternalLink, Image as ImageIcon, Video, Play } from 'lucide-react';
+import { Shield, Star, Download, ExternalLink, ShoppingCart } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage, { Product } from '../utils/adminStorage';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 
 const PubgHacks = () => {
@@ -17,9 +16,8 @@ const PubgHacks = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Load products from admin storage
   useEffect(() => {
-    const loadedProducts = AdminStorage.getProducts();
+    const loadedProducts = AdminStorage.getProducts().filter(p => p.category === 'pubg');
     setProducts(loadedProducts);
   }, []);
 
@@ -35,28 +33,23 @@ const PubgHacks = () => {
     window.open('https://discord.gg/CaQW7RWuG8', '_blank');
   };
 
-  const getProductIcon = (index: number) => {
-    const icons = [Eye, Target, Shield];
-    return icons[index % icons.length];
-  };
-
-  const getTextSizeClass = (size: string) => {
-    switch (size) {
-      case 'small': return 'text-sm';
-      case 'large': return 'text-lg';
-      default: return 'text-base';
+  const features = [
+    {
+      title: 'ESP متقدم',
+      description: 'رؤية الأعداء من خلال الجدران',
+      icon: Shield
+    },
+    {
+      title: 'ايمبوت ذكي',
+      description: 'تصويب تلقائي دقيق وسريع',
+      icon: Star
+    },
+    {
+      title: 'بايباس الحماية',
+      description: 'تجاوز جميع أنظمة الحماية',
+      icon: Download
     }
-  };
-
-  const getTitleSizeClass = (size: string) => {
-    switch (size) {
-      case 'small': return 'text-lg';
-      case 'medium': return 'text-xl';
-      case 'large': return 'text-2xl';
-      case 'xl': return 'text-3xl';
-      default: return 'text-2xl';
-    }
-  };
+  ];
 
   return (
     <div className="min-h-screen relative">
@@ -120,185 +113,73 @@ const PubgHacks = () => {
           </div>
         </DialogContent>
       </Dialog>
-
+      
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6">
           <h1 className="text-5xl font-bold text-center text-white mb-4">
             هكر ببجي موبايل
           </h1>
           <p className="text-xl text-gray-300 text-center mb-12 max-w-2xl mx-auto">
-            أحدث وأقوى الهاكات لببجي موبايل - آمنة وغير قابلة للاكتشاف
+            أحدث الهاكات والأدوات المتقدمة لببجي موبايل مع ضمان الأمان والجودة
           </p>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {products.filter(product => product.category === 'pubg').map((product, index) => {
-              const Icon = getProductIcon(index);
-              const isPopular = index === 2; // Make third product popular
-
-              const cardStyle: React.CSSProperties = {};
-              if (product.backgroundImage) {
-                cardStyle.backgroundImage = `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url(${product.backgroundImage})`;
-                cardStyle.backgroundSize = 'cover';
-                cardStyle.backgroundPosition = 'center';
-              } else if (product.backgroundColor) {
-                cardStyle.backgroundColor = product.backgroundColor;
-              }
-
+          {/* Features Grid */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
               return (
-                <div
-                  key={product.id}
-                  className={`product-card rounded-xl p-6 relative ${
-                    isPopular ? 'ring-2 ring-blue-400' : ''
-                  }`}
-                  style={cardStyle}
-                >
-                  {isPopular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">
-                        الأكثر مبيعاً
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="text-center mb-6">
-                    <div className="inline-flex p-3 rounded-full bg-blue-500/20 mb-4">
-                      <Icon className="w-8 h-8 text-blue-400" />
-                    </div>
-                    <h3 className={`${getTitleSizeClass(product.titleSize || 'large')} font-bold text-white mb-2`}>
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center justify-center mb-2">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                      ))}
-                    </div>
-                    <p className={`text-gray-300 mb-4 ${getTextSizeClass(product.textSize || 'medium')}`}>
-                      {product.description}
-                    </p>
-                    <div className="text-3xl font-bold text-blue-400 mb-6">${product.price}</div>
+                <div key={index} className="product-card rounded-xl p-6 text-center">
+                  <div className="inline-flex p-3 rounded-full bg-red-500/20 mb-4">
+                    <Icon className="w-8 h-8 text-red-400" />
                   </div>
-
-                  <div className="space-y-3 mb-6">
-                    {product.features && product.features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-center text-gray-300">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
-                        <span className={getTextSizeClass(product.textSize || 'medium')}>{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-3">
-                    <button 
-                      onClick={() => addToCart(product)}
-                      className="w-full glow-button flex items-center justify-center space-x-2 rtl:space-x-reverse"
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      <span>أضف للسلة</span>
-                    </button>
-                    
-                    {(product.images?.length > 0 || product.videos?.length > 0) && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="w-full bg-transparent border-blue-400 text-blue-400 hover:bg-blue-400/10">
-                            {product.videos?.length > 0 ? (
-                              <>
-                                <Video className="w-4 h-4 mr-2" />
-                                عرض الفيديوهات والصور
-                              </>
-                            ) : (
-                              <>
-                                <ImageIcon className="w-4 h-4 mr-2" />
-                                عرض صور المنتج
-                              </>
-                            )}
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>{product.name} - معرض الوسائط</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-6">
-                            {/* Videos */}
-                            {product.videos && product.videos.length > 0 && (
-                              <div>
-                                <h3 className="text-lg font-semibold mb-3 flex items-center">
-                                  <Video className="w-5 h-5 mr-2" />
-                                  الفيديوهات
-                                </h3>
-                                <div className="space-y-4">
-                                  {product.videos.map((video, videoIndex) => (
-                                    <div key={videoIndex} className="relative">
-                                      <video 
-                                        src={video} 
-                                        className="w-full rounded-lg border border-gray-700"
-                                        controls
-                                        poster=""
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Images */}
-                            {product.images && product.images.length > 0 && (
-                              <div>
-                                <h3 className="text-lg font-semibold mb-3 flex items-center">
-                                  <ImageIcon className="w-5 h-5 mr-2" />
-                                  الصور
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {product.images.map((image, imageIndex) => (
-                                    <img 
-                                      key={imageIndex}
-                                      src={image} 
-                                      alt={`${product.name} ${imageIndex + 1}`}
-                                      className="w-full rounded-lg border border-gray-700"
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {product.images?.length === 0 && product.videos?.length === 0 && (
-                              <p className="text-gray-400 text-center py-8">
-                                لا توجد وسائط متاحة لهذا المنتج
-                              </p>
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  </div>
+                  <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
+                  <p className="text-gray-300">{feature.description}</p>
                 </div>
               );
             })}
           </div>
 
-          {/* Discord Section */}
-          <div className="mt-16 bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <ExternalLink className="w-12 h-12 text-blue-400" />
-            </div>
-            <h3 className="text-xl font-bold text-blue-400 mb-2">للشراء والاستفسار</h3>
-            <p className="text-gray-300 mb-4">
-              انضم إلى خادم الديسكورد الخاص بنا لإتمام عملية الشراء والحصول على الدعم الفني
-            </p>
-            <Button 
-              onClick={handlePurchase}
-              className="glow-button"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              انضم للديسكورد
-            </Button>
+          {/* Products */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <div key={product.id} className="product-card rounded-xl p-6">
+                <div className="text-center mb-6">
+                  <div className="inline-flex p-3 rounded-full bg-red-500/20 mb-4">
+                    <Shield className="w-6 h-6 text-red-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-2">{product.name}</h3>
+                  <p className="text-gray-300 mb-4">{product.description}</p>
+                  <div className="text-3xl font-bold text-red-400 mb-6">${product.price}</div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  {product.features.map((feature, index) => (
+                    <div key={index} className="flex items-center text-gray-300">
+                      <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Button 
+                  onClick={() => addToCart(product)}
+                  className="w-full glow-button"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  أضف للسلة
+                </Button>
+              </div>
+            ))}
           </div>
 
-          {/* Security Notice */}
-          <div className="mt-8 bg-green-500/10 border border-green-500/30 rounded-xl p-6 text-center">
+          {/* Safety Notice */}
+          <div className="mt-16 bg-green-500/10 border border-green-500/30 rounded-xl p-8 text-center">
             <Shield className="w-12 h-12 text-green-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-green-400 mb-2">ضمان الأمان 100%</h3>
-            <p className="text-gray-300">
-              جميع هاكاتنا محدثة باستمرار ومحمية ضد أنظمة الكشف. نضمن لك اللعب بأمان تام.
+            <h3 className="text-2xl font-bold text-green-400 mb-4">
+              ضمان الأمان 100%
+            </h3>
+            <p className="text-gray-300 max-w-2xl mx-auto">
+              جميع هاكاتنا مطورة بأحدث التقنيات لتجنب الكشف والحظر. نضمن لك تجربة آمنة ومميزة.
             </p>
           </div>
         </div>

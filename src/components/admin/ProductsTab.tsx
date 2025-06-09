@@ -18,17 +18,61 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
   updateProduct, 
   deleteProduct 
 }) => {
+  const categories = [
+    { value: 'pubg', label: 'هكر ببجي موبايل' },
+    { value: 'web', label: 'برمجة مواقع' },
+    { value: 'discord', label: 'برمجة بوتات ديسكورد' },
+    { value: 'other', label: 'خدمات أخرى' }
+  ];
+
+  const addProductByCategory = (category: string) => {
+    const categoryLabels: { [key: string]: string } = {
+      pubg: 'هكر ببجي موبايل',
+      web: 'موقع ويب',
+      discord: 'بوت ديسكورد',
+      other: 'خدمة'
+    };
+
+    const newProduct = {
+      name: `${categoryLabels[category]} جديد`,
+      price: 0,
+      category,
+      images: [],
+      videos: [],
+      description: 'وصف المنتج',
+      features: [],
+      textSize: 'medium' as const,
+      titleSize: 'large' as const
+    };
+
+    // استخدام addProduct الموجودة مع تحديث الفئة
+    addProduct();
+    // ثم تحديث آخر منتج مضاف بالفئة المطلوبة
+    setTimeout(() => {
+      const allProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
+      if (allProducts.length > 0) {
+        const lastProduct = allProducts[allProducts.length - 1];
+        updateProduct(lastProduct.id, { category, name: newProduct.name });
+      }
+    }, 100);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-white">إدارة المنتجات</h2>
-        <button
-          onClick={addProduct}
-          className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
-        >
-          <Plus className="w-4 h-4" />
-          <span>إضافة منتج</span>
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          {categories.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => addProductByCategory(cat.value)}
+              className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>إضافة {cat.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
       
       <div className="admin-card rounded-xl p-6">
@@ -44,6 +88,19 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                     onChange={(e) => updateProduct(product.id, { name: e.target.value })}
                     className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                   />
+                </div>
+                
+                <div>
+                  <label className="block text-gray-400 text-sm mb-2">الفئة</label>
+                  <select
+                    value={product.category}
+                    onChange={(e) => updateProduct(product.id, { category: e.target.value })}
+                    className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div className="lg:col-span-2">
@@ -64,7 +121,9 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                     className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">حجم النص</label>
                   <select
@@ -77,9 +136,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                     <option value="large">كبير</option>
                   </select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">لون الخلفية</label>
                   <input
