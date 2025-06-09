@@ -42,7 +42,14 @@ const GlobalCart = () => {
     window.open('https://discord.gg/CaQW7RWuG8', '_blank');
   };
 
-  const cartTexts = siteSettings.pageTexts.cart;
+  // Add safety check for pageTexts to prevent undefined access
+  const cartTexts = siteSettings?.pageTexts?.cart || {
+    cartTitle: 'السلة',
+    emptyCartMessage: 'السلة فارغة',
+    purchaseButton: 'شراء الآن',
+    purchaseNote: 'سيتم توجيهك إلى ديسكورد',
+    removeButton: 'إزالة'
+  };
 
   return (
     <>
