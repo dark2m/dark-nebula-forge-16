@@ -59,7 +59,7 @@ const PubgHacks = () => {
                 </div>
 
                 <div className="space-y-3 mb-6">
-                  {product.features.map((feature, index) => (
+                  {(product.features || []).map((feature, index) => (
                     <div key={index} className="flex items-center text-gray-300">
                       <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
                       <span>{feature}</span>
