@@ -12,7 +12,14 @@ const Navigation = () => {
     setSiteSettings(AdminStorage.getSiteSettings());
   }, []);
 
-  const navTexts = siteSettings.pageTexts.navigation;
+  // Add safety check for pageTexts to prevent undefined access
+  const navTexts = siteSettings?.pageTexts?.navigation || {
+    pubgTitle: 'هكر ببجي موبايل',
+    webTitle: 'برمجة مواقع',
+    discordTitle: 'برمجة بوتات ديسكورد',
+    officialTitle: 'الصفحة الرئيسية',
+    adminTitle: 'الإدارة'
+  };
   
   const navItems = [
     { name: navTexts.pubgTitle, path: '/pubg-hacks', icon: Shield },
