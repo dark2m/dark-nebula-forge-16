@@ -65,7 +65,16 @@ const WebDevelopment = () => {
 
   // دمج المنتجات من الإدارة مع الخدمات الافتراضية
   const allServices = products.length > 0 ? products : services;
-  const pageTexts = siteSettings.pageTexts.webDevelopment;
+  
+  // Add safety check for pageTexts to prevent undefined access
+  const pageTexts = siteSettings?.pageTexts?.webDevelopment || {
+    pageTitle: 'برمجة مواقع',
+    pageSubtitle: 'خدمات تطوير مواقع احترافية ومتقدمة'
+  };
+
+  const cartTexts = siteSettings?.pageTexts?.cart || {
+    addToCartButton: 'أضف للسلة'
+  };
 
   return (
     <div className="min-h-screen relative">
@@ -111,7 +120,7 @@ const WebDevelopment = () => {
                     className="w-full glow-button"
                   >
                     <ShoppingCart className="w-4 h-4 mr-2" />
-                    {siteSettings.pageTexts.cart.addToCartButton}
+                    {cartTexts.addToCartButton}
                   </Button>
                 </div>
               );
