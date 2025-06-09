@@ -8,24 +8,24 @@ class ProductService {
     try {
       const stored = localStorage.getItem(this.PRODUCTS_KEY);
       if (!stored) {
-        const defaultProducts = this.getDefaultProducts();
-        this.saveProducts(defaultProducts);
+        const defaultProducts = ProductService.getDefaultProducts();
+        ProductService.saveProducts(defaultProducts);
         return defaultProducts;
       }
       
       const parsed = JSON.parse(stored);
       if (!Array.isArray(parsed)) {
         console.warn('Products data is not an array, resetting to defaults');
-        const defaultProducts = this.getDefaultProducts();
-        this.saveProducts(defaultProducts);
+        const defaultProducts = ProductService.getDefaultProducts();
+        ProductService.saveProducts(defaultProducts);
         return defaultProducts;
       }
       
       return parsed;
     } catch (error) {
       console.error('Error loading products:', error);
-      const defaultProducts = this.getDefaultProducts();
-      this.saveProducts(defaultProducts);
+      const defaultProducts = ProductService.getDefaultProducts();
+      ProductService.saveProducts(defaultProducts);
       return defaultProducts;
     }
   }
@@ -57,28 +57,28 @@ class ProductService {
   }
 
   static addProduct(product: Omit<Product, 'id'>): Product {
-    const products = this.getProducts();
+    const products = ProductService.getProducts();
     const newProduct: Product = {
       ...product,
       id: Date.now()
     };
     products.push(newProduct);
-    this.saveProducts(products);
+    ProductService.saveProducts(products);
     return newProduct;
   }
 
   static updateProduct(id: number, updates: Partial<Product>): void {
-    const products = this.getProducts();
+    const products = ProductService.getProducts();
     const index = products.findIndex(p => p.id === id);
     if (index !== -1) {
       products[index] = { ...products[index], ...updates };
-      this.saveProducts(products);
+      ProductService.saveProducts(products);
     }
   }
 
   static deleteProduct(id: number): void {
-    const products = this.getProducts().filter(p => p.id !== id);
-    this.saveProducts(products);
+    const products = ProductService.getProducts().filter(p => p.id !== id);
+    ProductService.saveProducts(products);
   }
 }
 
