@@ -11,9 +11,17 @@ const PubgHacks = () => {
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
 
   useEffect(() => {
-    const loadedProducts = AdminStorage.getProducts().filter(p => p.category === 'pubg');
-    setProducts(loadedProducts);
-    setSiteSettings(AdminStorage.getSiteSettings());
+    try {
+      const allProducts = AdminStorage.getProducts();
+      console.log('All products loaded:', allProducts);
+      const pubgProducts = Array.isArray(allProducts) ? allProducts.filter(p => p.category === 'pubg') : [];
+      console.log('PUBG products filtered:', pubgProducts);
+      setProducts(pubgProducts);
+      setSiteSettings(AdminStorage.getSiteSettings());
+    } catch (error) {
+      console.error('Error loading products:', error);
+      setProducts([]);
+    }
   }, []);
 
   const addToCart = (product: Product) => {

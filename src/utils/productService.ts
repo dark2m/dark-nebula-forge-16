@@ -5,12 +5,33 @@ class ProductService {
   private static PRODUCTS_KEY = 'admin_products';
 
   static getProducts(): Product[] {
-    const stored = localStorage.getItem(this.PRODUCTS_KEY);
-    if (stored) {
-      return JSON.parse(stored);
+    try {
+      const stored = localStorage.getItem(this.PRODUCTS_KEY);
+      if (!stored) {
+        const defaultProducts = this.getDefaultProducts();
+        this.saveProducts(defaultProducts);
+        return defaultProducts;
+      }
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) {
+        console.warn('Products data is not an array, resetting to defaults');
+        const defaultProducts = this.getDefaultProducts();
+        this.saveProducts(defaultProducts);
+        return defaultProducts;
+      }
+      
+      return parsed;
+    } catch (error) {
+      console.error('Error loading products:', error);
+      const defaultProducts = this.getDefaultProducts();
+      this.saveProducts(defaultProducts);
+      return defaultProducts;
     }
-    
-    const defaultProducts: Product[] = [
+  }
+
+  private static getDefaultProducts(): Product[] {
+    return [
       { 
         id: 1, 
         name: 'هكر ESP المتقدم', 
@@ -24,9 +45,6 @@ class ProductService {
         titleSize: 'large'
       }
     ];
-    
-    this.saveProducts(defaultProducts);
-    return defaultProducts;
   }
 
   static saveProducts(products: Product[]): void {
