@@ -10,7 +10,8 @@ import {
   Type,
   Navigation as NavigationIcon,
   MessageCircle,
-  Shield
+  Shield,
+  Monitor
 } from 'lucide-react';
 import { AdminUser } from '../../utils/adminStorage';
 
@@ -30,12 +31,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const tabs = [
     { id: 'overview', name: 'نظرة عامة', icon: BarChart3, requiredRole: 'مشرف' as const },
     { id: 'products', name: 'إدارة المنتجات', icon: Package, requiredRole: 'مبرمج' as const },
+    { id: 'background', name: 'تخصيص الخلفية', icon: Monitor, requiredRole: 'مدير عام' as const },
     { id: 'passwords', name: 'إدارة كلمات المرور', icon: Key, requiredRole: 'مدير عام' as const },
     { id: 'design', name: 'تخصيص التصميم', icon: Palette, requiredRole: 'مدير عام' as const },
     { id: 'typography', name: 'التحكم في النصوص', icon: Type, requiredRole: 'مدير عام' as const },
     { id: 'navigation', name: 'إدارة التنقل', icon: NavigationIcon, requiredRole: 'مدير عام' as const },
     { id: 'contact', name: 'إعدادات التواصل', icon: MessageCircle, requiredRole: 'مدير عام' as const },
-    { id: 'users', name: 'إدارة المستخدمين', icon: Users, requiredRole: 'مشرف' as const },
+    { id: 'users', name: 'إدارة المستخدمين', icon: Users, requiredRole: 'مدير عام' as const },
     { id: 'settings', name: 'الإعدادات', icon: Settings, requiredRole: 'مدير عام' as const },
   ];
 
@@ -71,6 +73,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             <Shield className="w-4 h-4 text-blue-400" />
             <span className="text-white">{currentUser?.role}</span>
           </div>
+          {currentUser?.role === 'مدير عام' && (
+            <p className="text-xs text-green-400 mt-2">✓ تحكم كامل في جميع الإعدادات</p>
+          )}
         </div>
       </div>
     </div>

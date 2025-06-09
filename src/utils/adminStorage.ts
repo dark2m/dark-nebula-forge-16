@@ -1,4 +1,3 @@
-
 // نظام تخزين بيانات الإدارة
 export interface Product {
   id: number;
@@ -35,6 +34,13 @@ export interface SiteSettings {
   backgroundSettings: {
     type: 'color' | 'image';
     value: string;
+    starCount?: number;
+    meteorCount?: number;
+    animationSpeed?: 'slow' | 'normal' | 'fast';
+    starOpacity?: number;
+    meteorOpacity?: number;
+    starSize?: 'small' | 'medium' | 'large';
+    meteorSize?: 'small' | 'medium' | 'large';
   };
   navigation: Array<{
     id: string;
@@ -214,14 +220,20 @@ class AdminStorage {
       globalTextSize: 'medium',
       backgroundSettings: {
         type: 'color',
-        value: '#000000'
+        value: '#000000',
+        starCount: 100,
+        meteorCount: 15,
+        animationSpeed: 'normal',
+        starOpacity: 0.8,
+        meteorOpacity: 0.6,
+        starSize: 'medium',
+        meteorSize: 'medium'
       },
       navigation: [
         { id: 'pubg', name: 'هكر ببجي موبايل', path: '/pubg-hacks', icon: 'Shield', visible: true },
         { id: 'web', name: 'برمجة مواقع', path: '/web-development', icon: 'Code', visible: true },
         { id: 'discord', name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: 'Bot', visible: true },
-        { id: 'about', name: 'من نحن', path: '/about', icon: 'Users', visible: true },
-        { id: 'contact', name: 'تواصل معنا', path: '/contact', icon: 'MessageCircle', visible: true }
+        { id: 'official', name: 'الصفحة الرسمية', path: '/official', icon: 'Users', visible: true },
       ],
       contactInfo: {
         telegram: '@DarkTeam_Support',

@@ -7,6 +7,7 @@ import AdminSidebar from '../components/admin/AdminSidebar';
 import ProductsTab from '../components/admin/ProductsTab';
 import ContactTab from '../components/admin/ContactTab';
 import NavigationTab from '../components/admin/NavigationTab';
+import BackgroundTab from '../components/admin/BackgroundTab';
 import AccessDenied from '../components/admin/AccessDenied';
 import OverviewTab from '../components/admin/OverviewTab';
 import AdminStorage, { Product, AdminUser, SiteSettings } from '../utils/adminStorage';
@@ -177,6 +178,15 @@ const AdminDashboard = () => {
             addProduct={addProduct}
             updateProduct={updateProduct}
             deleteProduct={deleteProduct}
+          />
+        ) : <AccessDenied />;
+      
+      case 'background':
+        return canAccess('مدير عام') ? (
+          <BackgroundTab 
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
           />
         ) : <AccessDenied />;
       
