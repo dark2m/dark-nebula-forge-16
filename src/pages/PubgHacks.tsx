@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Star, Shield, Eye, Target, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import { ShoppingCart, Star, Shield, Eye, Target, ExternalLink, Image as ImageIcon, Video, Play } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage, { Product } from '../utils/adminStorage';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,24 @@ const PubgHacks = () => {
   const getProductIcon = (index: number) => {
     const icons = [Eye, Target, Shield];
     return icons[index % icons.length];
+  };
+
+  const getTextSizeClass = (size: string) => {
+    switch (size) {
+      case 'small': return 'text-sm';
+      case 'large': return 'text-lg';
+      default: return 'text-base';
+    }
+  };
+
+  const getTitleSizeClass = (size: string) => {
+    switch (size) {
+      case 'small': return 'text-lg';
+      case 'medium': return 'text-xl';
+      case 'large': return 'text-2xl';
+      case 'xl': return 'text-3xl';
+      default: return 'text-2xl';
+    }
   };
 
   return (
@@ -117,17 +135,22 @@ const PubgHacks = () => {
               const Icon = getProductIcon(index);
               const isPopular = index === 2; // Make third product popular
 
+              const cardStyle: React.CSSProperties = {};
+              if (product.backgroundImage) {
+                cardStyle.backgroundImage = `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url(${product.backgroundImage})`;
+                cardStyle.backgroundSize = 'cover';
+                cardStyle.backgroundPosition = 'center';
+              } else if (product.backgroundColor) {
+                cardStyle.backgroundColor = product.backgroundColor;
+              }
+
               return (
                 <div
                   key={product.id}
                   className={`product-card rounded-xl p-6 relative ${
                     isPopular ? 'ring-2 ring-blue-400' : ''
                   }`}
-                  style={{
-                    backgroundImage: product.image ? `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url(${product.image})` : undefined,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
+                  style={cardStyle}
                 >
                   {isPopular && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -141,13 +164,17 @@ const PubgHacks = () => {
                     <div className="inline-flex p-3 rounded-full bg-blue-500/20 mb-4">
                       <Icon className="w-8 h-8 text-blue-400" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{product.name}</h3>
+                    <h3 className={`${getTitleSizeClass(product.titleSize || 'large')} font-bold text-white mb-2`}>
+                      {product.name}
+                    </h3>
                     <div className="flex items-center justify-center mb-2">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                       ))}
                     </div>
-                    <p className="text-gray-300 mb-4">{product.description}</p>
+                    <p className={`text-gray-300 mb-4 ${getTextSizeClass(product.textSize || 'medium')}`}>
+                      {product.description}
+                    </p>
                     <div className="text-3xl font-bold text-blue-400 mb-6">${product.price}</div>
                   </div>
 
@@ -155,7 +182,7 @@ const PubgHacks = () => {
                     {product.features && product.features.map((feature, featureIndex) => (
                       <div key={featureIndex} className="flex items-center text-gray-300">
                         <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
-                        <span>{feature}</span>
+                        <span className={getTextSizeClass(product.textSize || 'medium')}>{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -169,27 +196,75 @@ const PubgHacks = () => {
                       <span>أضف للسلة</span>
                     </button>
                     
-                    {product.image && (
+                    {(product.images?.length > 0 || product.videos?.length > 0) && (
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button variant="outline" className="w-full bg-transparent border-blue-400 text-blue-400 hover:bg-blue-400/10">
-                            <ImageIcon className="w-4 h-4 mr-2" />
-                            عرض صور المنتج
+                            {product.videos?.length > 0 ? (
+                              <>
+                                <Video className="w-4 h-4 mr-2" />
+                                عرض الفيديوهات والصور
+                              </>
+                            ) : (
+                              <>
+                                <ImageIcon className="w-4 h-4 mr-2" />
+                                عرض صور المنتج
+                              </>
+                            )}
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-lg">
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>{product.name} - معرض الصور</DialogTitle>
+                            <DialogTitle>{product.name} - معرض الوسائط</DialogTitle>
                           </DialogHeader>
-                          <div className="space-y-4">
-                            <img 
-                              src={product.image} 
-                              alt={product.name}
-                              className="w-full rounded-lg border border-gray-700"
-                            />
-                            <p className="text-gray-400 text-sm text-center">
-                              صور توضيحية للمنتج وواجهة الاستخدام
-                            </p>
+                          <div className="space-y-6">
+                            {/* Videos */}
+                            {product.videos && product.videos.length > 0 && (
+                              <div>
+                                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                                  <Video className="w-5 h-5 mr-2" />
+                                  الفيديوهات
+                                </h3>
+                                <div className="space-y-4">
+                                  {product.videos.map((video, videoIndex) => (
+                                    <div key={videoIndex} className="relative">
+                                      <video 
+                                        src={video} 
+                                        className="w-full rounded-lg border border-gray-700"
+                                        controls
+                                        poster=""
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Images */}
+                            {product.images && product.images.length > 0 && (
+                              <div>
+                                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                                  <ImageIcon className="w-5 h-5 mr-2" />
+                                  الصور
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {product.images.map((image, imageIndex) => (
+                                    <img 
+                                      key={imageIndex}
+                                      src={image} 
+                                      alt={`${product.name} ${imageIndex + 1}`}
+                                      className="w-full rounded-lg border border-gray-700"
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {product.images?.length === 0 && product.videos?.length === 0 && (
+                              <p className="text-gray-400 text-center py-8">
+                                لا توجد وسائط متاحة لهذا المنتج
+                              </p>
+                            )}
                           </div>
                         </DialogContent>
                       </Dialog>

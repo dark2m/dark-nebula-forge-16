@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Lock, User, Eye, EyeOff, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Lock, User, Eye, EyeOff } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
+import AdminStorage from '../utils/adminStorage';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -10,47 +12,51 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login process
-    setTimeout(() => {
-      if (username === 'admin' && password === 'dark123') {
-        localStorage.setItem('adminToken', 'authenticated');
+    try {
+      const isAuthenticated = AdminStorage.authenticateAdmin(username, password);
+      
+      if (isAuthenticated) {
+        toast({
+          title: "تم تسجيل الدخول بنجاح",
+          description: "مرحباً بك في لوحة التحكم"
+        });
         navigate('/admin/dashboard');
       } else {
-        alert('بيانات تسجيل الدخول غير صحيحة');
+        toast({
+          title: "خطأ في تسجيل الدخول",
+          description: "اسم المستخدم أو كلمة المرور غير صحيحة",
+          variant: "destructive"
+        });
       }
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تسجيل الدخول",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center">
+    <div className="min-h-screen relative">
       <StarryBackground />
       
-      {/* Close Button */}
-      <Link
-        to="/"
-        className="fixed top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
-      >
-        <X className="w-6 h-6" />
-      </Link>
-      
-      <div className="relative z-10 w-full max-w-md mx-4">
-        <div className="admin-card rounded-2xl p-8">
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+        <div className="admin-card rounded-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex p-4 rounded-full bg-blue-500/20 mb-4">
               <Lock className="w-8 h-8 text-blue-400" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              تسجيل دخول الإدارة
-            </h1>
-            <p className="text-gray-300">
-              يرجى إدخال بيانات تسجيل الدخول للوصول إلى لوحة التحكم
-            </p>
+            <h1 className="text-2xl font-bold text-white mb-2">تسجيل دخول الإدارة</h1>
+            <p className="text-gray-400">قم بإدخال بيانات الدخول للوصول للوحة التحكم</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -59,12 +65,12 @@ const AdminLogin = () => {
                 اسم المستخدم
               </label>
               <div className="relative">
-                <User className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg pr-10 pl-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg pl-4 pr-12 py-3 text-white focus:outline-none focus:border-blue-400"
                   placeholder="أدخل اسم المستخدم"
                   required
                 />
@@ -76,19 +82,19 @@ const AdminLogin = () => {
                 كلمة المرور
               </label>
               <div className="relative">
-                <Lock className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg pr-10 pl-10 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg pl-12 pr-12 py-3 text-white focus:outline-none focus:border-blue-400"
                   placeholder="أدخل كلمة المرور"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-3 text-gray-400 hover:text-white"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -98,15 +104,19 @@ const AdminLogin = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full glow-button disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full glow-button py-3 disabled:opacity-50"
             >
-              {isLoading ? (
-                <span className="loading-dots">جاري تسجيل الدخول</span>
-              ) : (
-                'تسجيل الدخول'
-              )}
+              {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
             </button>
           </form>
+
+          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+            <h3 className="text-blue-400 font-semibold mb-2">بيانات الدخول الافتراضية:</h3>
+            <div className="text-gray-300 text-sm space-y-1">
+              <p>المدير: admin / dark123</p>
+              <p>المشرف: moderator / mod456</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

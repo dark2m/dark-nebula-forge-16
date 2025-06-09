@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -12,12 +11,13 @@ import {
   Trash2,
   Save,
   Key,
-  Upload,
-  Image,
+  Type,
+  Image as ImageIcon,
   CheckCircle
 } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import ProductFeaturesManager from '../components/ProductFeaturesManager';
+import MediaManager from '../components/MediaManager';
 import AdminStorage, { Product, AdminUser, SiteSettings } from '../utils/adminStorage';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -30,15 +30,21 @@ const AdminDashboard = () => {
   // Load data from storage
   const [products, setProducts] = useState<Product[]>([]);
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [tempAdminUsers, setTempAdminUsers] = useState<AdminUser[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     title: 'DARK',
-    colors: { primary: '#3b82f6', secondary: '#8b5cf6', accent: '#06b6d4' }
+    titleSize: 'xl',
+    colors: { primary: '#3b82f6', secondary: '#8b5cf6', accent: '#06b6d4' },
+    globalTextSize: 'medium',
+    backgroundSettings: { type: 'color', value: '#000000' }
   });
 
   // Load data on component mount
   useEffect(() => {
     setProducts(AdminStorage.getProducts());
-    setAdminUsers(AdminStorage.getAdminUsers());
+    const users = AdminStorage.getAdminUsers();
+    setAdminUsers(users);
+    setTempAdminUsers([...users]);
     setSiteSettings(AdminStorage.getSiteSettings());
   }, []);
 
@@ -53,9 +59,12 @@ const AdminDashboard = () => {
       name: 'منتج جديد',
       price: 0,
       category: 'pubg',
-      image: '',
+      images: [],
+      videos: [],
       description: 'وصف المنتج',
-      features: []
+      features: [],
+      textSize: 'medium',
+      titleSize: 'large'
     });
     setProducts(AdminStorage.getProducts());
     toast({
@@ -67,6 +76,10 @@ const AdminDashboard = () => {
   const updateProduct = (id: number, updates: Partial<Product>) => {
     AdminStorage.updateProduct(id, updates);
     setProducts(AdminStorage.getProducts());
+    toast({
+      title: "تم تحديث المنتج",
+      description: "تم حفظ التغييرات بنجاح"
+    });
   };
 
   const deleteProduct = (id: number) => {
@@ -78,48 +91,52 @@ const AdminDashboard = () => {
     });
   };
 
-  const handleImageUpload = (productId: number, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageData = e.target?.result as string;
-        updateProduct(productId, { image: imageData });
-        toast({
-          title: "تم تحديث الصورة",
-          description: "تم تحديث صورة المنتج بنجاح"
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   // Admin users management
   const addAdminUser = () => {
-    const newUser = AdminStorage.addAdminUser({
+    const newUser: AdminUser = {
+      id: Date.now(),
       username: 'مستخدم جديد',
       password: 'password123',
       role: 'مشرف'
-    });
-    setAdminUsers(AdminStorage.getAdminUsers());
-    toast({
-      title: "تم إضافة المستخدم",
-      description: "تم إضافة مستخدم إداري جديد بنجاح"
-    });
+    };
+    const updatedUsers = [...tempAdminUsers, newUser];
+    setTempAdminUsers(updatedUsers);
   };
 
-  const updateAdminUser = (id: number, updates: Partial<AdminUser>) => {
-    AdminStorage.updateAdminUser(id, updates);
-    setAdminUsers(AdminStorage.getAdminUsers());
-    toast({
-      title: "تم تحديث المستخدم",
-      description: "تم تحديث بيانات المستخدم بنجاح"
-    });
+  const updateTempAdminUser = (id: number, updates: Partial<AdminUser>) => {
+    const updatedUsers = tempAdminUsers.map(user => 
+      user.id === id ? { ...user, ...updates } : user
+    );
+    setTempAdminUsers(updatedUsers);
   };
 
-  const deleteAdminUser = (id: number) => {
-    AdminStorage.deleteAdminUser(id);
-    setAdminUsers(AdminStorage.getAdminUsers());
+  const saveTempAdminUser = (id: number) => {
+    const userToSave = tempAdminUsers.find(u => u.id === id);
+    if (userToSave) {
+      if (adminUsers.find(u => u.id === id)) {
+        AdminStorage.updateAdminUser(id, userToSave);
+      } else {
+        AdminStorage.addAdminUser({
+          username: userToSave.username,
+          password: userToSave.password,
+          role: userToSave.role
+        });
+      }
+      setAdminUsers(AdminStorage.getAdminUsers());
+      toast({
+        title: "تم حفظ المستخدم",
+        description: "تم حفظ بيانات المستخدم بنجاح"
+      });
+    }
+  };
+
+  const deleteTempAdminUser = (id: number) => {
+    const updatedUsers = tempAdminUsers.filter(u => u.id !== id);
+    setTempAdminUsers(updatedUsers);
+    if (adminUsers.find(u => u.id === id)) {
+      AdminStorage.deleteAdminUser(id);
+      setAdminUsers(AdminStorage.getAdminUsers());
+    }
     toast({
       title: "تم حذف المستخدم",
       description: "تم حذف المستخدم بنجاح"
@@ -135,11 +152,30 @@ const AdminDashboard = () => {
     });
   };
 
+  const handleBackgroundImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageData = e.target?.result as string;
+        setSiteSettings({
+          ...siteSettings,
+          backgroundSettings: {
+            type: 'image',
+            value: imageData
+          }
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const tabs = [
     { id: 'overview', name: 'نظرة عامة', icon: BarChart3 },
     { id: 'products', name: 'إدارة المنتجات', icon: Package },
     { id: 'passwords', name: 'إدارة كلمات المرور', icon: Key },
     { id: 'design', name: 'تخصيص التصميم', icon: Palette },
+    { id: 'typography', name: 'التحكم في النصوص', icon: Type },
     { id: 'users', name: 'إدارة المستخدمين', icon: Users },
     { id: 'settings', name: 'الإعدادات', icon: Settings },
   ];
@@ -250,35 +286,6 @@ const AdminDashboard = () => {
                       {products.map((product) => (
                         <div key={product.id} className="border border-white/10 rounded-lg p-6 space-y-6">
                           <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
-                            {/* Product Image */}
-                            <div className="lg:col-span-1">
-                              <label className="block text-gray-400 text-sm mb-2">صورة المنتج</label>
-                              <div className="space-y-2">
-                                {product.image && (
-                                  <img 
-                                    src={product.image} 
-                                    alt="Product" 
-                                    className="w-full h-20 object-cover rounded border border-white/20"
-                                  />
-                                )}
-                                <div className="relative">
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageUpload(product.id, e)}
-                                    className="hidden"
-                                    id={`image-${product.id}`}
-                                  />
-                                  <label
-                                    htmlFor={`image-${product.id}`}
-                                    className="flex items-center justify-center w-full p-2 border border-white/20 rounded-lg cursor-pointer hover:bg-white/10 transition-colors"
-                                  >
-                                    <Upload className="w-4 h-4 text-gray-400" />
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-                            
                             {/* Product Name */}
                             <div className="lg:col-span-2">
                               <label className="block text-gray-400 text-sm mb-2">اسم المنتج</label>
@@ -293,11 +300,10 @@ const AdminDashboard = () => {
                             {/* Product Description */}
                             <div className="lg:col-span-2">
                               <label className="block text-gray-400 text-sm mb-2">الوصف</label>
-                              <input
-                                type="text"
+                              <textarea
                                 value={product.description}
                                 onChange={(e) => updateProduct(product.id, { description: e.target.value })}
-                                className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                                className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400 h-20 resize-none"
                               />
                             </div>
                             
@@ -311,7 +317,60 @@ const AdminDashboard = () => {
                                 className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                               />
                             </div>
+
+                            {/* Text Size */}
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-2">حجم النص</label>
+                              <select
+                                value={product.textSize}
+                                onChange={(e) => updateProduct(product.id, { textSize: e.target.value as 'small' | 'medium' | 'large' })}
+                                className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                              >
+                                <option value="small">صغير</option>
+                                <option value="medium">متوسط</option>
+                                <option value="large">كبير</option>
+                              </select>
+                            </div>
                           </div>
+
+                          {/* Background Settings */}
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-2">لون الخلفية</label>
+                              <input
+                                type="color"
+                                value={product.backgroundColor || '#000000'}
+                                onChange={(e) => updateProduct(product.id, { backgroundColor: e.target.value })}
+                                className="w-full h-10 rounded border border-white/20"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-gray-400 text-sm mb-2">صورة الخلفية</label>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                      updateProduct(product.id, { backgroundImage: event.target?.result as string });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                                className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Media Manager */}
+                          <MediaManager
+                            images={product.images || []}
+                            videos={product.videos || []}
+                            onImagesChange={(images) => updateProduct(product.id, { images })}
+                            onVideosChange={(videos) => updateProduct(product.id, { videos })}
+                          />
 
                           {/* Product Features */}
                           <ProductFeaturesManager
@@ -351,7 +410,7 @@ const AdminDashboard = () => {
                   
                   <div className="admin-card rounded-xl p-6">
                     <div className="space-y-6">
-                      {adminUsers.map((user) => (
+                      {tempAdminUsers.map((user) => (
                         <div key={user.id} className="border border-white/10 rounded-lg p-4">
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                             <div>
@@ -359,30 +418,16 @@ const AdminDashboard = () => {
                               <input
                                 type="text"
                                 value={user.username}
-                                onChange={(e) => {
-                                  const updated = [...adminUsers];
-                                  const index = updated.findIndex(u => u.id === user.id);
-                                  if (index !== -1) {
-                                    updated[index] = { ...updated[index], username: e.target.value };
-                                    setAdminUsers(updated);
-                                  }
-                                }}
+                                onChange={(e) => updateTempAdminUser(user.id, { username: e.target.value })}
                                 className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                               />
                             </div>
                             <div>
                               <label className="block text-gray-400 text-sm mb-1">كلمة المرور</label>
                               <input
-                                type="password"
+                                type="text"
                                 value={user.password}
-                                onChange={(e) => {
-                                  const updated = [...adminUsers];
-                                  const index = updated.findIndex(u => u.id === user.id);
-                                  if (index !== -1) {
-                                    updated[index] = { ...updated[index], password: e.target.value };
-                                    setAdminUsers(updated);
-                                  }
-                                }}
+                                onChange={(e) => updateTempAdminUser(user.id, { password: e.target.value })}
                                 className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                               />
                             </div>
@@ -390,14 +435,7 @@ const AdminDashboard = () => {
                               <label className="block text-gray-400 text-sm mb-1">الدور</label>
                               <select
                                 value={user.role}
-                                onChange={(e) => {
-                                  const updated = [...adminUsers];
-                                  const index = updated.findIndex(u => u.id === user.id);
-                                  if (index !== -1) {
-                                    updated[index] = { ...updated[index], role: e.target.value };
-                                    setAdminUsers(updated);
-                                  }
-                                }}
+                                onChange={(e) => updateTempAdminUser(user.id, { role: e.target.value })}
                                 className="w-full bg-white/10 text-white border border-white/20 rounded py-2 px-3 focus:outline-none focus:border-blue-400"
                               >
                                 <option value="مدير عام">مدير عام</option>
@@ -407,14 +445,14 @@ const AdminDashboard = () => {
                             </div>
                             <div className="flex items-end gap-2">
                               <Button
-                                onClick={() => updateAdminUser(user.id, adminUsers.find(u => u.id === user.id)!)}
+                                onClick={() => saveTempAdminUser(user.id)}
                                 className="bg-green-500 hover:bg-green-600 flex items-center gap-1"
                               >
                                 <Save className="w-4 h-4" />
                                 <span>حفظ</span>
                               </Button>
                               <button
-                                onClick={() => deleteAdminUser(user.id)}
+                                onClick={() => deleteTempAdminUser(user.id)}
                                 className="text-red-400 hover:text-red-300 transition-colors p-2"
                               >
                                 <Trash2 className="w-5 h-5" />
@@ -434,18 +472,6 @@ const AdminDashboard = () => {
                   
                   <div className="admin-card rounded-xl p-6">
                     <div className="space-y-6">
-                      <div>
-                        <label className="block text-gray-300 text-sm font-medium mb-2">
-                          عنوان الموقع
-                        </label>
-                        <input
-                          type="text"
-                          value={siteSettings.title}
-                          onChange={(e) => setSiteSettings({ ...siteSettings, title: e.target.value })}
-                          className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
-                        />
-                      </div>
-
                       <div className="grid md:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-gray-300 text-sm font-medium mb-2">
@@ -490,6 +516,129 @@ const AdminDashboard = () => {
                             })}
                             className="w-full h-12 rounded-lg border border-white/20"
                           />
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-gray-300 text-sm font-medium mb-2">
+                            نوع الخلفية
+                          </label>
+                          <select
+                            value={siteSettings.backgroundSettings.type}
+                            onChange={(e) => setSiteSettings({
+                              ...siteSettings,
+                              backgroundSettings: {
+                                ...siteSettings.backgroundSettings,
+                                type: e.target.value as 'color' | 'image'
+                              }
+                            })}
+                            className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                          >
+                            <option value="color">لون</option>
+                            <option value="image">صورة</option>
+                          </select>
+                        </div>
+
+                        {siteSettings.backgroundSettings.type === 'color' ? (
+                          <div>
+                            <label className="block text-gray-300 text-sm font-medium mb-2">
+                              لون الخلفية
+                            </label>
+                            <input
+                              type="color"
+                              value={siteSettings.backgroundSettings.value}
+                              onChange={(e) => setSiteSettings({
+                                ...siteSettings,
+                                backgroundSettings: {
+                                  ...siteSettings.backgroundSettings,
+                                  value: e.target.value
+                                }
+                              })}
+                              className="w-full h-12 rounded-lg border border-white/20"
+                            />
+                          </div>
+                        ) : (
+                          <div>
+                            <label className="block text-gray-300 text-sm font-medium mb-2">
+                              صورة الخلفية
+                            </label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleBackgroundImageUpload}
+                              className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={saveSiteSettings}
+                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
+                      >
+                        <Save className="w-4 h-4" />
+                        <span>حفظ التغييرات</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'typography' && (
+                <div className="space-y-6">
+                  <h2 className="text-3xl font-bold text-white">التحكم في النصوص</h2>
+                  
+                  <div className="admin-card rounded-xl p-6">
+                    <div className="space-y-6">
+                      <div>
+                        <label className="block text-gray-300 text-sm font-medium mb-2">
+                          عنوان الموقع
+                        </label>
+                        <input
+                          type="text"
+                          value={siteSettings.title}
+                          onChange={(e) => setSiteSettings({ ...siteSettings, title: e.target.value })}
+                          className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
+                        />
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-gray-300 text-sm font-medium mb-2">
+                            حجم عنوان الموقع
+                          </label>
+                          <select
+                            value={siteSettings.titleSize}
+                            onChange={(e) => setSiteSettings({ 
+                              ...siteSettings, 
+                              titleSize: e.target.value as 'small' | 'medium' | 'large' | 'xl'
+                            })}
+                            className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                          >
+                            <option value="small">صغير</option>
+                            <option value="medium">متوسط</option>
+                            <option value="large">كبير</option>
+                            <option value="xl">كبير جداً</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-gray-300 text-sm font-medium mb-2">
+                            حجم النص العام
+                          </label>
+                          <select
+                            value={siteSettings.globalTextSize}
+                            onChange={(e) => setSiteSettings({ 
+                              ...siteSettings, 
+                              globalTextSize: e.target.value as 'small' | 'medium' | 'large'
+                            })}
+                            className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                          >
+                            <option value="small">صغير</option>
+                            <option value="medium">متوسط</option>
+                            <option value="large">كبير</option>
+                          </select>
                         </div>
                       </div>
 

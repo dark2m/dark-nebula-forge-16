@@ -5,9 +5,14 @@ export interface Product {
   name: string;
   price: number;
   category: string;
-  image: string;
+  images: string[]; // Changed from single image to array
+  videos: string[]; // Added videos support
   description: string;
   features: string[];
+  backgroundColor?: string;
+  backgroundImage?: string;
+  textSize: 'small' | 'medium' | 'large';
+  titleSize: 'small' | 'medium' | 'large' | 'xl';
 }
 
 export interface AdminUser {
@@ -19,10 +24,16 @@ export interface AdminUser {
 
 export interface SiteSettings {
   title: string;
+  titleSize: 'small' | 'medium' | 'large' | 'xl';
   colors: {
     primary: string;
     secondary: string;
     accent: string;
+  };
+  globalTextSize: 'small' | 'medium' | 'large';
+  backgroundSettings: {
+    type: 'color' | 'image';
+    value: string;
   };
 }
 
@@ -30,6 +41,22 @@ class AdminStorage {
   private static PRODUCTS_KEY = 'admin_products';
   private static USERS_KEY = 'admin_users';
   private static SETTINGS_KEY = 'site_settings';
+
+  // Authentication
+  static authenticateAdmin(username: string, password: string): boolean {
+    const users = this.getAdminUsers();
+    const user = users.find(u => u.username === username && u.password === password);
+    if (user) {
+      localStorage.setItem('adminToken', JSON.stringify({ userId: user.id, timestamp: Date.now() }));
+      return true;
+    }
+    return false;
+  }
+
+  static isAdminAuthenticated(): boolean {
+    const token = localStorage.getItem('adminToken');
+    return !!token;
+  }
 
   // Products management
   static getProducts(): Product[] {
@@ -45,27 +72,36 @@ class AdminStorage {
         name: 'هكر ESP المتقدم', 
         price: 25, 
         category: 'pubg',
-        image: '',
+        images: [],
+        videos: [],
         description: 'رؤية الأعداء من خلال الجدران مع معلومات مفصلة',
-        features: ['ESP للاعبين', 'ESP للأسلحة', 'ESP للسيارات', 'آمن 100%']
+        features: ['ESP للاعبين', 'ESP للأسلحة', 'ESP للسيارات', 'آمن 100%'],
+        textSize: 'medium',
+        titleSize: 'large'
       },
       { 
         id: 2, 
         name: 'Aimbot Pro', 
         price: 35, 
         category: 'pubg',
-        image: '',
+        images: [],
+        videos: [],
         description: 'تصويب تلقائي دقيق مع إعدادات متقدمة',
-        features: ['تصويب تلقائي', 'تصويب ناعم', 'تخصيص المفاتيح', 'مكافحة الارتداد']
+        features: ['تصويب تلقائي', 'تصويب ناعم', 'تخصيص المفاتيح', 'مكافحة الارتداد'],
+        textSize: 'medium',
+        titleSize: 'large'
       },
       { 
         id: 3, 
         name: 'الحزمة الكاملة', 
         price: 50, 
         category: 'pubg',
-        image: '',
+        images: [],
+        videos: [],
         description: 'جميع الهاكات في حزمة واحدة بسعر مخفض',
-        features: ['ESP متقدم', 'Aimbot Pro', 'Speed Hack', 'دعم مدى الحياة']
+        features: ['ESP متقدم', 'Aimbot Pro', 'Speed Hack', 'دعم مدى الحياة'],
+        textSize: 'medium',
+        titleSize: 'large'
       }
     ];
     
@@ -156,10 +192,16 @@ class AdminStorage {
     
     const defaultSettings: SiteSettings = {
       title: 'DARK',
+      titleSize: 'xl',
       colors: {
         primary: '#3b82f6',
         secondary: '#8b5cf6',
         accent: '#06b6d4'
+      },
+      globalTextSize: 'medium',
+      backgroundSettings: {
+        type: 'color',
+        value: '#000000'
       }
     };
     
