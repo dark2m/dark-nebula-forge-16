@@ -23,7 +23,8 @@ class AuthService {
 
   static isAdminAuthenticated(): boolean {
     const token = localStorage.getItem('adminToken');
-    return !!token;
+    const currentUser = this.getCurrentUser();
+    return !!token && !!currentUser;
   }
 
   static hasPermission(requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean {
@@ -35,6 +36,11 @@ class AuthService {
     
     const roleHierarchy = { 'مدير عام': 3, 'مبرمج': 2, 'مشرف': 1 };
     return roleHierarchy[currentUser.role] >= roleHierarchy[requiredRole];
+  }
+
+  static logout(): void {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem(this.CURRENT_USER_KEY);
   }
 
   private static getAdminUsers(): AdminUser[] {
