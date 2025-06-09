@@ -1,9 +1,20 @@
 
-import React from 'react';
-import { ShoppingCart, Star, Shield, Eye, Target } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShoppingCart, Star, Shield, Eye, Target, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 const PubgHacks = () => {
+  const [cart, setCart] = useState<Array<{id: number, name: string, price: string}>>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   const products = [
     {
       id: 1,
@@ -12,7 +23,8 @@ const PubgHacks = () => {
       description: 'رؤية الأعداء من خلال الجدران مع معلومات مفصلة',
       features: ['ESP للاعبين', 'ESP للأسلحة', 'ESP للسيارات', 'آمن 100%'],
       rating: 5,
-      icon: Eye
+      icon: Eye,
+      image: '/placeholder.svg'
     },
     {
       id: 2,
@@ -21,7 +33,8 @@ const PubgHacks = () => {
       description: 'تصويب تلقائي دقيق مع إعدادات متقدمة',
       features: ['تصويب تلقائي', 'تصويب ناعم', 'تخصيص المفاتيح', 'مكافحة الارتداد'],
       rating: 5,
-      icon: Target
+      icon: Target,
+      image: '/placeholder.svg'
     },
     {
       id: 3,
@@ -31,14 +44,86 @@ const PubgHacks = () => {
       features: ['ESP متقدم', 'Aimbot Pro', 'Speed Hack', 'دعم مدى الحياة'],
       rating: 5,
       icon: Shield,
-      popular: true
+      popular: true,
+      image: '/placeholder.svg'
     }
   ];
+
+  const addToCart = (product: typeof products[0]) => {
+    setCart([...cart, { id: product.id, name: product.name, price: product.price }]);
+  };
+
+  const removeFromCart = (id: number) => {
+    setCart(cart.filter(item => item.id !== id));
+  };
+
+  const handlePurchase = () => {
+    window.open('https://discord.gg/CaQW7RWuG8', '_blank');
+  };
 
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
       
+      {/* Cart Button */}
+      <div className="fixed top-20 right-6 z-50">
+        <Button
+          onClick={() => setIsCartOpen(true)}
+          className="glow-button relative"
+        >
+          <ShoppingCart className="w-5 h-5" />
+          {cart.length > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+              {cart.length}
+            </span>
+          )}
+        </Button>
+      </div>
+
+      {/* Cart Dialog */}
+      <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">السلة</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {cart.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">السلة فارغة</p>
+            ) : (
+              <>
+                {cart.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                    <div>
+                      <h4 className="font-semibold">{item.name}</h4>
+                      <p className="text-blue-400">{item.price}</p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => removeFromCart(item.id)}
+                    >
+                      حذف
+                    </Button>
+                  </div>
+                ))}
+                <div className="pt-4 border-t border-gray-700">
+                  <Button
+                    onClick={handlePurchase}
+                    className="w-full glow-button flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    شراء عبر الديسكورد
+                  </Button>
+                  <p className="text-xs text-gray-400 text-center mt-2">
+                    سيتم توجيهك إلى الديسكورد لإتمام الشراء
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6">
           <h1 className="text-5xl font-bold text-center text-white mb-4">
@@ -57,6 +142,11 @@ const PubgHacks = () => {
                   className={`product-card rounded-xl p-6 relative ${
                     product.popular ? 'ring-2 ring-blue-400' : ''
                   }`}
+                  style={{
+                    backgroundImage: product.image ? `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url(${product.image})` : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
                 >
                   {product.popular && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -89,17 +179,64 @@ const PubgHacks = () => {
                     ))}
                   </div>
 
-                  <button className="w-full glow-button flex items-center justify-center space-x-2 rtl:space-x-reverse">
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>اطلب الآن</span>
-                  </button>
+                  <div className="space-y-3">
+                    <button 
+                      onClick={() => addToCart(product)}
+                      className="w-full glow-button flex items-center justify-center space-x-2 rtl:space-x-reverse"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>أضف للسلة</span>
+                    </button>
+                    
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full bg-transparent border-blue-400 text-blue-400 hover:bg-blue-400/10">
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          عرض صور المنتج
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-lg">
+                        <DialogHeader>
+                          <DialogTitle>{product.name} - معرض الصور</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <img 
+                            src={product.image} 
+                            alt={product.name}
+                            className="w-full rounded-lg border border-gray-700"
+                          />
+                          <p className="text-gray-400 text-sm text-center">
+                            صور توضيحية للمنتج وواجهة الاستخدام
+                          </p>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               );
             })}
           </div>
 
+          {/* Discord Section */}
+          <div className="mt-16 bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 text-center">
+            <div className="flex items-center justify-center mb-4">
+              <ExternalLink className="w-12 h-12 text-blue-400" />
+            </div>
+            <h3 className="text-xl font-bold text-blue-400 mb-2">للشراء والاستفسار</h3>
+            <p className="text-gray-300 mb-4">
+              انضم إلى خادم الديسكورد الخاص بنا لإتمام عملية الشراء والحصول على الدعم الفني
+            </p>
+            <Button 
+              onClick={handlePurchase}
+              className="glow-button"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              انضم للديسكورد
+            </Button>
+          </div>
+
           {/* Security Notice */}
-          <div className="mt-16 bg-green-500/10 border border-green-500/30 rounded-xl p-6 text-center">
+          <div className="mt-8 bg-green-500/10 border border-green-500/30 rounded-xl p-6 text-center">
             <Shield className="w-12 h-12 text-green-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-green-400 mb-2">ضمان الأمان 100%</h3>
             <p className="text-gray-300">
