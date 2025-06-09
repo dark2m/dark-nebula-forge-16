@@ -1,16 +1,24 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users } from 'lucide-react';
+import AdminStorage from '../utils/adminStorage';
 
 const Navigation = () => {
   const location = useLocation();
+  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+  
+  useEffect(() => {
+    setSiteSettings(AdminStorage.getSiteSettings());
+  }, []);
+
+  const navTexts = siteSettings.pageTexts.navigation;
   
   const navItems = [
-    { name: 'هكر ببجي موبايل', path: '/pubg-hacks', icon: Shield },
-    { name: 'برمجة مواقع', path: '/web-development', icon: Code },
-    { name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: Bot },
-    { name: 'الصفحة الرسمية', path: '/official', icon: Users },
+    { name: navTexts.pubgTitle, path: '/pubg-hacks', icon: Shield },
+    { name: navTexts.webTitle, path: '/web-development', icon: Code },
+    { name: navTexts.discordTitle, path: '/discord-bots', icon: Bot },
+    { name: navTexts.officialTitle, path: '/official', icon: Users },
   ];
 
   return (
@@ -49,7 +57,7 @@ const Navigation = () => {
             className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
           >
             <User className="w-4 h-4" />
-            <span>الإدارة</span>
+            <span>{navTexts.adminTitle}</span>
           </Link>
         </div>
       </div>

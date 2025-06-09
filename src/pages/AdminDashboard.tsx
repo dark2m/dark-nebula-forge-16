@@ -15,6 +15,7 @@ import SettingsTab from '../components/admin/SettingsTab';
 import UsersTab from '../components/admin/UsersTab';
 import TypographyTab from '../components/admin/TypographyTab';
 import DesignTab from '../components/admin/DesignTab';
+import TextsTab from '../components/admin/TextsTab';
 import AdminStorage, { Product, AdminUser, SiteSettings } from '../utils/adminStorage';
 import { useToast } from '@/hooks/use-toast';
 
@@ -59,6 +60,55 @@ const AdminDashboard = () => {
       shadows: 'medium',
       spacing: 'normal',
       animations: true
+    },
+    pageTexts: {
+      home: {
+        heroTitle: 'مرحباً بك في DARK',
+        heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
+        featuresTitle: 'لماذا تختار DARK؟',
+        features: []
+      },
+      official: {
+        pageTitle: 'الصفحة الرئيسية',
+        pageSubtitle: 'تعرف على فريق DARK واحصل على جميع طرق التواصل معنا',
+        aboutTitle: 'من نحن',
+        aboutContent: [],
+        whyChooseTitle: 'لماذا تختارنا',
+        whyChooseItems: [],
+        contactTitle: 'تواصل معنا'
+      },
+      pubgHacks: {
+        pageTitle: 'هكر ببجي موبايل',
+        pageSubtitle: 'أحدث الهاكات والأدوات المتقدمة لببجي موبايل مع ضمان الأمان والجودة',
+        safetyTitle: 'ضمان الأمان 100%',
+        safetyDescription: 'جميع هاكاتنا مطورة بأحدث التقنيات لتجنب الكشف والحظر. نضمن لك تجربة آمنة ومميزة.'
+      },
+      webDevelopment: {
+        pageTitle: 'برمجة مواقع',
+        pageSubtitle: 'خدمات تطوير مواقع احترافية ومتقدمة',
+        servicesTitle: 'خدماتنا'
+      },
+      discordBots: {
+        pageTitle: 'برمجة بوتات ديسكورد',
+        pageSubtitle: 'بوتات ديسكورد مخصصة ومتطورة',
+        featuresTitle: 'مميزات بوتاتنا'
+      },
+      navigation: {
+        homeTitle: 'الرئيسية',
+        pubgTitle: 'هكر ببجي موبايل',
+        webTitle: 'برمجة مواقع',
+        discordTitle: 'برمجة بوتات ديسكورد',
+        officialTitle: 'الصفحة الرئيسية',
+        adminTitle: 'الإدارة'
+      },
+      cart: {
+        cartTitle: 'السلة',
+        emptyCartMessage: 'السلة فارغة',
+        purchaseButton: 'شراء عبر الديسكورد',
+        purchaseNote: 'سيتم توجيهك إلى الديسكورد لإتمام الشراء',
+        addToCartButton: 'أضف للسلة',
+        removeButton: 'حذف'
+      }
     }
   });
 
@@ -73,37 +123,7 @@ const AdminDashboard = () => {
     
     setProducts(AdminStorage.getProducts());
     const loadedSettings = AdminStorage.getSiteSettings();
-    setSiteSettings({
-      ...loadedSettings,
-      backgroundSettings: loadedSettings.backgroundSettings || { type: 'color', value: '#000000' },
-      navigation: loadedSettings.navigation || [],
-      contactInfo: loadedSettings.contactInfo || {
-        telegram: '',
-        discord: '',
-        whatsapp: '',
-        email: '',
-        phone: '',
-        address: ''
-      },
-      homePage: loadedSettings.homePage || {
-        heroTitle: 'مرحباً بك في DARK',
-        heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
-        featuresTitle: 'لماذا تختار DARK؟',
-        features: []
-      },
-      typography: loadedSettings.typography || {
-        fontFamily: 'system',
-        headingWeight: 'bold',
-        bodyWeight: 'normal',
-        lineHeight: 'normal'
-      },
-      design: loadedSettings.design || {
-        borderRadius: 'medium',
-        shadows: 'medium',
-        spacing: 'normal',
-        animations: true
-      }
-    });
+    setSiteSettings(loadedSettings);
   }, [navigate]);
 
   const handleLogout = () => {
@@ -264,6 +284,9 @@ const AdminDashboard = () => {
 
       case 'settings':
         return canAccess('مدير عام') ? <SettingsTab /> : <AccessDenied />;
+
+      case 'texts':
+        return canAccess('مدير عام') ? <TextsTab /> : <AccessDenied />;
       
       default:
         return <AccessDenied />;
