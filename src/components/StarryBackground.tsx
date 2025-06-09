@@ -38,17 +38,17 @@ const StarryBackground = () => {
         ))}
       </div>
       
-      {/* More meteors */}
-      <div className="meteor"></div>
-      <div className="meteor"></div>
-      <div className="meteor"></div>
-      <div className="meteor"></div>
-      <div className="meteor"></div>
-      <div className="meteor"></div>
-      <div className="meteor"></div>
-      <div className="meteor"></div>
-      <div className="meteor"></div>
-      <div className="meteor"></div>
+      {/* 30 meteors as requested */}
+      {Array.from({ length: 30 }, (_, i) => (
+        <div 
+          key={`meteor-${i}`} 
+          className="meteor" 
+          style={{
+            animationDelay: `${Math.random() * 20}s`,
+            left: `${Math.random() * 100}%`,
+          }}
+        />
+      ))}
     </div>
   );
 };

@@ -1,7 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Star, Shield, Eye, Target, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
+import AdminStorage, { Product } from '../utils/adminStorage';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,43 +15,16 @@ import {
 const PubgHacks = () => {
   const [cart, setCart] = useState<Array<{id: number, name: string, price: string}>>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const products = [
-    {
-      id: 1,
-      name: 'هكر ESP المتقدم',
-      price: '25$',
-      description: 'رؤية الأعداء من خلال الجدران مع معلومات مفصلة',
-      features: ['ESP للاعبين', 'ESP للأسلحة', 'ESP للسيارات', 'آمن 100%'],
-      rating: 5,
-      icon: Eye,
-      image: '/placeholder.svg'
-    },
-    {
-      id: 2,
-      name: 'Aimbot Pro',
-      price: '35$',
-      description: 'تصويب تلقائي دقيق مع إعدادات متقدمة',
-      features: ['تصويب تلقائي', 'تصويب ناعم', 'تخصيص المفاتيح', 'مكافحة الارتداد'],
-      rating: 5,
-      icon: Target,
-      image: '/placeholder.svg'
-    },
-    {
-      id: 3,
-      name: 'الحزمة الكاملة',
-      price: '50$',
-      description: 'جميع الهاكات في حزمة واحدة بسعر مخفض',
-      features: ['ESP متقدم', 'Aimbot Pro', 'Speed Hack', 'دعم مدى الحياة'],
-      rating: 5,
-      icon: Shield,
-      popular: true,
-      image: '/placeholder.svg'
-    }
-  ];
+  // Load products from admin storage
+  useEffect(() => {
+    const loadedProducts = AdminStorage.getProducts();
+    setProducts(loadedProducts);
+  }, []);
 
-  const addToCart = (product: typeof products[0]) => {
-    setCart([...cart, { id: product.id, name: product.name, price: product.price }]);
+  const addToCart = (product: Product) => {
+    setCart([...cart, { id: product.id, name: product.name, price: `${product.price}$` }]);
   };
 
   const removeFromCart = (id: number) => {
@@ -59,6 +33,11 @@ const PubgHacks = () => {
 
   const handlePurchase = () => {
     window.open('https://discord.gg/CaQW7RWuG8', '_blank');
+  };
+
+  const getProductIcon = (index: number) => {
+    const icons = [Eye, Target, Shield];
+    return icons[index % icons.length];
   };
 
   return (
@@ -134,13 +113,15 @@ const PubgHacks = () => {
           </p>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {products.map((product) => {
-              const Icon = product.icon;
+            {products.filter(product => product.category === 'pubg').map((product, index) => {
+              const Icon = getProductIcon(index);
+              const isPopular = index === 2; // Make third product popular
+
               return (
                 <div
                   key={product.id}
                   className={`product-card rounded-xl p-6 relative ${
-                    product.popular ? 'ring-2 ring-blue-400' : ''
+                    isPopular ? 'ring-2 ring-blue-400' : ''
                   }`}
                   style={{
                     backgroundImage: product.image ? `linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url(${product.image})` : undefined,
@@ -148,7 +129,7 @@ const PubgHacks = () => {
                     backgroundPosition: 'center'
                   }}
                 >
-                  {product.popular && (
+                  {isPopular && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                       <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">
                         الأكثر مبيعاً
@@ -162,17 +143,17 @@ const PubgHacks = () => {
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-2">{product.name}</h3>
                     <div className="flex items-center justify-center mb-2">
-                      {[...Array(product.rating)].map((_, i) => (
+                      {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                       ))}
                     </div>
                     <p className="text-gray-300 mb-4">{product.description}</p>
-                    <div className="text-3xl font-bold text-blue-400 mb-6">{product.price}</div>
+                    <div className="text-3xl font-bold text-blue-400 mb-6">${product.price}</div>
                   </div>
 
                   <div className="space-y-3 mb-6">
-                    {product.features.map((feature, index) => (
-                      <div key={index} className="flex items-center text-gray-300">
+                    {product.features && product.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-center text-gray-300">
                         <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
                         <span>{feature}</span>
                       </div>
@@ -188,29 +169,31 @@ const PubgHacks = () => {
                       <span>أضف للسلة</span>
                     </button>
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full bg-transparent border-blue-400 text-blue-400 hover:bg-blue-400/10">
-                          <ImageIcon className="w-4 h-4 mr-2" />
-                          عرض صور المنتج
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-lg">
-                        <DialogHeader>
-                          <DialogTitle>{product.name} - معرض الصور</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <img 
-                            src={product.image} 
-                            alt={product.name}
-                            className="w-full rounded-lg border border-gray-700"
-                          />
-                          <p className="text-gray-400 text-sm text-center">
-                            صور توضيحية للمنتج وواجهة الاستخدام
-                          </p>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                    {product.image && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="w-full bg-transparent border-blue-400 text-blue-400 hover:bg-blue-400/10">
+                            <ImageIcon className="w-4 h-4 mr-2" />
+                            عرض صور المنتج
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-lg">
+                          <DialogHeader>
+                            <DialogTitle>{product.name} - معرض الصور</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <img 
+                              src={product.image} 
+                              alt={product.name}
+                              className="w-full rounded-lg border border-gray-700"
+                            />
+                            <p className="text-gray-400 text-sm text-center">
+                              صور توضيحية للمنتج وواجهة الاستخدام
+                            </p>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
                   </div>
                 </div>
               );
