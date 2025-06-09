@@ -161,7 +161,7 @@ const AdminDashboard = () => {
     });
   };
 
-  const canAccess = (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف') => {
+  const canAccess = (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean => {
     return AdminStorage.hasPermission(requiredRole);
   };
 
