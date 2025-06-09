@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Lock, User, Eye, EyeOff } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Lock, User, Eye, EyeOff, X } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 
 const AdminLogin = () => {
@@ -30,6 +30,14 @@ const AdminLogin = () => {
   return (
     <div className="min-h-screen relative flex items-center justify-center">
       <StarryBackground />
+      
+      {/* Close Button */}
+      <Link
+        to="/"
+        className="fixed top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+      >
+        <X className="w-6 h-6" />
+      </Link>
       
       <div className="relative z-10 w-full max-w-md mx-4">
         <div className="admin-card rounded-2xl p-8">
@@ -99,12 +107,6 @@ const AdminLogin = () => {
               )}
             </button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              البيانات التجريبية: admin / dark123
-            </p>
-          </div>
         </div>
       </div>
     </div>

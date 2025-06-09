@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -11,7 +10,8 @@ import {
   Edit,
   Plus,
   Trash2,
-  Save
+  Save,
+  Key
 } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 
@@ -28,6 +28,10 @@ const AdminDashboard = () => {
     { id: 1, name: 'هكر ESP المتقدم', price: 25, category: 'pubg' },
     { id: 2, name: 'Aimbot Pro', price: 35, category: 'pubg' },
     { id: 3, name: 'بوت الموسيقى المتقدم', price: 30, category: 'discord' },
+  ]);
+  const [adminUsers, setAdminUsers] = useState([
+    { id: 1, username: 'admin', password: 'dark123', role: 'مدير عام' },
+    { id: 2, username: 'moderator', password: 'mod456', role: 'مشرف' },
   ]);
 
   const handleLogout = () => {
@@ -54,9 +58,24 @@ const AdminDashboard = () => {
     setProducts(products.filter(p => p.id !== id));
   };
 
+  const addAdminUser = () => {
+    const newUser = {
+      id: Date.now(),
+      username: 'مستخدم جديد',
+      password: 'password123',
+      role: 'مشرف'
+    };
+    setAdminUsers([...adminUsers, newUser]);
+  };
+
+  const deleteAdminUser = (id: number) => {
+    setAdminUsers(adminUsers.filter(u => u.id !== id));
+  };
+
   const tabs = [
     { id: 'overview', name: 'نظرة عامة', icon: BarChart3 },
     { id: 'products', name: 'إدارة المنتجات', icon: Package },
+    { id: 'passwords', name: 'إدارة كلمات المرور', icon: Key },
     { id: 'design', name: 'تخصيص التصميم', icon: Palette },
     { id: 'users', name: 'إدارة المستخدمين', icon: Users },
     { id: 'settings', name: 'الإعدادات', icon: Settings },
@@ -200,6 +219,83 @@ const AdminDashboard = () => {
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'passwords' && (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-3xl font-bold text-white">إدارة كلمات المرور</h2>
+                    <button
+                      onClick={addAdminUser}
+                      className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>إضافة مستخدم</span>
+                    </button>
+                  </div>
+                  
+                  <div className="admin-card rounded-xl p-6">
+                    <div className="space-y-4">
+                      {adminUsers.map((user) => (
+                        <div key={user.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-white/5 rounded-lg">
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-1">اسم المستخدم</label>
+                            <input
+                              type="text"
+                              value={user.username}
+                              onChange={(e) => {
+                                const updated = adminUsers.map(u => 
+                                  u.id === user.id ? { ...u, username: e.target.value } : u
+                                );
+                                setAdminUsers(updated);
+                              }}
+                              className="w-full bg-transparent text-white border-b border-white/20 focus:outline-none focus:border-blue-400 py-2"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-1">كلمة المرور</label>
+                            <input
+                              type="password"
+                              value={user.password}
+                              onChange={(e) => {
+                                const updated = adminUsers.map(u => 
+                                  u.id === user.id ? { ...u, password: e.target.value } : u
+                                );
+                                setAdminUsers(updated);
+                              }}
+                              className="w-full bg-transparent text-white border-b border-white/20 focus:outline-none focus:border-blue-400 py-2"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-gray-400 text-sm mb-1">الدور</label>
+                            <select
+                              value={user.role}
+                              onChange={(e) => {
+                                const updated = adminUsers.map(u => 
+                                  u.id === user.id ? { ...u, role: e.target.value } : u
+                                );
+                                setAdminUsers(updated);
+                              }}
+                              className="w-full bg-white/10 text-white border border-white/20 rounded py-2 px-3 focus:outline-none focus:border-blue-400"
+                            >
+                              <option value="مدير عام">مدير عام</option>
+                              <option value="مشرف">مشرف</option>
+                              <option value="محرر">محرر</option>
+                            </select>
+                          </div>
+                          <div className="flex items-end">
+                            <button
+                              onClick={() => deleteAdminUser(user.id)}
+                              className="text-red-400 hover:text-red-300 transition-colors p-2"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
