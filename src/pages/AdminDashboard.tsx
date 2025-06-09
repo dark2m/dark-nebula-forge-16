@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
@@ -12,6 +11,8 @@ import AccessDenied from '../components/admin/AccessDenied';
 import OverviewTab from '../components/admin/OverviewTab';
 import AdminStorage, { Product, AdminUser, SiteSettings } from '../utils/adminStorage';
 import { useToast } from '@/hooks/use-toast';
+import PasswordsTab from '../components/admin/PasswordsTab';
+import SettingsTab from '../components/admin/SettingsTab';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -212,14 +213,7 @@ const AdminDashboard = () => {
         ) : <AccessDenied />;
 
       case 'passwords':
-        return canAccess('مدير عام') ? (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-white">إدارة كلمات المرور</h2>
-            <div className="admin-card rounded-xl p-6">
-              <p className="text-gray-300">قسم إدارة كلمات المرور سيتم إضافته قريباً</p>
-            </div>
-          </div>
-        ) : <AccessDenied />;
+        return canAccess('مدير عام') ? <PasswordsTab /> : <AccessDenied />;
 
       case 'design':
         return canAccess('مدير عام') ? (
@@ -252,14 +246,7 @@ const AdminDashboard = () => {
         ) : <AccessDenied />;
 
       case 'settings':
-        return canAccess('مدير عام') ? (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-white">الإعدادات العامة</h2>
-            <div className="admin-card rounded-xl p-6">
-              <p className="text-gray-300">قسم الإعدادات العامة سيتم إضافته قريباً</p>
-            </div>
-          </div>
-        ) : <AccessDenied />;
+        return canAccess('مدير عام') ? <SettingsTab /> : <AccessDenied />;
       
       default:
         return <AccessDenied />;
