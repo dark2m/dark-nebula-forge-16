@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Plus, Trash2, Save } from 'lucide-react';
 import ProductFeaturesManager from '../ProductFeaturesManager';
@@ -117,15 +118,16 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
           return;
         }
         
-        const product = products.find(p => p.id === productId);
+        // البحث عن المنتج باستخدام المعرف الصحيح الذي تم استلامه
+        const product = products.find(p => p.id === receivedProductId);
         if (!product) {
-          console.error('Product not found:', productId);
+          console.error('Product not found:', receivedProductId);
           return;
         }
         
         try {
-          console.log(`Updating images for product ${productId}:`, images.length, 'items');
-          updateProduct(productId, { images });
+          console.log(`Updating images for product ${receivedProductId}:`, images.length, 'items');
+          updateProduct(receivedProductId, { images });
           
           toast({
             title: "تم حفظ الصور",
@@ -148,15 +150,16 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
           return;
         }
         
-        const product = products.find(p => p.id === productId);
+        // البحث عن المنتج باستخدام المعرف الصحيح الذي تم استلامه
+        const product = products.find(p => p.id === receivedProductId);
         if (!product) {
-          console.error('Product not found:', productId);
+          console.error('Product not found:', receivedProductId);
           return;
         }
         
         try {
-          console.log(`Updating videos for product ${productId}:`, videos.length, 'items');
-          updateProduct(productId, { videos });
+          console.log(`Updating videos for product ${receivedProductId}:`, videos.length, 'items');
+          updateProduct(receivedProductId, { videos });
           
           toast({
             title: "تم حفظ الفيديوهات",
