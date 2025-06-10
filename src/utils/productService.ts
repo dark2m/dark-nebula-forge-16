@@ -112,25 +112,45 @@ class ProductService {
     try {
       console.log('ProductService: Saving products:', products);
       
-      // التأكد من أن جميع العناصر هي منتجات صحيحة
-      const validProducts = products.filter(product => 
+      // تنظيف البيانات وتحسين الحفظ
+      const optimizedProducts = products.filter(product => 
         product && 
         typeof product === 'object' && 
         product.hasOwnProperty('name') && 
         product.hasOwnProperty('category') &&
         product.hasOwnProperty('price')
-      );
+      ).map(product => ({
+        ...product,
+        // ضغط الصور والفيديوهات الكبيرة
+        images: product.images ? product.images.slice(0, 20) : [], // حد أقصى 20 صورة
+        videos: product.videos ? product.videos.slice(0, 10) : []  // حد أقصى 10 فيديوهات
+      }));
       
-      localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(validProducts));
-      console.log('ProductService: Products saved successfully');
+      // محاولة الحفظ مع معالجة خطأ امتلاء التخزين
+      try {
+        localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(optimizedProducts));
+        console.log('ProductService: Products saved successfully');
+      } catch (storageError) {
+        // إذا امتلأت المساحة، نحاول تقليل البيانات
+        console.warn('ProductService: Storage full, trying to optimize...');
+        
+        const compactProducts = optimizedProducts.map(product => ({
+          ...product,
+          images: product.images.slice(0, 5), // تقليل إلى 5 صور
+          videos: product.videos.slice(0, 3)  // تقليل إلى 3 فيديوهات
+        }));
+        
+        localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(compactProducts));
+        console.log('ProductService: Products saved with optimization');
+      }
       
       // إشعار جميع النوافذ بالتحديث
       window.dispatchEvent(new CustomEvent('productsUpdated', { 
-        detail: { products: validProducts } 
+        detail: { products: optimizedProducts } 
       }));
     } catch (error) {
       console.error('ProductService: Error saving products:', error);
-      throw new Error('تم تجاوز حد التخزين المسموح');
+      throw new Error('حدث خطأ في حفظ البيانات');
     }
   }
 
@@ -139,7 +159,9 @@ class ProductService {
     const products = ProductService.getProducts();
     const newProduct: Product = {
       ...product,
-      id: Date.now()
+      id: Date.now(),
+      images: [], // البدء بصور فارغة
+      videos: []  // البدء بفيديوهات فارغة
     };
     
     const updatedProducts = [...products, newProduct];
@@ -153,7 +175,14 @@ class ProductService {
     const products = ProductService.getProducts();
     const index = products.findIndex(p => p.id === id);
     if (index !== -1) {
-      products[index] = { ...products[index], ...updates };
+      // التأكد من أن المعرف الصحيح للمنتج
+      const updatedProduct = { 
+        ...products[index], 
+        ...updates,
+        id: products[index].id // الحفاظ على المعرف الأصلي
+      };
+      
+      products[index] = updatedProduct;
       ProductService.saveProducts(products);
       console.log('ProductService: Product updated successfully');
     } else {
@@ -173,7 +202,6 @@ class ProductService {
     try {
       console.log('ProductService: Cleaning up storage...');
       
-      // مسح أي بيانات مختلطة
       const stored = localStorage.getItem(this.PRODUCTS_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
@@ -195,6 +223,27 @@ class ProductService {
       }
     } catch (error) {
       console.error('ProductService: Error cleaning storage:', error);
+    }
+  }
+
+  // إضافة دالة لمراقبة استخدام التخزين
+  static getStorageInfo(): { used: number, available: number, percentage: number } {
+    try {
+      const testKey = 'storage_test';
+      const stored = localStorage.getItem(this.PRODUCTS_KEY);
+      const usedBytes = stored ? new Blob([stored]).size : 0;
+      
+      // تقدير المساحة المتاحة (5MB تقريباً)
+      const maxStorage = 5 * 1024 * 1024; // 5MB
+      const percentage = (usedBytes / maxStorage) * 100;
+      
+      return {
+        used: usedBytes,
+        available: maxStorage - usedBytes,
+        percentage: Math.round(percentage)
+      };
+    } catch (error) {
+      return { used: 0, available: 0, percentage: 0 };
     }
   }
 }

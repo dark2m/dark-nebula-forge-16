@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { ShoppingCart, MessageCircle, Phone } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import ProductImageViewer from '../components/ProductImageViewer';
 import ProductVideoViewer from '../components/ProductVideoViewer';
@@ -18,10 +18,6 @@ const PubgHacks = () => {
     setProducts(ProductService.getProducts().filter(p => p.category === 'pubg'));
     setSettings(SettingsService.getSiteSettings());
   }, []);
-
-  const whatsappNumber = "971566252595";
-  const whatsappMessage = encodeURIComponent("مرحباً، أريد الاستفسار عن خدماتكم");
-  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 
   if (!settings) return null;
 
@@ -120,18 +116,10 @@ const PubgHacks = () => {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-center">
                       <span className="text-2xl font-bold text-green-400">
                         ${product.price}
                       </span>
-                      <a
-                        href={whatsappLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -144,27 +132,6 @@ const PubgHacks = () => {
               <p className="text-gray-400 text-xl">لا توجد منتجات متاحة حالياً</p>
             </div>
           )}
-
-          {/* Contact Section */}
-          <div className="mt-12 text-center">
-            <div className="inline-flex items-center gap-4 bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
-              <Phone className="w-6 h-6 text-blue-400" />
-              <div>
-                <p className="text-white font-semibold">للاستفسار والطلب</p>
-                <p className="text-gray-300">+971 56 625 2595</p>
-                <p className="text-sm text-gray-400">الإمارات العربية المتحدة</p>
-              </div>
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="glow-button flex items-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                تواصل واتساب
-              </a>
-            </div>
-          </div>
         </div>
       </div>
     </div>

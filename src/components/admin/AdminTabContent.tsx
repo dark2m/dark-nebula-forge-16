@@ -12,6 +12,7 @@ import UsersTab from './UsersTab';
 import TypographyTab from './TypographyTab';
 import DesignTab from './DesignTab';
 import TextsTab from './TextsTab';
+import SiteControlTab from './SiteControlTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -48,6 +49,15 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
           addProduct={addProduct}
           updateProduct={updateProduct}
           deleteProduct={deleteProduct}
+        />
+      ) : <AccessDenied />;
+    
+    case 'site-control':
+      return canAccess('مدير عام') ? (
+        <SiteControlTab 
+          siteSettings={siteSettings}
+          setSiteSettings={setSiteSettings}
+          saveSiteSettings={saveSiteSettings}
         />
       ) : <AccessDenied />;
     

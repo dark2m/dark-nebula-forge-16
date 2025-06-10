@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, ExternalLink } from 'lucide-react';
+import { ShoppingCart, ExternalLink, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -48,8 +48,23 @@ const GlobalCart = () => {
     }));
   };
 
-  const handlePurchase = () => {
+  const handleDiscordPurchase = () => {
     window.open('https://discord.gg/CaQW7RWuG8', '_blank');
+  };
+
+  const handleWhatsAppPurchase = () => {
+    const whatsappNumber = "971566252595";
+    const cartText = Object.entries(cartItems)
+      .filter(([_, items]) => items.length > 0)
+      .map(([category, items]) => {
+        const categoryName = category === 'pubg' ? 'هكر ببجي' : 
+                           category === 'web' ? 'برمجة مواقع' : 'بوتات ديسكورد';
+        return `${categoryName}: ${items.map(item => item.name).join(', ')}`;
+      }).join('\n');
+    
+    const whatsappMessage = encodeURIComponent(`مرحباً، أريد شراء:\n${cartText}`);
+    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+    window.open(whatsappLink, '_blank');
   };
 
   const cartTexts = siteSettings.pageTexts.cart;
@@ -124,13 +139,27 @@ const GlobalCart = () => {
                           </Button>
                         </div>
                       ))}
-                      <Button
-                        onClick={handlePurchase}
-                        className="w-full glow-button flex items-center justify-center gap-2"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        {cartTexts.purchaseButton}
-                      </Button>
+                      
+                      {/* Payment Methods */}
+                      <div className="space-y-3 pt-4 border-t border-gray-700">
+                        <h4 className="text-center font-semibold text-green-400">طرق الدفع</h4>
+                        
+                        <Button
+                          onClick={handleDiscordPurchase}
+                          className="w-full bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center gap-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          شراء عبر الديسكورد
+                        </Button>
+                        
+                        <Button
+                          onClick={handleWhatsAppPurchase}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          شراء عبر الواتساب
+                        </Button>
+                      </div>
                     </>
                   )}
                 </TabsContent>
@@ -139,7 +168,7 @@ const GlobalCart = () => {
               {totalItems > 0 && (
                 <div className="pt-4 border-t border-gray-700">
                   <p className="text-xs text-gray-400 text-center">
-                    {cartTexts.purchaseNote}
+                    اختر طريقة الدفع المناسبة لك لإتمام الشراء
                   </p>
                 </div>
               )}
