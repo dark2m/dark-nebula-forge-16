@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Save, Settings, Palette, Type, Globe } from 'lucide-react';
 import AdminStorage, { SiteSettings } from '../../utils/adminStorage';
@@ -5,23 +6,63 @@ import { useToast } from '@/hooks/use-toast';
 
 const SettingsTab = () => {
   const [settings, setSettings] = useState<SiteSettings>(AdminStorage.getSiteSettings());
+  const [hasChanges, setHasChanges] = useState(false);
+  const [originalSettings, setOriginalSettings] = useState<SiteSettings>(AdminStorage.getSiteSettings());
   const { toast } = useToast();
 
   useEffect(() => {
-    setSettings(AdminStorage.getSiteSettings());
+    const loadedSettings = AdminStorage.getSiteSettings();
+    setSettings(loadedSettings);
+    setOriginalSettings(loadedSettings);
   }, []);
+
+  useEffect(() => {
+    // تحقق من وجود تغييرات
+    const changed = JSON.stringify(settings) !== JSON.stringify(originalSettings);
+    setHasChanges(changed);
+  }, [settings, originalSettings]);
 
   const saveSettings = () => {
     AdminStorage.saveSiteSettings(settings);
+    setOriginalSettings(settings);
+    setHasChanges(false);
     toast({
       title: "تم حفظ الإعدادات",
       description: "تم حفظ إعدادات الموقع بنجاح"
     });
   };
 
+  const resetSettings = () => {
+    setSettings(originalSettings);
+    setHasChanges(false);
+    toast({
+      title: "تم إلغاء التغييرات",
+      description: "تم إرجاع الإعدادات إلى آخر حفظ"
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-white">الإعدادات العامة</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-white">الإعدادات العامة</h2>
+        {hasChanges && (
+          <div className="flex gap-2">
+            <button
+              onClick={resetSettings}
+              className="px-4 py-2 border border-gray-500 text-gray-300 rounded hover:bg-gray-500/20 transition-colors"
+            >
+              إلغاء التغييرات
+            </button>
+            <button
+              onClick={saveSettings}
+              className="glow-button flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              حفظ الإعدادات
+            </button>
+          </div>
+        )}
+      </div>
       
       {/* Site Information */}
       <div className="admin-card rounded-xl p-6">
@@ -130,15 +171,28 @@ const SettingsTab = () => {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={saveSettings}
-          className="glow-button flex items-center gap-2"
-        >
-          <Save className="w-4 h-4" />
-          حفظ الإعدادات
-        </button>
-      </div>
+      {hasChanges && (
+        <div className="flex justify-center bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+          <div className="text-center">
+            <p className="text-blue-400 mb-3">يوجد تغييرات غير محفوظة</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={resetSettings}
+                className="px-4 py-2 border border-gray-500 text-gray-300 rounded hover:bg-gray-500/20 transition-colors"
+              >
+                إلغاء التغييرات
+              </button>
+              <button
+                onClick={saveSettings}
+                className="glow-button flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                حفظ الإعدادات
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
