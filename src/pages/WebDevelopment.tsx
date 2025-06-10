@@ -6,7 +6,7 @@ import ProductImageViewer from '../components/ProductImageViewer';
 import ProductVideoViewer from '../components/ProductVideoViewer';
 import SettingsService from '../utils/settingsService';
 import ProductService from '../utils/productService';
-import { useCart } from '../components/GlobalCart';
+import { useCart } from '../hooks/useCart';
 import type { Product, SiteSettings } from '../types/admin';
 
 const WebDevelopment = () => {
