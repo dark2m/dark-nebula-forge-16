@@ -37,21 +37,29 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
       other: 'خدمة'
     };
 
+    console.log('Adding product with category:', category);
     addProduct();
-    // تحديث آخر منتج مضاف بالفئة المطلوبة
+    
+    // انتظار قصير للتأكد من إضافة المنتج ثم تحديثه
     setTimeout(() => {
-      const allProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
-      if (allProducts.length > 0) {
-        const lastProduct = allProducts[allProducts.length - 1];
+      const storedProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
+      console.log('Products after adding:', storedProducts);
+      
+      if (storedProducts.length > 0) {
+        const lastProduct = storedProducts[storedProducts.length - 1];
+        console.log('Updating last product:', lastProduct);
+        
+        // تحديث المنتج الأخير مباشرة
         updateProduct(lastProduct.id, { 
           category, 
           name: `${categoryLabels[category]} جديد` 
         });
       }
-    }, 100);
+    }, 200);
   };
 
   const handleProductChange = (productId: number, field: string, value: any) => {
+    console.log('Product change:', productId, field, value);
     setEditedProducts(prev => ({
       ...prev,
       [productId]: {
@@ -63,6 +71,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
 
   const saveProduct = (productId: number) => {
     const changes = editedProducts[productId];
+    console.log('Saving product changes:', productId, changes);
+    
     if (changes) {
       updateProduct(productId, changes);
       setEditedProducts(prev => {
@@ -79,9 +89,22 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
 
   const getProductValue = (product: Product, field: string) => {
     const productId = product.id;
-    return editedProducts[productId]?.[field] !== undefined 
-      ? editedProducts[productId][field] 
-      : product[field as keyof Product];
+    const editedValue = editedProducts[productId]?.[field];
+    const originalValue = product[field as keyof Product];
+    
+    // للتأكد من إرجاع القيمة الصحيحة
+    if (editedValue !== undefined) {
+      return editedValue;
+    }
+    
+    // إرجاع قيمة افتراضية للحقول المهمة
+    if (field === 'images' && !originalValue) return [];
+    if (field === 'videos' && !originalValue) return [];
+    if (field === 'features' && !originalValue) return [];
+    if (field === 'textSize' && !originalValue) return 'medium';
+    if (field === 'titleSize' && !originalValue) return 'large';
+    
+    return originalValue || '';
   };
 
   const hasChanges = (productId: number) => {
@@ -128,7 +151,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                   <label className="block text-gray-400 text-sm mb-2">اسم المنتج</label>
                   <input
                     type="text"
-                    value={getProductValue(product, 'name')}
+                    value={getProductValue(product, 'name') || ''}
                     onChange={(e) => handleProductChange(product.id, 'name', e.target.value)}
                     className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                   />
@@ -137,7 +160,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">الفئة</label>
                   <select
-                    value={getProductValue(product, 'category')}
+                    value={getProductValue(product, 'category') || 'pubg'}
                     onChange={(e) => handleProductChange(product.id, 'category', e.target.value)}
                     className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                   >
@@ -150,7 +173,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                 <div className="lg:col-span-2">
                   <label className="block text-gray-400 text-sm mb-2">الوصف</label>
                   <textarea
-                    value={getProductValue(product, 'description')}
+                    value={getProductValue(product, 'description') || ''}
                     onChange={(e) => handleProductChange(product.id, 'description', e.target.value)}
                     className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400 h-20 resize-none"
                   />
@@ -160,7 +183,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                   <label className="block text-gray-400 text-sm mb-2">السعر ($)</label>
                   <input
                     type="number"
-                    value={getProductValue(product, 'price')}
+                    value={getProductValue(product, 'price') || 0}
                     onChange={(e) => handleProductChange(product.id, 'price', Number(e.target.value))}
                     className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                   />
@@ -171,7 +194,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">حجم النص</label>
                   <select
-                    value={getProductValue(product, 'textSize')}
+                    value={getProductValue(product, 'textSize') || 'medium'}
                     onChange={(e) => handleProductChange(product.id, 'textSize', e.target.value)}
                     className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                   >
