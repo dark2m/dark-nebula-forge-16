@@ -14,7 +14,7 @@ class CartService {
         const allItems: CartItem[] = [];
         
         allCategories.forEach(cat => {
-          const stored = localStorage.getItem(this.getCartKey(cat));
+          const stored = localStorage.getItem(CartService.getCartKey(cat));
           if (stored) {
             const parsed = JSON.parse(stored);
             if (Array.isArray(parsed)) {
@@ -26,7 +26,7 @@ class CartService {
         return allItems;
       }
 
-      const stored = localStorage.getItem(this.getCartKey(category));
+      const stored = localStorage.getItem(CartService.getCartKey(category));
       if (!stored) {
         return [];
       }
@@ -40,7 +40,8 @@ class CartService {
 
   static addToCart(product: Product): void {
     try {
-      const cart = this.getCart(product.category);
+      console.log('CartService addToCart called with:', product);
+      const cart = CartService.getCart(product.category);
       const cartItem: CartItem = {
         id: product.id,
         name: product.name,
@@ -48,16 +49,18 @@ class CartService {
         category: product.category
       };
       cart.push(cartItem);
-      localStorage.setItem(this.getCartKey(product.category), JSON.stringify(cart));
+      localStorage.setItem(CartService.getCartKey(product.category), JSON.stringify(cart));
+      console.log('Product added to cart successfully');
     } catch (error) {
       console.error('Error adding to cart:', error);
+      throw error;
     }
   }
 
   static removeFromCart(id: number, category: string): void {
     try {
-      const cart = this.getCart(category).filter(item => item.id !== id);
-      localStorage.setItem(this.getCartKey(category), JSON.stringify(cart));
+      const cart = CartService.getCart(category).filter(item => item.id !== id);
+      localStorage.setItem(CartService.getCartKey(category), JSON.stringify(cart));
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
@@ -69,10 +72,10 @@ class CartService {
         // مسح جميع السلال
         const allCategories = ['pubg', 'web', 'discord'];
         allCategories.forEach(cat => {
-          localStorage.removeItem(this.getCartKey(cat));
+          localStorage.removeItem(CartService.getCartKey(cat));
         });
       } else {
-        localStorage.removeItem(this.getCartKey(category));
+        localStorage.removeItem(CartService.getCartKey(category));
       }
     } catch (error) {
       console.error('Error clearing cart:', error);
@@ -80,7 +83,7 @@ class CartService {
   }
 
   static getCartCount(category?: string): number {
-    return this.getCart(category).length;
+    return CartService.getCart(category).length;
   }
 }
 

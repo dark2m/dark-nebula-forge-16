@@ -32,15 +32,8 @@ const WebDevelopment = () => {
 
   const addToCart = (product: Product) => {
     try {
-      // تحويل المنتج إلى تنسيق السلة
-      const cartItem = {
-        id: product.id,
-        name: product.name,
-        price: product.price.toString(),
-        category: product.category
-      };
-      
-      AdminStorage.addToCart(cartItem);
+      console.log('Adding product to cart:', product);
+      AdminStorage.addToCart(product);
       
       toast({
         title: "تم إضافة المنتج",
