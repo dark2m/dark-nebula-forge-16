@@ -99,12 +99,21 @@ const PubgHacks = () => {
                       </div>
                     )}
 
-                    {/* Media Buttons */}
-                    <div className="flex gap-2 mb-4">
+                    {/* Media and Cart Buttons */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>{settings.pageTexts.cart.addToCartButton}</span>
+                      </button>
+                      
                       <ProductImageViewer 
                         images={product.images || []} 
                         productName={product.name} 
                       />
+                      
                       <ProductVideoViewer 
                         videos={product.videos || []} 
                         productName={product.name} 
@@ -115,24 +124,14 @@ const PubgHacks = () => {
                       <span className="text-2xl font-bold text-green-400">
                         ${product.price}
                       </span>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => addToCart(product)}
-                          className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          <span>{settings.pageTexts.cart.addToCartButton}</span>
-                        </button>
-                        <a
-                          href={whatsappLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          واتساب
-                        </a>
-                      </div>
+                      <a
+                        href={whatsappLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </a>
                     </div>
                   </div>
                 </div>

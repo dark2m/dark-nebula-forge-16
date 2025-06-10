@@ -40,7 +40,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
     console.log('Adding product with category:', category);
     addProduct();
     
-    // انتظار قصير للتأكد من إضافة المنتج ثم تحديثه
     setTimeout(() => {
       const storedProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
       console.log('Products after adding:', storedProducts);
@@ -49,7 +48,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
         const lastProduct = storedProducts[storedProducts.length - 1];
         console.log('Updating last product:', lastProduct);
         
-        // تحديث المنتج الأخير مباشرة
         updateProduct(lastProduct.id, { 
           category, 
           name: `${categoryLabels[category]} جديد` 
@@ -92,12 +90,10 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
     const editedValue = editedProducts[productId]?.[field];
     const originalValue = product[field as keyof Product];
     
-    // للتأكد من إرجاع القيمة الصحيحة
     if (editedValue !== undefined) {
       return editedValue;
     }
     
-    // إرجاع قيمة افتراضية للحقول المهمة
     if (field === 'images' && !originalValue) return [];
     if (field === 'videos' && !originalValue) return [];
     if (field === 'features' && !originalValue) return [];
@@ -109,6 +105,23 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
 
   const hasChanges = (productId: number) => {
     return editedProducts[productId] && Object.keys(editedProducts[productId]).length > 0;
+  };
+
+  // دالة لحفظ التغييرات فوراً عند تعديل الميديا
+  const handleMediaChange = (productId: number, field: 'images' | 'videos', value: string[]) => {
+    console.log('Media change for product:', productId, field, value);
+    
+    // حفظ التغيير في الحالة المحلية
+    setEditedProducts(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        [field]: value
+      }
+    }));
+    
+    // حفظ التغيير فوراً في قاعدة البيانات
+    updateProduct(productId, { [field]: value });
   };
 
   return (
@@ -236,8 +249,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
               <MediaManager
                 images={getProductValue(product, 'images') || []}
                 videos={getProductValue(product, 'videos') || []}
-                onImagesChange={(images) => handleProductChange(product.id, 'images', images)}
-                onVideosChange={(videos) => handleProductChange(product.id, 'videos', videos)}
+                onImagesChange={(images) => handleMediaChange(product.id, 'images', images)}
+                onVideosChange={(videos) => handleMediaChange(product.id, 'videos', videos)}
               />
 
               <ProductFeaturesManager
