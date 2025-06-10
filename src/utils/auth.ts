@@ -1,30 +1,46 @@
 
 import { AdminUser } from '../types/admin';
+import UserService from './userService';
 
 class AuthService {
-  private static USERS_KEY = 'admin_users';
   private static CURRENT_USER_KEY = 'current_admin_user';
 
   static authenticateAdmin(username: string, password: string): boolean {
-    const users = this.getAdminUsers();
+    console.log('AuthService: Attempting login for:', username);
+    
+    const users = UserService.getAdminUsers();
+    console.log('AuthService: Available users:', users);
+    
     const user = users.find(u => u.username === username && u.password === password);
+    console.log('AuthService: Found user:', user);
+    
     if (user) {
       localStorage.setItem('adminToken', JSON.stringify({ userId: user.id, timestamp: Date.now() }));
       localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(user));
+      console.log('AuthService: Login successful');
       return true;
     }
+    
+    console.log('AuthService: Login failed - invalid credentials');
     return false;
   }
 
   static getCurrentUser(): AdminUser | null {
-    const stored = localStorage.getItem(this.CURRENT_USER_KEY);
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem(this.CURRENT_USER_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      console.error('AuthService: Error getting current user:', error);
+      return null;
+    }
   }
 
   static isAdminAuthenticated(): boolean {
     const token = localStorage.getItem('adminToken');
     const currentUser = this.getCurrentUser();
-    return !!token && !!currentUser;
+    const isAuth = !!token && !!currentUser;
+    console.log('AuthService: Is authenticated:', isAuth);
+    return isAuth;
   }
 
   static hasPermission(requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean {
@@ -41,24 +57,7 @@ class AuthService {
   static logout(): void {
     localStorage.removeItem('adminToken');
     localStorage.removeItem(this.CURRENT_USER_KEY);
-  }
-
-  private static getAdminUsers(): AdminUser[] {
-    const stored = localStorage.getItem(this.USERS_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-    
-    const defaultUsers: AdminUser[] = [
-      { id: 1, username: 'dark', password: 'dark', role: 'مدير عام' },
-    ];
-    
-    this.saveAdminUsers(defaultUsers);
-    return defaultUsers;
-  }
-
-  private static saveAdminUsers(users: AdminUser[]): void {
-    localStorage.setItem(this.USERS_KEY, JSON.stringify(users));
+    console.log('AuthService: Logged out successfully');
   }
 }
 

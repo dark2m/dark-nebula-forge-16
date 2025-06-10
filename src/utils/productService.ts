@@ -77,6 +77,30 @@ class ProductService {
         features: ['رؤية ليلية متقدمة', 'كشف الأعداء المختبئين', 'تحسين الرؤية', 'آمن ومحدث'],
         textSize: 'medium',
         titleSize: 'large'
+      },
+      { 
+        id: 3, 
+        name: 'موقع ويب شخصي', 
+        price: 150, 
+        category: 'web',
+        images: [],
+        videos: [],
+        description: 'تصميم موقع ويب شخصي احترافي',
+        features: ['تصميم عصري', 'متجاوب مع جميع الأجهزة', 'سرعة عالية', 'SEO محسن'],
+        textSize: 'medium',
+        titleSize: 'large'
+      },
+      { 
+        id: 4, 
+        name: 'بوت ديسكورد متعدد الوظائف', 
+        price: 75, 
+        category: 'discord',
+        images: [],
+        videos: [],
+        description: 'بوت ديسكورد مخصص مع مميزات متقدمة',
+        features: ['إدارة السيرفر', 'نظام البوتات', 'ألعاب تفاعلية', 'دعم متعدد اللغات'],
+        textSize: 'medium',
+        titleSize: 'large'
       }
     ];
   }
@@ -86,6 +110,11 @@ class ProductService {
       console.log('ProductService: Saving products:', products);
       localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
       console.log('ProductService: Products saved successfully');
+      
+      // إشعار جميع النوافذ بالتحديث
+      window.dispatchEvent(new CustomEvent('productsUpdated', { 
+        detail: { products } 
+      }));
     } catch (error) {
       console.error('ProductService: Error saving products:', error);
       throw new Error('تم تجاوز حد التخزين المسموح');

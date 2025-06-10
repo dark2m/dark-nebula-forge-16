@@ -2,45 +2,74 @@
 import React, { useState, useEffect } from 'react';
 import { Shield } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import AdminStorage, { Product } from '../utils/adminStorage';
+import ProductService from '../utils/productService';
+import SettingsService from '../utils/settingsService';
+import { Product } from '../types/admin';
 import { Button } from '@/components/ui/button';
 import GlobalCart from '../components/GlobalCart';
 import ProductImageViewer from '../components/ProductImageViewer';
 import { useToast } from '@/hooks/use-toast';
+import CartService from '../utils/cartService';
 
 const PubgHacks = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+  const [siteSettings, setSiteSettings] = useState(SettingsService.getSiteSettings());
   const { toast } = useToast();
 
   useEffect(() => {
     console.log('PubgHacks: Loading products...');
+    loadProducts();
+    loadSettings();
+
+    // Listen for product updates
+    const handleProductsUpdate = () => {
+      console.log('PubgHacks: Products updated, reloading...');
+      loadProducts();
+    };
+
+    // Listen for settings updates
+    const handleSettingsUpdate = () => {
+      console.log('PubgHacks: Settings updated, reloading...');
+      loadSettings();
+    };
+
+    window.addEventListener('productsUpdated', handleProductsUpdate);
+    window.addEventListener('settingsUpdated', handleSettingsUpdate);
+
+    return () => {
+      window.removeEventListener('productsUpdated', handleProductsUpdate);
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate);
+    };
+  }, []);
+
+  const loadProducts = () => {
     try {
-      const allProducts = AdminStorage.getProducts();
+      const allProducts = ProductService.getProducts();
       console.log('PubgHacks: All products loaded:', allProducts);
       
-      // التأكد من أن البيانات المحملة هي منتجات وليس مستخدمين
-      const validProducts = Array.isArray(allProducts) ? allProducts.filter(p => 
-        p && typeof p === 'object' && p.hasOwnProperty('name') && p.hasOwnProperty('category')
-      ) : [];
-      
-      console.log('PubgHacks: Valid products:', validProducts);
-      
-      const pubgProducts = validProducts.filter(p => p.category === 'pubg');
+      const pubgProducts = allProducts.filter(p => p.category === 'pubg');
       console.log('PubgHacks: PUBG products filtered:', pubgProducts);
       
       setProducts(pubgProducts);
-      setSiteSettings(AdminStorage.getSiteSettings());
     } catch (error) {
       console.error('PubgHacks: Error loading products:', error);
       setProducts([]);
     }
-  }, []);
+  };
+
+  const loadSettings = () => {
+    try {
+      const settings = SettingsService.getSiteSettings();
+      setSiteSettings(settings);
+    } catch (error) {
+      console.error('PubgHacks: Error loading settings:', error);
+    }
+  };
 
   const addToCart = (product: Product) => {
     try {
       console.log('PubgHacks: Adding product to cart:', product);
-      AdminStorage.addToCart(product);
+      CartService.addToCart(product);
       toast({
         title: "تم إضافة المنتج",
         description: `تم إضافة ${product.name} إلى السلة`,

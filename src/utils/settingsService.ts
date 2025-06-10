@@ -7,9 +7,18 @@ class SettingsService {
   static getSiteSettings(): SiteSettings {
     const stored = localStorage.getItem(this.SETTINGS_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      try {
+        return JSON.parse(stored);
+      } catch (error) {
+        console.error('Error parsing settings:', error);
+        return this.getDefaultSettings();
+      }
     }
     
+    return this.getDefaultSettings();
+  }
+
+  private static getDefaultSettings(): SiteSettings {
     const defaultSettings: SiteSettings = {
       title: 'DARK',
       titleSize: 'xl',
@@ -136,7 +145,18 @@ class SettingsService {
   }
 
   static saveSiteSettings(settings: SiteSettings): void {
-    localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
+    try {
+      localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
+      console.log('Settings saved successfully');
+      
+      // إشعار جميع النوافذ بالتحديث
+      window.dispatchEvent(new CustomEvent('settingsUpdated', { 
+        detail: { settings } 
+      }));
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      throw new Error('تم تجاوز حد التخزين المسموح');
+    }
   }
 }
 
