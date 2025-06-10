@@ -42,7 +42,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       return canAccess('مشرف') ? <OverviewTab products={products} /> : <AccessDenied />;
     
     case 'products':
-      return canAccess('مبرمج') ? (
+      return canAccess('مشرف') ? (
         <ProductsTab 
           products={products}
           addProduct={addProduct}
@@ -61,7 +61,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       ) : <AccessDenied />;
     
     case 'contact':
-      return canAccess('مدير عام') ? (
+      return canAccess('مبرمج') ? (
         <ContactTab 
           siteSettings={siteSettings}
           setSiteSettings={setSiteSettings}
@@ -70,7 +70,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       ) : <AccessDenied />;
     
     case 'navigation':
-      return canAccess('مدير عام') ? (
+      return canAccess('مبرمج') ? (
         <NavigationTab 
           siteSettings={siteSettings}
           setSiteSettings={setSiteSettings}
@@ -82,16 +82,16 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       return canAccess('مدير عام') ? <PasswordsTab /> : <AccessDenied />;
 
     case 'design':
-      return canAccess('مدير عام') ? <DesignTab /> : <AccessDenied />;
+      return canAccess('مبرمج') ? <DesignTab /> : <AccessDenied />;
 
     case 'typography':
-      return canAccess('مدير عام') ? <TypographyTab /> : <AccessDenied />;
+      return canAccess('مبرمج') ? <TypographyTab /> : <AccessDenied />;
 
     case 'users':
       return canAccess('مدير عام') ? <UsersTab /> : <AccessDenied />;
 
     case 'settings':
-      return canAccess('مدير عام') ? <SettingsTab /> : <AccessDenied />;
+      return canAccess('مبرمج') ? <SettingsTab /> : <AccessDenied />;
 
     case 'texts':
       return canAccess('مدير عام') ? <TextsTab /> : <AccessDenied />;

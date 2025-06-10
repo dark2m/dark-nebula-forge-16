@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, Shield, UserCheck } from 'lucide-react';
+import { Users, Plus, Trash2, Shield, UserCheck, Lock } from 'lucide-react';
 import UserService from '../../utils/userService';
 import { useToast } from '@/hooks/use-toast';
 import type { AdminUser } from '../../types/admin';
@@ -57,6 +57,18 @@ const UsersTab = () => {
   };
 
   const deleteUser = (id: number) => {
+    const userToDelete = users.find(u => u.id === id);
+    
+    // منع حذف المالك الرئيسي
+    if (userToDelete?.username === 'dark') {
+      toast({
+        title: "غير مسموح",
+        description: "لا يمكن حذف المالك الرئيسي للخادم",
+        variant: "destructive"
+      });
+      return;
+    }
+
     UserService.deleteAdminUser(id);
     setUsers(UserService.getAdminUsers());
     toast({
@@ -73,6 +85,8 @@ const UsersTab = () => {
       default: return 'text-gray-400';
     }
   };
+
+  const isOwner = (username: string) => username === 'dark';
 
   return (
     <div className="space-y-6">
@@ -140,10 +154,19 @@ const UsersTab = () => {
             <div key={user.id} className="border border-white/10 rounded-lg p-4 flex items-center justify-between">
               <div className="flex items-center space-x-4 rtl:space-x-reverse">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-500/20 rounded-full">
-                  <UserCheck className="w-5 h-5 text-blue-400" />
+                  {isOwner(user.username) ? (
+                    <Lock className="w-5 h-5 text-red-400" />
+                  ) : (
+                    <UserCheck className="w-5 h-5 text-blue-400" />
+                  )}
                 </div>
                 <div>
-                  <h4 className="text-white font-semibold">{user.username}</h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-white font-semibold">{user.username}</h4>
+                    {isOwner(user.username) && (
+                      <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">مالك الخادم</span>
+                    )}
+                  </div>
                   <div className="flex items-center space-x-2 rtl:space-x-reverse">
                     <Shield className="w-4 h-4 text-gray-400" />
                     <span className={`text-sm ${getRoleColor(user.role)}`}>{user.role}</span>
@@ -156,6 +179,7 @@ const UsersTab = () => {
                   value={user.role}
                   onChange={(e) => updateUser(user.id, { role: e.target.value as 'مدير عام' | 'مبرمج' | 'مشرف' })}
                   className="bg-white/10 text-white border border-white/20 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
+                  disabled={isOwner(user.username)}
                 >
                   <option value="مشرف">مشرف</option>
                   <option value="مبرمج">مبرمج</option>
@@ -163,8 +187,13 @@ const UsersTab = () => {
                 </select>
                 <button
                   onClick={() => deleteUser(user.id)}
-                  className="text-red-400 hover:text-red-300 transition-colors p-2"
-                  disabled={users.length <= 1}
+                  className={`transition-colors p-2 ${
+                    isOwner(user.username) 
+                      ? 'text-gray-600 cursor-not-allowed' 
+                      : 'text-red-400 hover:text-red-300'
+                  }`}
+                  disabled={isOwner(user.username) || users.length <= 1}
+                  title={isOwner(user.username) ? 'لا يمكن حذف مالك الخادم' : 'حذف المستخدم'}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

@@ -1,169 +1,170 @@
 
-import React, { useState, useEffect } from 'react';
-import { Shield } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ShoppingCart, MessageCircle, Phone } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import ProductService from '../utils/productService';
-import SettingsService from '../utils/settingsService';
-import { Product } from '../types/admin';
-import { Button } from '@/components/ui/button';
-import GlobalCart from '../components/GlobalCart';
 import ProductImageViewer from '../components/ProductImageViewer';
-import { useToast } from '@/hooks/use-toast';
-import CartService from '../utils/cartService';
+import ProductVideoViewer from '../components/ProductVideoViewer';
+import SettingsService from '../utils/settingsService';
+import ProductService from '../utils/productService';
+import { useCart } from '../components/GlobalCart';
+import type { Product, SiteSettings } from '../types/admin';
 
 const PubgHacks = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [siteSettings, setSiteSettings] = useState(SettingsService.getSiteSettings());
-  const { toast } = useToast();
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const { addToCart } = useCart();
 
   useEffect(() => {
-    console.log('PubgHacks: Loading products...');
-    loadProducts();
-    loadSettings();
-
-    // Listen for product updates
-    const handleProductsUpdate = () => {
-      console.log('PubgHacks: Products updated, reloading...');
-      loadProducts();
-    };
-
-    // Listen for settings updates
-    const handleSettingsUpdate = () => {
-      console.log('PubgHacks: Settings updated, reloading...');
-      loadSettings();
-    };
-
-    window.addEventListener('productsUpdated', handleProductsUpdate);
-    window.addEventListener('settingsUpdated', handleSettingsUpdate);
-
-    return () => {
-      window.removeEventListener('productsUpdated', handleProductsUpdate);
-      window.removeEventListener('settingsUpdated', handleSettingsUpdate);
-    };
+    setProducts(ProductService.getProducts().filter(p => p.category === 'pubg'));
+    setSettings(SettingsService.getSiteSettings());
   }, []);
 
-  const loadProducts = () => {
-    try {
-      const allProducts = ProductService.getProducts();
-      console.log('PubgHacks: All products loaded:', allProducts);
-      
-      const pubgProducts = allProducts.filter(p => p.category === 'pubg');
-      console.log('PubgHacks: PUBG products filtered:', pubgProducts);
-      
-      setProducts(pubgProducts);
-    } catch (error) {
-      console.error('PubgHacks: Error loading products:', error);
-      setProducts([]);
+  const whatsappNumber = "971566252595";
+  const whatsappMessage = encodeURIComponent("مرحباً، أريد الاستفسار عن خدماتكم");
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
+
+  if (!settings) return null;
+
+  const getTextSize = (size: string) => {
+    switch (size) {
+      case 'small': return 'text-sm';
+      case 'large': return 'text-lg';
+      default: return 'text-base';
     }
   };
-
-  const loadSettings = () => {
-    try {
-      const settings = SettingsService.getSiteSettings();
-      setSiteSettings(settings);
-    } catch (error) {
-      console.error('PubgHacks: Error loading settings:', error);
-    }
-  };
-
-  const addToCart = (product: Product) => {
-    try {
-      console.log('PubgHacks: Adding product to cart:', product);
-      CartService.addToCart(product);
-      toast({
-        title: "تم إضافة المنتج",
-        description: `تم إضافة ${product.name} إلى السلة`,
-        variant: "default"
-      });
-      console.log('PubgHacks: Product added successfully');
-    } catch (error) {
-      console.error('PubgHacks: Error adding to cart:', error);
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء إضافة المنتج للسلة",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const pageTexts = siteSettings.pageTexts.pubgHacks;
-  const cartTexts = siteSettings.pageTexts.cart;
 
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
-      <GlobalCart />
       
-      <div className="relative z-10 pt-32 pb-20">
-        <div className="container mx-auto px-6">
-          <h1 className="text-5xl font-bold text-center text-white mb-4">
-            {pageTexts.pageTitle}
-          </h1>
-          <p className="text-xl text-gray-300 text-center mb-12 max-w-2xl mx-auto">
-            {pageTexts.pageSubtitle}
-          </p>
-
-          {/* Debug info */}
-          <div className="text-center mb-8">
-            <p className="text-gray-400">عدد المنتجات المتاحة: {products.length}</p>
+      <div className="relative z-10">
+        <div className="container mx-auto px-6 py-12">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+              {settings.pageTexts.pubgHacks.pageTitle}
+            </h1>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              {settings.pageTexts.pubgHacks.pageSubtitle}
+            </p>
           </div>
 
-          {/* Products */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-400 text-lg">لا توجد منتجات متاحة حالياً</p>
-                <p className="text-gray-500 text-sm mt-2">يرجى إضافة منتجات من لوحة الإدارة</p>
-              </div>
-            ) : (
-              products.map((product) => (
-                <div key={product.id} className="product-card rounded-xl p-6">
-                  <div className="text-center mb-6">
-                    <div className="inline-flex p-3 rounded-full bg-red-500/20 mb-4">
-                      <Shield className="w-6 h-6 text-red-400" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{product.name}</h3>
-                    <p className="text-gray-300 mb-4">{product.description}</p>
-                    <div className="text-3xl font-bold text-red-400 mb-6">${product.price}</div>
-                  </div>
+          {/* Safety Section */}
+          <div className="mb-12 p-8 bg-green-500/10 border border-green-500/30 rounded-xl">
+            <h2 className="text-2xl font-bold text-green-400 mb-4">
+              {settings.pageTexts.pubgHacks.safetyTitle}
+            </h2>
+            <p className="text-gray-300">
+              {settings.pageTexts.pubgHacks.safetyDescription}
+            </p>
+          </div>
 
-                  <div className="space-y-3 mb-6">
-                    {(product.features || []).map((feature, index) => (
-                      <div key={index} className="flex items-center text-gray-300">
-                        <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
-                        <span>{feature}</span>
+          {/* Products Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+              <div key={product.id} className="group">
+                <div 
+                  className="relative overflow-hidden rounded-xl border border-white/20 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105"
+                  style={{
+                    backgroundColor: product.backgroundColor || '#1a1a2e',
+                    backgroundImage: product.backgroundImage ? `url(${product.backgroundImage})` : 'none',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
+                  }}
+                >
+                  <div className="absolute inset-0 bg-black/40" />
+                  
+                  <div className="relative p-6">
+                    <h3 className={`font-bold text-white mb-3 ${
+                      product.titleSize === 'small' ? 'text-lg' :
+                      product.titleSize === 'large' ? 'text-2xl' : 'text-xl'
+                    }`}>
+                      {product.name}
+                    </h3>
+                    
+                    <p className={`text-gray-300 mb-4 ${getTextSize(product.textSize || 'medium')}`}>
+                      {product.description}
+                    </p>
+
+                    {/* Features */}
+                    {product.features && product.features.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-blue-400 font-semibold mb-2">المميزات:</h4>
+                        <ul className="space-y-1">
+                          {product.features.map((feature, index) => (
+                            <li key={index} className={`text-gray-300 ${getTextSize(product.textSize || 'medium')}`}>
+                              • {feature}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    ))}
-                  </div>
+                    )}
 
-                  <div className="space-y-3">
-                    <div className="flex gap-2 justify-center">
-                      <Button 
-                        onClick={() => addToCart(product)}
-                        className="flex-1 glow-button"
-                      >
-                        {cartTexts.addToCartButton}
-                      </Button>
+                    {/* Media Buttons */}
+                    <div className="flex gap-2 mb-4">
                       <ProductImageViewer 
                         images={product.images || []} 
-                        productName={product.name}
+                        productName={product.name} 
                       />
+                      <ProductVideoViewer 
+                        videos={product.videos || []} 
+                        productName={product.name} 
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-green-400">
+                        ${product.price}
+                      </span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => addToCart(product)}
+                          className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>{settings.pageTexts.cart.addToCartButton}</span>
+                        </button>
+                        <a
+                          href={whatsappLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          واتساب
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
 
-          {/* Safety Notice */}
-          <div className="mt-16 bg-green-500/10 border border-green-500/30 rounded-xl p-8 text-center">
-            <Shield className="w-12 h-12 text-green-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-green-400 mb-4">
-              {pageTexts.safetyTitle}
-            </h3>
-            <p className="text-gray-300 max-w-2xl mx-auto">
-              {pageTexts.safetyDescription}
-            </p>
+          {products.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-xl">لا توجد منتجات متاحة حالياً</p>
+            </div>
+          )}
+
+          {/* Contact Section */}
+          <div className="mt-12 text-center">
+            <div className="inline-flex items-center gap-4 bg-blue-500/10 border border-blue-500/30 rounded-xl p-6">
+              <Phone className="w-6 h-6 text-blue-400" />
+              <div>
+                <p className="text-white font-semibold">للاستفسار والطلب</p>
+                <p className="text-gray-300">+971 56 625 2595</p>
+                <p className="text-sm text-gray-400">الإمارات العربية المتحدة</p>
+              </div>
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glow-button flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                تواصل واتساب
+              </a>
+            </div>
           </div>
         </div>
       </div>

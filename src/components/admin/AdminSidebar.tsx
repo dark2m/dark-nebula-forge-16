@@ -30,15 +30,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   const tabs = [
     { id: 'overview', name: 'نظرة عامة', icon: BarChart3, requiredRole: 'مشرف' as const },
-    { id: 'products', name: 'إدارة المنتجات', icon: Package, requiredRole: 'مبرمج' as const },
+    { id: 'products', name: 'إدارة المنتجات', icon: Package, requiredRole: 'مشرف' as const },
     { id: 'background', name: 'تخصيص الخلفية', icon: Monitor, requiredRole: 'مبرمج' as const },
     { id: 'passwords', name: 'إدارة كلمات المرور', icon: Key, requiredRole: 'مدير عام' as const },
-    { id: 'design', name: 'تخصيص التصميم', icon: Palette, requiredRole: 'مدير عام' as const },
-    { id: 'typography', name: 'التحكم في النصوص', icon: Type, requiredRole: 'مدير عام' as const },
-    { id: 'navigation', name: 'إدارة التنقل', icon: NavigationIcon, requiredRole: 'مدير عام' as const },
-    { id: 'contact', name: 'إعدادات التواصل', icon: MessageCircle, requiredRole: 'مدير عام' as const },
+    { id: 'design', name: 'تخصيص التصميم', icon: Palette, requiredRole: 'مبرمج' as const },
+    { id: 'typography', name: 'التحكم في النصوص', icon: Type, requiredRole: 'مبرمج' as const },
+    { id: 'navigation', name: 'إدارة التنقل', icon: NavigationIcon, requiredRole: 'مبرمج' as const },
+    { id: 'contact', name: 'إعدادات التواصل', icon: MessageCircle, requiredRole: 'مبرمج' as const },
     { id: 'users', name: 'إدارة المستخدمين', icon: Users, requiredRole: 'مدير عام' as const },
-    { id: 'settings', name: 'الإعدادات', icon: Settings, requiredRole: 'مدير عام' as const },
+    { id: 'settings', name: 'الإعدادات', icon: Settings, requiredRole: 'مبرمج' as const },
     { id: 'texts', name: 'إدارة النصوص', icon: Type, requiredRole: 'مدير عام' as const },
   ];
 
@@ -79,6 +79,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
           </div>
           {currentUser?.role === 'مدير عام' && (
             <p className="text-xs text-green-400 mt-2">✓ تحكم كامل في جميع الإعدادات</p>
+          )}
+          {currentUser?.role === 'مبرمج' && (
+            <p className="text-xs text-blue-400 mt-2">✓ تحكم في المنتجات والتصميم</p>
+          )}
+          {currentUser?.role === 'مشرف' && (
+            <p className="text-xs text-yellow-400 mt-2">✓ إدارة المنتجات والمبيعات</p>
           )}
         </div>
       </div>
