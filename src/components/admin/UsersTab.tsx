@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Trash2, Shield, UserCheck } from 'lucide-react';
-import AdminStorage, { AdminUser } from '../../utils/adminStorage';
+import UserService from '../../utils/userService';
 import { useToast } from '@/hooks/use-toast';
+import type { AdminUser } from '../../types/admin';
 
 const UsersTab = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -14,7 +15,7 @@ const UsersTab = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    setUsers(AdminStorage.getAdminUsers());
+    setUsers(UserService.getAdminUsers());
   }, []);
 
   const addUser = () => {
@@ -37,8 +38,8 @@ const UsersTab = () => {
       return;
     }
 
-    AdminStorage.addAdminUser(newUser);
-    setUsers(AdminStorage.getAdminUsers());
+    UserService.addAdminUser(newUser);
+    setUsers(UserService.getAdminUsers());
     setNewUser({ username: '', password: '', role: 'مشرف' });
     toast({
       title: "تم إضافة المستخدم",
@@ -47,8 +48,8 @@ const UsersTab = () => {
   };
 
   const updateUser = (id: number, updates: Partial<AdminUser>) => {
-    AdminStorage.updateAdminUser(id, updates);
-    setUsers(AdminStorage.getAdminUsers());
+    UserService.updateAdminUser(id, updates);
+    setUsers(UserService.getAdminUsers());
     toast({
       title: "تم تحديث المستخدم",
       description: "تم حفظ التغييرات بنجاح"
@@ -56,8 +57,8 @@ const UsersTab = () => {
   };
 
   const deleteUser = (id: number) => {
-    AdminStorage.deleteAdminUser(id);
-    setUsers(AdminStorage.getAdminUsers());
+    UserService.deleteAdminUser(id);
+    setUsers(UserService.getAdminUsers());
     toast({
       title: "تم حذف المستخدم",
       description: "تم حذف المستخدم بنجاح"

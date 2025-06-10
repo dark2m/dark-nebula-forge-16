@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Plus, Trash2, Key, Save } from 'lucide-react';
-import AdminStorage from '../../utils/adminStorage';
+import UserService from '../../utils/userService';
 import { useToast } from '@/hooks/use-toast';
 import type { AdminUser } from '../../types/admin';
 
@@ -17,7 +17,7 @@ const PasswordsTab = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    setUsers(AdminStorage.getAdminUsers());
+    setUsers(UserService.getAdminUsers());
   }, []);
 
   const togglePasswordVisibility = (userId: number) => {
@@ -47,8 +47,8 @@ const PasswordsTab = () => {
       return;
     }
 
-    AdminStorage.addAdminUser(newUser);
-    setUsers(AdminStorage.getAdminUsers());
+    UserService.addAdminUser(newUser);
+    setUsers(UserService.getAdminUsers());
     setNewUser({ username: '', password: '', role: 'مشرف' });
     toast({
       title: "تم إضافة المستخدم",
@@ -69,8 +69,8 @@ const PasswordsTab = () => {
   const saveUser = (userId: number) => {
     const changes = editedUsers[userId];
     if (changes) {
-      AdminStorage.updateAdminUser(userId, changes);
-      setUsers(AdminStorage.getAdminUsers());
+      UserService.updateAdminUser(userId, changes);
+      setUsers(UserService.getAdminUsers());
       setEditedUsers(prev => {
         const updated = { ...prev };
         delete updated[userId];
@@ -84,8 +84,8 @@ const PasswordsTab = () => {
   };
 
   const deleteUser = (id: number) => {
-    AdminStorage.deleteAdminUser(id);
-    setUsers(AdminStorage.getAdminUsers());
+    UserService.deleteAdminUser(id);
+    setUsers(UserService.getAdminUsers());
     toast({
       title: "تم حذف المستخدم",
       description: "تم حذف المستخدم بنجاح"
