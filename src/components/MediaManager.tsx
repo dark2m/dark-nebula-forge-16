@@ -296,5 +296,3 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 };
 
 export default MediaManager;
-
-</edits_to_apply>
