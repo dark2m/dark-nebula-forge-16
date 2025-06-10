@@ -6,27 +6,55 @@ import AdminStorage, { Product } from '../utils/adminStorage';
 import { Button } from '@/components/ui/button';
 import GlobalCart from '../components/GlobalCart';
 import ProductImageViewer from '../components/ProductImageViewer';
+import { useToast } from '@/hooks/use-toast';
 
 const PubgHacks = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+  const { toast } = useToast();
 
   useEffect(() => {
+    console.log('PubgHacks: Loading products...');
     try {
       const allProducts = AdminStorage.getProducts();
-      console.log('All products loaded:', allProducts);
-      const pubgProducts = Array.isArray(allProducts) ? allProducts.filter(p => p.category === 'pubg') : [];
-      console.log('PUBG products filtered:', pubgProducts);
+      console.log('PubgHacks: All products loaded:', allProducts);
+      
+      // التأكد من أن البيانات المحملة هي منتجات وليس مستخدمين
+      const validProducts = Array.isArray(allProducts) ? allProducts.filter(p => 
+        p && typeof p === 'object' && p.hasOwnProperty('name') && p.hasOwnProperty('category')
+      ) : [];
+      
+      console.log('PubgHacks: Valid products:', validProducts);
+      
+      const pubgProducts = validProducts.filter(p => p.category === 'pubg');
+      console.log('PubgHacks: PUBG products filtered:', pubgProducts);
+      
       setProducts(pubgProducts);
       setSiteSettings(AdminStorage.getSiteSettings());
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error('PubgHacks: Error loading products:', error);
       setProducts([]);
     }
   }, []);
 
   const addToCart = (product: Product) => {
-    AdminStorage.addToCart(product);
+    try {
+      console.log('PubgHacks: Adding product to cart:', product);
+      AdminStorage.addToCart(product);
+      toast({
+        title: "تم إضافة المنتج",
+        description: `تم إضافة ${product.name} إلى السلة`,
+        variant: "default"
+      });
+      console.log('PubgHacks: Product added successfully');
+    } catch (error) {
+      console.error('PubgHacks: Error adding to cart:', error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء إضافة المنتج للسلة",
+        variant: "destructive"
+      });
+    }
   };
 
   const pageTexts = siteSettings.pageTexts.pubgHacks;
@@ -46,44 +74,56 @@ const PubgHacks = () => {
             {pageTexts.pageSubtitle}
           </p>
 
+          {/* Debug info */}
+          <div className="text-center mb-8">
+            <p className="text-gray-400">عدد المنتجات المتاحة: {products.length}</p>
+          </div>
+
           {/* Products */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product) => (
-              <div key={product.id} className="product-card rounded-xl p-6">
-                <div className="text-center mb-6">
-                  <div className="inline-flex p-3 rounded-full bg-red-500/20 mb-4">
-                    <Shield className="w-6 h-6 text-red-400" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">{product.name}</h3>
-                  <p className="text-gray-300 mb-4">{product.description}</p>
-                  <div className="text-3xl font-bold text-red-400 mb-6">${product.price}</div>
-                </div>
-
-                <div className="space-y-3 mb-6">
-                  {(product.features || []).map((feature, index) => (
-                    <div key={index} className="flex items-center text-gray-300">
-                      <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex gap-2 justify-center">
-                    <Button 
-                      onClick={() => addToCart(product)}
-                      className="flex-1 glow-button"
-                    >
-                      {cartTexts.addToCartButton}
-                    </Button>
-                    <ProductImageViewer 
-                      images={product.images || []} 
-                      productName={product.name}
-                    />
-                  </div>
-                </div>
+            {products.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-400 text-lg">لا توجد منتجات متاحة حالياً</p>
+                <p className="text-gray-500 text-sm mt-2">يرجى إضافة منتجات من لوحة الإدارة</p>
               </div>
-            ))}
+            ) : (
+              products.map((product) => (
+                <div key={product.id} className="product-card rounded-xl p-6">
+                  <div className="text-center mb-6">
+                    <div className="inline-flex p-3 rounded-full bg-red-500/20 mb-4">
+                      <Shield className="w-6 h-6 text-red-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-2">{product.name}</h3>
+                    <p className="text-gray-300 mb-4">{product.description}</p>
+                    <div className="text-3xl font-bold text-red-400 mb-6">${product.price}</div>
+                  </div>
+
+                  <div className="space-y-3 mb-6">
+                    {(product.features || []).map((feature, index) => (
+                      <div key={index} className="flex items-center text-gray-300">
+                        <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex gap-2 justify-center">
+                      <Button 
+                        onClick={() => addToCart(product)}
+                        className="flex-1 glow-button"
+                      >
+                        {cartTexts.addToCartButton}
+                      </Button>
+                      <ProductImageViewer 
+                        images={product.images || []} 
+                        productName={product.name}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Safety Notice */}

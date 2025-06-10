@@ -6,24 +6,46 @@ class ProductService {
 
   static getProducts(): Product[] {
     try {
+      console.log('ProductService: Getting products from localStorage...');
       const stored = localStorage.getItem(this.PRODUCTS_KEY);
+      
       if (!stored) {
+        console.log('ProductService: No products found, creating defaults...');
         const defaultProducts = ProductService.getDefaultProducts();
         ProductService.saveProducts(defaultProducts);
         return defaultProducts;
       }
       
       const parsed = JSON.parse(stored);
+      console.log('ProductService: Parsed products:', parsed);
+      
       if (!Array.isArray(parsed)) {
-        console.warn('Products data is not an array, resetting to defaults');
+        console.warn('ProductService: Products data is not an array, resetting to defaults');
         const defaultProducts = ProductService.getDefaultProducts();
         ProductService.saveProducts(defaultProducts);
         return defaultProducts;
       }
       
-      return parsed;
+      // التأكد من أن كل عنصر هو منتج صحيح
+      const validProducts = parsed.filter(item => 
+        item && 
+        typeof item === 'object' && 
+        item.hasOwnProperty('id') && 
+        item.hasOwnProperty('name') && 
+        item.hasOwnProperty('category') &&
+        item.hasOwnProperty('price')
+      );
+      
+      console.log('ProductService: Valid products:', validProducts);
+      
+      if (validProducts.length !== parsed.length) {
+        console.warn('ProductService: Some invalid products removed, saving cleaned data');
+        ProductService.saveProducts(validProducts);
+      }
+      
+      return validProducts;
     } catch (error) {
-      console.error('Error loading products:', error);
+      console.error('ProductService: Error loading products:', error);
       const defaultProducts = ProductService.getDefaultProducts();
       ProductService.saveProducts(defaultProducts);
       return defaultProducts;
@@ -43,20 +65,35 @@ class ProductService {
         features: ['ESP للاعبين', 'ESP للأسلحة', 'ESP للسيارات', 'آمن 100%'],
         textSize: 'medium',
         titleSize: 'large'
+      },
+      { 
+        id: 2, 
+        name: 'هكر الرؤية الليلية', 
+        price: 30, 
+        category: 'pubg',
+        images: [],
+        videos: [],
+        description: 'رؤية واضحة في الظلام والأماكن المظلمة',
+        features: ['رؤية ليلية متقدمة', 'كشف الأعداء المختبئين', 'تحسين الرؤية', 'آمن ومحدث'],
+        textSize: 'medium',
+        titleSize: 'large'
       }
     ];
   }
 
   static saveProducts(products: Product[]): void {
     try {
+      console.log('ProductService: Saving products:', products);
       localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
+      console.log('ProductService: Products saved successfully');
     } catch (error) {
-      console.error('خطأ في حفظ المنتجات:', error);
+      console.error('ProductService: Error saving products:', error);
       throw new Error('تم تجاوز حد التخزين المسموح');
     }
   }
 
   static addProduct(product: Omit<Product, 'id'>): Product {
+    console.log('ProductService: Adding new product:', product);
     const products = ProductService.getProducts();
     const newProduct: Product = {
       ...product,
@@ -64,21 +101,28 @@ class ProductService {
     };
     products.push(newProduct);
     ProductService.saveProducts(products);
+    console.log('ProductService: New product added:', newProduct);
     return newProduct;
   }
 
   static updateProduct(id: number, updates: Partial<Product>): void {
+    console.log('ProductService: Updating product:', id, updates);
     const products = ProductService.getProducts();
     const index = products.findIndex(p => p.id === id);
     if (index !== -1) {
       products[index] = { ...products[index], ...updates };
       ProductService.saveProducts(products);
+      console.log('ProductService: Product updated successfully');
+    } else {
+      console.warn('ProductService: Product not found for update:', id);
     }
   }
 
   static deleteProduct(id: number): void {
+    console.log('ProductService: Deleting product:', id);
     const products = ProductService.getProducts().filter(p => p.id !== id);
     ProductService.saveProducts(products);
+    console.log('ProductService: Product deleted successfully');
   }
 }
 
