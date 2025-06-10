@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminStorage from '../utils/adminStorage';
+import ProductService from '../utils/productService';
+import SettingsService from '../utils/settingsService';
 import AuthService from '../utils/auth';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, AdminUser, SiteSettings } from '../types/admin';
@@ -105,8 +106,12 @@ export const useAdminData = () => {
     }
     setCurrentUser(user);
     
-    setProducts(AdminStorage.getProducts());
-    const loadedSettings = AdminStorage.getSiteSettings();
+    // تنظيف وتحميل المنتجات
+    ProductService.cleanupStorage();
+    setProducts(ProductService.getProducts());
+    
+    // تحميل الإعدادات
+    const loadedSettings = SettingsService.getSiteSettings();
     setSiteSettings(loadedSettings);
   }, [navigate]);
 

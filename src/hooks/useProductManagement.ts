@@ -1,5 +1,5 @@
 
-import AdminStorage from '../utils/adminStorage';
+import ProductService from '../utils/productService';
 import type { Product } from '../types/admin';
 
 export const useProductManagement = (
@@ -20,7 +20,10 @@ export const useProductManagement = (
     console.log('Adding new product...');
     
     try {
-      const newProduct = AdminStorage.addProduct({
+      // تنظيف التخزين أولاً
+      ProductService.cleanupStorage();
+      
+      const newProduct = ProductService.addProduct({
         name: 'منتج جديد',
         price: 0,
         category: 'pubg',
@@ -35,7 +38,7 @@ export const useProductManagement = (
       console.log('New product added:', newProduct);
       
       // تحديث قائمة المنتجات
-      const updatedProducts = AdminStorage.getProducts();
+      const updatedProducts = ProductService.getProducts();
       setProducts(updatedProducts);
       
       toast({
@@ -64,10 +67,10 @@ export const useProductManagement = (
     
     try {
       console.log('Updating product:', id, updates);
-      AdminStorage.updateProduct(id, updates);
+      ProductService.updateProduct(id, updates);
       
       // تحديث قائمة المنتجات
-      const updatedProducts = AdminStorage.getProducts();
+      const updatedProducts = ProductService.getProducts();
       setProducts(updatedProducts);
       
       console.log('Product updated successfully');
@@ -91,8 +94,8 @@ export const useProductManagement = (
       return;
     }
     
-    AdminStorage.deleteProduct(id);
-    setProducts(AdminStorage.getProducts());
+    ProductService.deleteProduct(id);
+    setProducts(ProductService.getProducts());
     toast({
       title: "تم حذف المنتج",
       description: "تم حذف المنتج بنجاح"

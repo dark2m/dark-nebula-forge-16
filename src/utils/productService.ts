@@ -26,14 +26,17 @@ class ProductService {
         return defaultProducts;
       }
       
-      // التأكد من أن كل عنصر هو منتج صحيح
+      // التأكد من أن كل عنصر هو منتج صحيح وليس مستخدم
       const validProducts = parsed.filter(item => 
         item && 
         typeof item === 'object' && 
         item.hasOwnProperty('id') && 
         item.hasOwnProperty('name') && 
         item.hasOwnProperty('category') &&
-        item.hasOwnProperty('price')
+        item.hasOwnProperty('price') &&
+        !item.hasOwnProperty('username') && // التأكد من أنه ليس مستخدم
+        !item.hasOwnProperty('password') && // التأكد من أنه ليس مستخدم
+        !item.hasOwnProperty('role') // التأكد من أنه ليس مستخدم
       );
       
       console.log('ProductService: Valid products:', validProducts);
@@ -108,12 +111,22 @@ class ProductService {
   static saveProducts(products: Product[]): void {
     try {
       console.log('ProductService: Saving products:', products);
-      localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(products));
+      
+      // التأكد من أن جميع العناصر هي منتجات صحيحة
+      const validProducts = products.filter(product => 
+        product && 
+        typeof product === 'object' && 
+        product.hasOwnProperty('name') && 
+        product.hasOwnProperty('category') &&
+        product.hasOwnProperty('price')
+      );
+      
+      localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(validProducts));
       console.log('ProductService: Products saved successfully');
       
       // إشعار جميع النوافذ بالتحديث
       window.dispatchEvent(new CustomEvent('productsUpdated', { 
-        detail: { products } 
+        detail: { products: validProducts } 
       }));
     } catch (error) {
       console.error('ProductService: Error saving products:', error);
@@ -128,8 +141,9 @@ class ProductService {
       ...product,
       id: Date.now()
     };
-    products.push(newProduct);
-    ProductService.saveProducts(products);
+    
+    const updatedProducts = [...products, newProduct];
+    ProductService.saveProducts(updatedProducts);
     console.log('ProductService: New product added:', newProduct);
     return newProduct;
   }
@@ -152,6 +166,36 @@ class ProductService {
     const products = ProductService.getProducts().filter(p => p.id !== id);
     ProductService.saveProducts(products);
     console.log('ProductService: Product deleted successfully');
+  }
+
+  // إضافة دالة لتنظيف البيانات المختلطة
+  static cleanupStorage(): void {
+    try {
+      console.log('ProductService: Cleaning up storage...');
+      
+      // مسح أي بيانات مختلطة
+      const stored = localStorage.getItem(this.PRODUCTS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const cleanProducts = parsed.filter(item => 
+            item && 
+            typeof item === 'object' && 
+            item.hasOwnProperty('name') && 
+            item.hasOwnProperty('category') &&
+            item.hasOwnProperty('price') &&
+            !item.hasOwnProperty('username')
+          );
+          
+          if (cleanProducts.length !== parsed.length) {
+            this.saveProducts(cleanProducts);
+            console.log('ProductService: Storage cleaned successfully');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('ProductService: Error cleaning storage:', error);
+    }
   }
 }
 
