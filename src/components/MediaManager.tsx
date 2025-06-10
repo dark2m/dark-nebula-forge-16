@@ -1,16 +1,17 @@
-
 import React, { useState } from 'react';
 import { Plus, X, Upload, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface MediaManagerProps {
+  productId: number;
   images: string[];
   videos: string[];
-  onImagesChange: (images: string[]) => void;
-  onVideosChange: (videos: string[]) => void;
+  onImagesChange: (productId: number, images: string[]) => void;
+  onVideosChange: (productId: number, videos: string[]) => void;
 }
 
 const MediaManager: React.FC<MediaManagerProps> = ({
+  productId,
   images,
   videos,
   onImagesChange,
@@ -22,12 +23,13 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    console.log('Adding images to product:', productId);
+    
     setIsUploading(true);
     const newImages: string[] = [];
 
     for (const file of Array.from(files)) {
       try {
-        // تحسين جودة الصورة لتقليل الحجم
         const compressedImage = await compressImage(file, 0.7);
         newImages.push(compressedImage);
       } catch (error) {
@@ -37,11 +39,11 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 
     if (newImages.length > 0) {
       const updatedImages = [...images, ...newImages];
-      onImagesChange(updatedImages);
+      console.log('Calling onImagesChange for product:', productId, 'with images:', updatedImages.length);
+      onImagesChange(productId, updatedImages);
     }
     
     setIsUploading(false);
-    // مسح قيمة input
     event.target.value = '';
   };
 
@@ -49,12 +51,13 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    console.log('Adding videos to product:', productId);
+    
     setIsUploading(true);
     const newVideos: string[] = [];
 
     for (const file of Array.from(files)) {
       try {
-        // تحسين جودة الفيديو لتقليل الحجم
         const compressedVideo = await compressVideo(file, 0.6);
         newVideos.push(compressedVideo);
       } catch (error) {
@@ -64,11 +67,11 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 
     if (newVideos.length > 0) {
       const updatedVideos = [...videos, ...newVideos];
-      onVideosChange(updatedVideos);
+      console.log('Calling onVideosChange for product:', productId, 'with videos:', updatedVideos.length);
+      onVideosChange(productId, updatedVideos);
     }
     
     setIsUploading(false);
-    // مسح قيمة input
     event.target.value = '';
   };
 
@@ -151,12 +154,14 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 
   const removeImage = (index: number) => {
     const updatedImages = images.filter((_, i) => i !== index);
-    onImagesChange(updatedImages);
+    console.log('Removing image from product:', productId);
+    onImagesChange(productId, updatedImages);
   };
 
   const removeVideo = (index: number) => {
     const updatedVideos = videos.filter((_, i) => i !== index);
-    onVideosChange(updatedVideos);
+    console.log('Removing video from product:', productId);
+    onVideosChange(productId, updatedVideos);
   };
 
   return (

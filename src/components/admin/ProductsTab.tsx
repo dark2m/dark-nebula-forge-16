@@ -108,37 +108,68 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
 
   // إنشاء دالة منفصلة لكل منتج لضمان عدم خلط المعرفات
   const createMediaChangeHandler = (productId: number) => {
-    return (field: 'images' | 'videos', value: string[]) => {
-      console.log(`Media change for product ${productId}:`, field, value.length, 'items');
-      
-      // التأكد من أن المنتج موجود
-      const product = products.find(p => p.id === productId);
-      if (!product) {
-        console.error('Product not found:', productId);
-        toast({
-          title: "خطأ",
-          description: "المنتج غير موجود",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      // حفظ التغيير فوراً في قاعدة البيانات للمنتج المحدد فقط
-      try {
-        updateProduct(productId, { [field]: value });
-        console.log(`Successfully updated ${field} for product ${productId}`);
+    return {
+      onImagesChange: (receivedProductId: number, images: string[]) => {
+        console.log(`Images change handler called for product ${receivedProductId} (expected: ${productId})`);
         
-        toast({
-          title: "تم الحفظ",
-          description: `تم حفظ ${field === 'images' ? 'الصور' : 'الفيديوهات'} للمنتج "${product.name}" بنجاح`,
-        });
-      } catch (error) {
-        console.error('Error updating media:', error);
-        toast({
-          title: "خطأ في الحفظ",
-          description: "حدث خطأ أثناء حفظ الملفات",
-          variant: "destructive"
-        });
+        if (receivedProductId !== productId) {
+          console.error('Product ID mismatch!', { received: receivedProductId, expected: productId });
+          return;
+        }
+        
+        const product = products.find(p => p.id === productId);
+        if (!product) {
+          console.error('Product not found:', productId);
+          return;
+        }
+        
+        try {
+          console.log(`Updating images for product ${productId}:`, images.length, 'items');
+          updateProduct(productId, { images });
+          
+          toast({
+            title: "تم حفظ الصور",
+            description: `تم حفظ الصور للمنتج "${product.name}" بنجاح`,
+          });
+        } catch (error) {
+          console.error('Error updating images:', error);
+          toast({
+            title: "خطأ في الحفظ",
+            description: "حدث خطأ أثناء حفظ الصور",
+            variant: "destructive"
+          });
+        }
+      },
+      onVideosChange: (receivedProductId: number, videos: string[]) => {
+        console.log(`Videos change handler called for product ${receivedProductId} (expected: ${productId})`);
+        
+        if (receivedProductId !== productId) {
+          console.error('Product ID mismatch!', { received: receivedProductId, expected: productId });
+          return;
+        }
+        
+        const product = products.find(p => p.id === productId);
+        if (!product) {
+          console.error('Product not found:', productId);
+          return;
+        }
+        
+        try {
+          console.log(`Updating videos for product ${productId}:`, videos.length, 'items');
+          updateProduct(productId, { videos });
+          
+          toast({
+            title: "تم حفظ الفيديوهات",
+            description: `تم حفظ الفيديوهات للمنتج "${product.name}" بنجاح`,
+          });
+        } catch (error) {
+          console.error('Error updating videos:', error);
+          toast({
+            title: "خطأ في الحفظ",
+            description: "حدث خطأ أثناء حفظ الفيديوهات",
+            variant: "destructive"
+          });
+        }
       }
     };
   };
@@ -164,7 +195,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
       <div className="admin-card rounded-xl p-6">
         <div className="space-y-8">
           {products.map((product) => {
-            const mediaChangeHandler = createMediaChangeHandler(product.id);
+            const mediaHandlers = createMediaChangeHandler(product.id);
             
             return (
               <div key={product.id} className="border border-white/10 rounded-lg p-6 space-y-6">
@@ -271,10 +302,11 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                 </div>
 
                 <MediaManager
+                  productId={product.id}
                   images={getProductValue(product, 'images') || []}
                   videos={getProductValue(product, 'videos') || []}
-                  onImagesChange={(images) => mediaChangeHandler('images', images)}
-                  onVideosChange={(videos) => mediaChangeHandler('videos', videos)}
+                  onImagesChange={mediaHandlers.onImagesChange}
+                  onVideosChange={mediaHandlers.onVideosChange}
                 />
 
                 <ProductFeaturesManager
