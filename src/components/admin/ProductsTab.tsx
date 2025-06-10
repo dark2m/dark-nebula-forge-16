@@ -107,21 +107,39 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
     return editedProducts[productId] && Object.keys(editedProducts[productId]).length > 0;
   };
 
-  // دالة لحفظ التغييرات فوراً عند تعديل الميديا
+  // دالة محسنة لحفظ التغييرات فوراً عند تعديل الميديا مع التأكد من المنتج الصحيح
   const handleMediaChange = (productId: number, field: 'images' | 'videos', value: string[]) => {
-    console.log('Media change for product:', productId, field, value);
+    console.log('Media change for SPECIFIC product:', productId, field, value);
     
-    // حفظ التغيير في الحالة المحلية
-    setEditedProducts(prev => ({
-      ...prev,
-      [productId]: {
-        ...prev[productId],
-        [field]: value
-      }
-    }));
+    // التأكد من أن المنتج موجود
+    const product = products.find(p => p.id === productId);
+    if (!product) {
+      console.error('Product not found:', productId);
+      toast({
+        title: "خطأ",
+        description: "المنتج غير موجود",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    // حفظ التغيير فوراً في قاعدة البيانات
-    updateProduct(productId, { [field]: value });
+    // حفظ التغيير فوراً في قاعدة البيانات للمنتج المحدد فقط
+    try {
+      updateProduct(productId, { [field]: value });
+      console.log(`Successfully updated ${field} for product ${productId}`);
+      
+      toast({
+        title: "تم الحفظ",
+        description: `تم حفظ ${field === 'images' ? 'الصور' : 'الفيديوهات'} للمنتج بنجاح`,
+      });
+    } catch (error) {
+      console.error('Error updating media:', error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ الملفات",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -147,7 +165,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
           {products.map((product) => (
             <div key={product.id} className="border border-white/10 rounded-lg p-6 space-y-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-white">المنتج #{product.id}</h3>
+                <h3 className="text-lg font-semibold text-white">المنتج #{product.id} - {product.name}</h3>
                 {hasChanges(product.id) && (
                   <button
                     onClick={() => saveProduct(product.id)}

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -8,6 +7,7 @@ import SettingsService from '../utils/settingsService';
 import ProductService from '../utils/productService';
 import { useCart } from '../hooks/useCart';
 import type { Product, SiteSettings } from '../types/admin';
+import GlobalCart from '../components/GlobalCart';
 
 const DiscordBots = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -32,6 +32,7 @@ const DiscordBots = () => {
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
+      <GlobalCart />
       
       <div className="relative z-10">
         <div className="container mx-auto px-6 py-12">
