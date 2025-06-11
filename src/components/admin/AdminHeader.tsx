@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { LogOut } from 'lucide-react';
+import { LogOut, User, Shield } from 'lucide-react';
+import LanguageToggle from '../LanguageToggle';
 import type { AdminUser } from '../../types/admin';
 
 interface AdminHeaderProps {
@@ -10,30 +11,45 @@ interface AdminHeaderProps {
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({ currentUser, onLogout }) => {
   return (
-    <div className="bg-black/80 backdrop-blur-lg border-b border-white/10">
+    <header className="bg-black/50 backdrop-blur-sm border-b border-white/10">
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">لوحة تحكم الإدارة</h1>
-            {currentUser && (
-              <p className="text-gray-400 text-sm">
-                مرحباً {currentUser.username} - {currentUser.role}
-                {currentUser.role === 'مدير عام' && (
-                  <span className="text-green-400 mr-2">• تحكم كامل</span>
-                )}
-              </p>
-            )}
+          <div className="flex items-center space-x-4 rtl:space-x-reverse">
+            <h1 className="text-2xl font-bold text-white">لوحة التحكم</h1>
+            <span className="text-gray-400">|</span>
+            <span className="text-blue-400 font-medium">DARK Admin</span>
           </div>
-          <button
-            onClick={onLogout}
-            className="flex items-center space-x-2 rtl:space-x-reverse text-red-400 hover:text-red-300 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>تسجيل الخروج</span>
-          </button>
+          
+          <div className="flex items-center space-x-4 rtl:space-x-reverse">
+            {/* زر الترجمة */}
+            <LanguageToggle size="sm" />
+            
+            {/* معلومات المستخدم */}
+            {currentUser && (
+              <div className="flex items-center space-x-3 rtl:space-x-reverse text-white">
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <Shield className="w-4 h-4 text-blue-400" />
+                  <span className="text-blue-400 text-sm">{currentUser.role}</span>
+                </div>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <User className="w-4 h-4" />
+                  <span>{currentUser.username}</span>
+                </div>
+              </div>
+            )}
+            
+            {/* زر تسجيل الخروج */}
+            <button
+              onClick={onLogout}
+              className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>خروج</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </header>
   );
 };
 
