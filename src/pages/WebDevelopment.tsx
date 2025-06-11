@@ -49,8 +49,8 @@ const WebDevelopment = () => {
       <StarryBackground />
       <GlobalCart />
       
-      <div className="relative z-10">
-        <div className="container mx-auto px-6 py-12">
+      <div className="relative z-10 pt-32 pb-20">
+        <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
               {currentLang === 'ar' ? settings.pageTexts.webDevelopment.pageTitle : TranslationService.translate('web.page.title')}
