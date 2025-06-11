@@ -6,7 +6,7 @@ import AdminSidebar from '../components/admin/AdminSidebar';
 import AdminHeader from '../components/admin/AdminHeader';
 import AdminTabContent from '../components/admin/AdminTabContent';
 import AuthService from '../utils/auth';
-import AdminStorage from '../utils/adminStorage';
+import SettingsService from '../utils/settingsService';
 import { useAdminData } from '../hooks/useAdminData';
 import { useProductManagement } from '../hooks/useProductManagement';
 
@@ -36,11 +36,21 @@ const AdminDashboard = () => {
   };
 
   const saveSiteSettings = () => {
-    AdminStorage.saveSiteSettings(siteSettings);
-    toast({
-      title: "تم حفظ الإعدادات",
-      description: "تم حفظ إعدادات الموقع بنجاح"
-    });
+    try {
+      console.log('AdminDashboard: Saving settings:', siteSettings);
+      SettingsService.saveSiteSettings(siteSettings);
+      toast({
+        title: "تم حفظ الإعدادات",
+        description: "تم حفظ إعدادات الموقع بنجاح"
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ الإعدادات",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

@@ -1,38 +1,70 @@
+
 import React, { useState, useEffect } from 'react';
-import { Save, FileText, Globe, MessageSquare, Download, Upload, Copy } from 'lucide-react';
-import AdminStorage, { SiteSettings } from '../../utils/adminStorage';
+import { Save, FileText, Globe, MessageSquare, Download, Upload } from 'lucide-react';
+import SettingsService from '../../utils/settingsService';
+import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
 import TextEditor from './TextEditor';
 
 const TextsTab = () => {
-  const [settings, setSettings] = useState<SiteSettings>(AdminStorage.getSiteSettings());
+  const [settings, setSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
   const [activeSection, setActiveSection] = useState('home');
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
-    setSettings(AdminStorage.getSiteSettings());
+    // تحميل الإعدادات عند بداية التشغيل
+    const loadedSettings = SettingsService.getSiteSettings();
+    console.log('TextsTab: Loaded settings:', loadedSettings);
+    setSettings(loadedSettings);
+
+    // الاستماع لتحديثات الإعدادات
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('TextsTab: Settings updated via event:', event.detail.settings);
+      setSettings(event.detail.settings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
   }, []);
 
   const saveSettings = () => {
-    AdminStorage.saveSiteSettings(settings);
-    toast({
-      title: "تم حفظ النصوص",
-      description: "تم حفظ جميع النصوص بنجاح"
-    });
+    try {
+      console.log('TextsTab: Saving settings:', settings);
+      SettingsService.saveSiteSettings(settings);
+      toast({
+        title: "تم حفظ النصوص",
+        description: "تم حفظ جميع النصوص بنجاح"
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ النصوص",
+        variant: "destructive"
+      });
+    }
   };
 
   const updatePageTexts = (page: string, field: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      pageTexts: {
-        ...prev.pageTexts,
-        [page]: {
-          ...prev.pageTexts[page as keyof typeof prev.pageTexts],
-          [field]: value
+    console.log('TextsTab: Updating page texts:', page, field, value);
+    setSettings(prev => {
+      const newSettings = {
+        ...prev,
+        pageTexts: {
+          ...prev.pageTexts,
+          [page]: {
+            ...prev.pageTexts[page as keyof typeof prev.pageTexts],
+            [field]: value
+          }
         }
-      }
-    }));
+      };
+      console.log('TextsTab: New settings:', newSettings);
+      return newSettings;
+    });
   };
 
   const exportTexts = () => {
