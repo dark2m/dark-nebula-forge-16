@@ -102,6 +102,17 @@ const TextsTab = () => {
     section.name.includes(searchTerm)
   );
 
+  // Helper function to safely get page section data
+  const getPageSection = (sectionId: string) => {
+    return settings.pageTexts[sectionId as keyof typeof settings.pageTexts];
+  };
+
+  // Helper function to check if a section has specific properties
+  const hasProperty = (sectionId: string, property: string) => {
+    const section = getPageSection(sectionId);
+    return section && property in section;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -279,24 +290,64 @@ const TextsTab = () => {
             </div>
           )}
 
-          {/* باقي الأقسام */}
+          {/* أقسام الخدمات - pubgHacks, webDevelopment, discordBots */}
           {(activeSection === 'pubgHacks' || activeSection === 'webDevelopment' || activeSection === 'discordBots') && (
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-white">
                 نصوص {sections.find(s => s.id === activeSection)?.name}
               </h3>
               
-              <TextEditor
-                label="عنوان الصفحة"
-                value={settings.pageTexts[activeSection as keyof typeof settings.pageTexts].pageTitle}
-                onChange={(value) => updatePageTexts(activeSection, 'pageTitle', value)}
-              />
+              {hasProperty(activeSection, 'pageTitle') && (
+                <TextEditor
+                  label="عنوان الصفحة"
+                  value={(getPageSection(activeSection) as any).pageTitle}
+                  onChange={(value) => updatePageTexts(activeSection, 'pageTitle', value)}
+                />
+              )}
               
-              <TextEditor
-                label="وصف الصفحة"
-                value={settings.pageTexts[activeSection as keyof typeof settings.pageTexts].pageSubtitle}
-                onChange={(value) => updatePageTexts(activeSection, 'pageSubtitle', value)}
-              />
+              {hasProperty(activeSection, 'pageSubtitle') && (
+                <TextEditor
+                  label="وصف الصفحة"
+                  value={(getPageSection(activeSection) as any).pageSubtitle}
+                  onChange={(value) => updatePageTexts(activeSection, 'pageSubtitle', value)}
+                />
+              )}
+
+              {/* إضافة المزيد من الحقول المخصصة لكل قسم */}
+              {activeSection === 'pubgHacks' && (
+                <>
+                  {hasProperty(activeSection, 'safetyTitle') && (
+                    <TextEditor
+                      label="عنوان الأمان"
+                      value={settings.pageTexts.pubgHacks.safetyTitle}
+                      onChange={(value) => updatePageTexts('pubgHacks', 'safetyTitle', value)}
+                    />
+                  )}
+                  {hasProperty(activeSection, 'safetyDescription') && (
+                    <TextEditor
+                      label="وصف الأمان"
+                      value={settings.pageTexts.pubgHacks.safetyDescription}
+                      onChange={(value) => updatePageTexts('pubgHacks', 'safetyDescription', value)}
+                    />
+                  )}
+                </>
+              )}
+
+              {activeSection === 'webDevelopment' && hasProperty(activeSection, 'servicesTitle') && (
+                <TextEditor
+                  label="عنوان الخدمات"
+                  value={settings.pageTexts.webDevelopment.servicesTitle}
+                  onChange={(value) => updatePageTexts('webDevelopment', 'servicesTitle', value)}
+                />
+              )}
+
+              {activeSection === 'discordBots' && hasProperty(activeSection, 'featuresTitle') && (
+                <TextEditor
+                  label="عنوان المميزات"
+                  value={settings.pageTexts.discordBots.featuresTitle}
+                  onChange={(value) => updatePageTexts('discordBots', 'featuresTitle', value)}
+                />
+              )}
             </div>
           )}
 
@@ -328,6 +379,51 @@ const TextsTab = () => {
                   label="زر إضافة للسلة"
                   value={settings.pageTexts.cart.addToCartButton}
                   onChange={(value) => updatePageTexts('cart', 'addToCartButton', value)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* قسم التنقل */}
+          {activeSection === 'navigation' && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-bold text-white">نصوص التنقل</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TextEditor
+                  label="عنوان الرئيسية"
+                  value={settings.pageTexts.navigation.homeTitle}
+                  onChange={(value) => updatePageTexts('navigation', 'homeTitle', value)}
+                />
+                
+                <TextEditor
+                  label="عنوان ببجي"
+                  value={settings.pageTexts.navigation.pubgTitle}
+                  onChange={(value) => updatePageTexts('navigation', 'pubgTitle', value)}
+                />
+                
+                <TextEditor
+                  label="عنوان البرمجة"
+                  value={settings.pageTexts.navigation.webTitle}
+                  onChange={(value) => updatePageTexts('navigation', 'webTitle', value)}
+                />
+                
+                <TextEditor
+                  label="عنوان الديسكورد"
+                  value={settings.pageTexts.navigation.discordTitle}
+                  onChange={(value) => updatePageTexts('navigation', 'discordTitle', value)}
+                />
+                
+                <TextEditor
+                  label="عنوان الصفحة الرسمية"
+                  value={settings.pageTexts.navigation.officialTitle}
+                  onChange={(value) => updatePageTexts('navigation', 'officialTitle', value)}
+                />
+                
+                <TextEditor
+                  label="عنوان الإدارة"
+                  value={settings.pageTexts.navigation.adminTitle}
+                  onChange={(value) => updatePageTexts('navigation', 'adminTitle', value)}
                 />
               </div>
             </div>
