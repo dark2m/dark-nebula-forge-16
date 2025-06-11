@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, Mail, Phone, MapPin, Users, Star, Shield } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage from '../utils/adminStorage';
-import GlobalCart from '../components/GlobalCart';
 import TranslationService from '../utils/translationService';
+import GlobalCart from '../components/GlobalCart';
 
 const OfficialPage = () => {
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
@@ -39,10 +39,10 @@ const OfficialPage = () => {
           {/* Hero Section */}
           <div className="text-center mb-16">
             <h1 className="text-5xl font-bold text-white mb-6 bg-gradient-to-r from-white via-blue-200 to-blue-400 bg-clip-text text-transparent">
-              {pageTexts.pageTitle}
+              {currentLang === 'ar' ? pageTexts.pageTitle : TranslationService.translate('official.page.title')}
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              {pageTexts.pageSubtitle}
+              {currentLang === 'ar' ? pageTexts.pageSubtitle : TranslationService.translate('official.page.subtitle')}
             </p>
           </div>
 
@@ -51,7 +51,9 @@ const OfficialPage = () => {
             <div className="flex items-center justify-center mb-6">
               <Users className="w-12 h-12 text-blue-400" />
             </div>
-            <h2 className="text-3xl font-bold text-white text-center mb-6">{pageTexts.aboutTitle}</h2>
+            <h2 className="text-3xl font-bold text-white text-center mb-6">
+              {currentLang === 'ar' ? pageTexts.aboutTitle : TranslationService.translate('official.about.title')}
+            </h2>
             <div className="text-gray-300 text-lg leading-relaxed max-w-4xl mx-auto">
               {pageTexts.aboutContent.map((paragraph, index) => (
                 <p key={index} className="mb-6">
@@ -75,47 +77,49 @@ const OfficialPage = () => {
             <div className="flex items-center justify-center mb-6">
               <MessageCircle className="w-12 h-12 text-blue-400" />
             </div>
-            <h2 className="text-3xl font-bold text-white text-center mb-8">{pageTexts.contactTitle}</h2>
+            <h2 className="text-3xl font-bold text-white text-center mb-8">
+              {currentLang === 'ar' ? pageTexts.contactTitle : TranslationService.translate('official.contact.title')}
+            </h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6 text-center">
                 <MessageCircle className="w-8 h-8 text-blue-400 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-white mb-2">
-                  {currentLang === 'ar' ? 'تليجرام' : 'Telegram'}
+                  {TranslationService.translate('contact.telegram')}
                 </h3>
                 <p className="text-blue-400">{siteSettings.contactInfo.telegram}</p>
               </div>
               <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-6 text-center">
                 <MessageCircle className="w-8 h-8 text-purple-400 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-white mb-2">
-                  {currentLang === 'ar' ? 'ديسكورد' : 'Discord'}
+                  {TranslationService.translate('contact.discord')}
                 </h3>
                 <p className="text-purple-400">{siteSettings.contactInfo.discord}</p>
               </div>
               <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 text-center">
                 <Phone className="w-8 h-8 text-green-400 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-white mb-2">
-                  {currentLang === 'ar' ? 'واتساب' : 'WhatsApp'}
+                  {TranslationService.translate('contact.whatsapp')}
                 </h3>
                 <p className="text-green-400">{siteSettings.contactInfo.whatsapp}</p>
               </div>
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
                 <Mail className="w-8 h-8 text-red-400 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-white mb-2">
-                  {currentLang === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                  {TranslationService.translate('contact.email')}
                 </h3>
                 <p className="text-red-400">{siteSettings.contactInfo.email}</p>
               </div>
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6 text-center">
                 <Phone className="w-8 h-8 text-blue-400 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-white mb-2">
-                  {currentLang === 'ar' ? 'الهاتف' : 'Phone'}
+                  {TranslationService.translate('contact.phone')}
                 </h3>
                 <p className="text-blue-400">{siteSettings.contactInfo.phone}</p>
               </div>
               <div className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-6 text-center">
                 <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-white mb-2">
-                  {currentLang === 'ar' ? 'العنوان' : 'Address'}
+                  {TranslationService.translate('contact.address')}
                 </h3>
                 <p className="text-gray-400">{siteSettings.contactInfo.address}</p>
               </div>

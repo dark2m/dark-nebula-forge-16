@@ -28,6 +28,7 @@ class TranslationService {
     'common.features': { ar: 'المميزات', en: 'Features' },
     'common.contact': { ar: 'تواصل معنا', en: 'Contact Us' },
     'common.explore_now': { ar: 'استكشف الآن', en: 'Explore Now' },
+    'common.no_products': { ar: 'لا توجد منتجات متاحة حالياً', en: 'No products available at the moment' },
     
     // Admin Panel
     'admin.dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -53,6 +54,25 @@ class TranslationService {
     'services.web.description': { ar: 'تطوير مواقع احترافية ومتقدمة', en: 'Professional and advanced website development' },
     'services.discord.title': { ar: 'برمجة بوتات ديسكورد', en: 'Discord Bots' },
     'services.discord.description': { ar: 'بوتات ديسكورد مخصصة ومتطورة', en: 'Custom and advanced Discord bots' },
+    
+    // Discord Bots Page
+    'discord.page.title': { ar: 'برمجة بوتات ديسكورد', en: 'Discord Bot Development' },
+    'discord.page.subtitle': { ar: 'بوتات ديسكورد مخصصة ومتطورة لخدمة سيرفرك', en: 'Custom and advanced Discord bots to serve your server' },
+    'discord.features.title': { ar: 'مميزات البوتات', en: 'Bot Features' },
+    
+    // Official Page
+    'official.page.title': { ar: 'الصفحة الرسمية', en: 'Official Page' },
+    'official.page.subtitle': { ar: 'معلومات رسمية عن خدماتنا وفريق العمل', en: 'Official information about our services and team' },
+    'official.about.title': { ar: 'من نحن', en: 'About Us' },
+    'official.contact.title': { ar: 'تواصل معنا', en: 'Contact Us' },
+    
+    // Contact Info
+    'contact.telegram': { ar: 'تليجرام', en: 'Telegram' },
+    'contact.discord': { ar: 'ديسكورد', en: 'Discord' },
+    'contact.whatsapp': { ar: 'واتساب', en: 'WhatsApp' },
+    'contact.email': { ar: 'البريد الإلكتروني', en: 'Email' },
+    'contact.phone': { ar: 'الهاتف', en: 'Phone' },
+    'contact.address': { ar: 'العنوان', en: 'Address' },
   };
 
   static getCurrentLanguage(): 'ar' | 'en' {
