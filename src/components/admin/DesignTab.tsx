@@ -157,12 +157,12 @@ const DesignTab = () => {
             <select
               value={settings.design.borderRadius}
               onChange={(e) => updateDesign({ borderRadius: e.target.value as 'none' | 'small' | 'medium' | 'large' })}
-              className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+              className="w-full bg-gray-800 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
-              <option value="none">بدون انحناء</option>
-              <option value="small">انحناء صغير</option>
-              <option value="medium">انحناء متوسط</option>
-              <option value="large">انحناء كبير</option>
+              <option value="none" className="bg-gray-800 text-white">بدون انحناء</option>
+              <option value="small" className="bg-gray-800 text-white">انحناء صغير</option>
+              <option value="medium" className="bg-gray-800 text-white">انحناء متوسط</option>
+              <option value="large" className="bg-gray-800 text-white">انحناء كبير</option>
             </select>
           </div>
 
@@ -171,12 +171,12 @@ const DesignTab = () => {
             <select
               value={settings.design.shadows}
               onChange={(e) => updateDesign({ shadows: e.target.value as 'none' | 'small' | 'medium' | 'large' })}
-              className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+              className="w-full bg-gray-800 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
-              <option value="none">بدون ظلال</option>
-              <option value="small">ظلال صغيرة</option>
-              <option value="medium">ظلال متوسطة</option>
-              <option value="large">ظلال كبيرة</option>
+              <option value="none" className="bg-gray-800 text-white">بدون ظلال</option>
+              <option value="small" className="bg-gray-800 text-white">ظلال صغيرة</option>
+              <option value="medium" className="bg-gray-800 text-white">ظلال متوسطة</option>
+              <option value="large" className="bg-gray-800 text-white">ظلال كبيرة</option>
             </select>
           </div>
 
@@ -185,11 +185,11 @@ const DesignTab = () => {
             <select
               value={settings.design.spacing}
               onChange={(e) => updateDesign({ spacing: e.target.value as 'tight' | 'normal' | 'loose' })}
-              className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+              className="w-full bg-gray-800 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
-              <option value="tight">ضيق</option>
-              <option value="normal">عادي</option>
-              <option value="loose">واسع</option>
+              <option value="tight" className="bg-gray-800 text-white">ضيق</option>
+              <option value="normal" className="bg-gray-800 text-white">عادي</option>
+              <option value="loose" className="bg-gray-800 text-white">واسع</option>
             </select>
           </div>
 
