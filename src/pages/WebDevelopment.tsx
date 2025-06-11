@@ -50,25 +50,25 @@ const WebDevelopment = () => {
       <GlobalCart />
       
       <div className="relative z-10 pt-32 pb-20">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              {currentLang === 'ar' ? settings.pageTexts.webDevelopment.pageTitle : TranslationService.translate('web.page.title')}
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
+              {TranslationService.translate('web.page.title')}
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              {currentLang === 'ar' ? settings.pageTexts.webDevelopment.pageSubtitle : TranslationService.translate('web.page.subtitle')}
+            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
+              {TranslationService.translate('web.page.subtitle')}
             </p>
           </div>
 
           {/* Services Section */}
           <div className="mb-12">
-            <h2 className="text-3xl font-bold text-white text-center mb-8">
-              {currentLang === 'ar' ? settings.pageTexts.webDevelopment.servicesTitle : TranslationService.translate('services.web.services_title')}
+            <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
+              {TranslationService.translate('services.web.services_title')}
             </h2>
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {products.map((product) => (
               <div key={product.id} className="group">
                 <div 
@@ -82,10 +82,10 @@ const WebDevelopment = () => {
                 >
                   <div className="absolute inset-0 bg-black/40" />
                   
-                  <div className="relative p-6">
+                  <div className="relative p-4 sm:p-6">
                     <h3 className={`font-bold text-white mb-3 ${
-                      product.titleSize === 'small' ? 'text-lg' :
-                      product.titleSize === 'large' ? 'text-2xl' : 'text-xl'
+                      product.titleSize === 'small' ? 'text-base sm:text-lg' :
+                      product.titleSize === 'large' ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'
                     }`}>
                       {product.name}
                     </h3>
@@ -114,9 +114,9 @@ const WebDevelopment = () => {
                     <div className="flex flex-wrap gap-2 mb-4">
                       <button
                         onClick={() => addToCart(product)}
-                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
+                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-xs sm:text-sm"
                       >
-                        <ShoppingCart className="w-4 h-4" />
+                        <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span>{TranslationService.translate('common.add_to_cart')}</span>
                       </button>
                       
@@ -132,7 +132,7 @@ const WebDevelopment = () => {
                     </div>
 
                     <div className="flex items-center justify-center">
-                      <span className="text-2xl font-bold text-green-400">
+                      <span className="text-xl sm:text-2xl font-bold text-green-400">
                         ${product.price}
                       </span>
                     </div>
@@ -144,7 +144,7 @@ const WebDevelopment = () => {
 
           {products.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-400 text-xl">
+              <p className="text-gray-400 text-lg sm:text-xl">
                 {TranslationService.translate('common.no_services')}
               </p>
             </div>

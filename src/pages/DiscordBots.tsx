@@ -49,26 +49,62 @@ const DiscordBots = () => {
       <StarryBackground />
       <GlobalCart />
       
-      <div className="relative z-10">
-        <div className="container mx-auto px-6 py-12">
+      <div className="relative z-10 pt-32 pb-20">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              {currentLang === 'ar' ? settings.pageTexts.discordBots.pageTitle : TranslationService.translate('discord.page.title')}
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
+              {TranslationService.translate('discord.page.title')}
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              {currentLang === 'ar' ? settings.pageTexts.discordBots.pageSubtitle : TranslationService.translate('discord.page.subtitle')}
+            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
+              {TranslationService.translate('discord.page.subtitle')}
             </p>
+          </div>
+
+          {/* Why Choose DARK Section */}
+          <div className="mb-16">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
+              {TranslationService.translate('why.choose.dark.title')}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                <div className="text-4xl mb-3">⚡</div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                  {TranslationService.translate('why.choose.delivery.title')}
+                </h3>
+                <p className="text-gray-300 text-sm sm:text-base">
+                  {TranslationService.translate('why.choose.delivery.desc')}
+                </p>
+              </div>
+              <div className="text-center p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
+                <div className="text-4xl mb-3">🛡️</div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                  {TranslationService.translate('why.choose.safety.title')}
+                </h3>
+                <p className="text-gray-300 text-sm sm:text-base">
+                  {TranslationService.translate('why.choose.safety.desc')}
+                </p>
+              </div>
+              <div className="text-center p-6 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                <div className="text-4xl mb-3">💎</div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                  {TranslationService.translate('why.choose.quality.title')}
+                </h3>
+                <p className="text-gray-300 text-sm sm:text-base">
+                  {TranslationService.translate('why.choose.quality.desc')}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Features Section */}
           <div className="mb-12">
-            <h2 className="text-3xl font-bold text-white text-center mb-8">
-              {currentLang === 'ar' ? settings.pageTexts.discordBots.featuresTitle : TranslationService.translate('discord.features.title')}
+            <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
+              {TranslationService.translate('discord.features.title')}
             </h2>
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {products.map((product) => (
               <div key={product.id} className="group">
                 <div 
@@ -82,10 +118,10 @@ const DiscordBots = () => {
                 >
                   <div className="absolute inset-0 bg-black/40" />
                   
-                  <div className="relative p-6">
+                  <div className="relative p-4 sm:p-6">
                     <h3 className={`font-bold text-white mb-3 ${
-                      product.titleSize === 'small' ? 'text-lg' :
-                      product.titleSize === 'large' ? 'text-2xl' : 'text-xl'
+                      product.titleSize === 'small' ? 'text-base sm:text-lg' :
+                      product.titleSize === 'large' ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'
                     }`}>
                       {product.name}
                     </h3>
@@ -114,9 +150,9 @@ const DiscordBots = () => {
                     <div className="flex flex-wrap gap-2 mb-4">
                       <button
                         onClick={() => addToCart(product)}
-                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
+                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-xs sm:text-sm"
                       >
-                        <ShoppingCart className="w-4 h-4" />
+                        <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
                         <span>{TranslationService.translate('common.add_to_cart')}</span>
                       </button>
                       
@@ -132,7 +168,7 @@ const DiscordBots = () => {
                     </div>
 
                     <div className="flex items-center justify-center">
-                      <span className="text-2xl font-bold text-green-400">
+                      <span className="text-xl sm:text-2xl font-bold text-green-400">
                         ${product.price}
                       </span>
                     </div>
@@ -144,7 +180,7 @@ const DiscordBots = () => {
 
           {products.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-400 text-xl">
+              <p className="text-gray-400 text-lg sm:text-xl">
                 {TranslationService.translate('common.no_products')}
               </p>
             </div>

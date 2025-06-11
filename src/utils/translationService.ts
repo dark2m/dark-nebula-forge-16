@@ -1,4 +1,3 @@
-
 class TranslationService {
   private static currentLanguage: 'ar' | 'en' = 'ar';
 
@@ -30,9 +29,9 @@ class TranslationService {
       'services.web.services_title': 'خدماتنا',
 
       // Discord Bots Page
-      'discord.page.title': 'بوتات ديسكورد',
+      'discord.page.title': 'برمجة بوتات ديسكورد',
       'discord.page.subtitle': 'بوتات ديسكورد احترافية ومخصصة لخادمك',
-      'services.discord.features_title': 'مميزات البوتات',
+      'discord.features.title': 'مميزات البوتات',
 
       // Official Page
       'official.page.title': 'الصفحة الرسمية',
@@ -47,6 +46,15 @@ class TranslationService {
       'official.why.support.title': 'الدعم',
       'official.why.support.desc': 'دعم فني متاح 24/7 لجميع عملائنا',
       'official.contact.title': 'تواصل معنا',
+
+      // New Why Choose DARK section
+      'why.choose.dark.title': 'لماذا تختار DARK؟',
+      'why.choose.delivery.title': 'سرعة التسليم',
+      'why.choose.delivery.desc': 'نلتزم بتسليم جميع الطلبات في الوقت المحدد',
+      'why.choose.safety.title': 'الأمان والحماية',
+      'why.choose.safety.desc': 'جميع منتجاتنا آمنة ومحمية ضد الاكتشاف',
+      'why.choose.quality.title': 'جودة عالية',
+      'why.choose.quality.desc': 'نقدم أفضل جودة في السوق بأسعار منافسة',
 
       // Contact
       'contact.telegram': 'تيليجرام',
@@ -94,9 +102,9 @@ class TranslationService {
       'services.web.services_title': 'Our Services',
 
       // Discord Bots Page
-      'discord.page.title': 'Discord Bots',
+      'discord.page.title': 'Discord Bot Development',
       'discord.page.subtitle': 'Professional and custom Discord bots for your server',
-      'services.discord.features_title': 'Bot Features',
+      'discord.features.title': 'Bot Features',
 
       // Official Page
       'official.page.title': 'Official Page',
@@ -111,6 +119,15 @@ class TranslationService {
       'official.why.support.title': 'Support',
       'official.why.support.desc': '24/7 technical support available for all our customers',
       'official.contact.title': 'Contact Us',
+
+      // New Why Choose DARK section
+      'why.choose.dark.title': 'Why Choose DARK?',
+      'why.choose.delivery.title': 'Fast Delivery',
+      'why.choose.delivery.desc': 'We commit to delivering all orders on time',
+      'why.choose.safety.title': 'Safety & Protection',
+      'why.choose.safety.desc': 'All our products are safe and protected against detection',
+      'why.choose.quality.title': 'High Quality',
+      'why.choose.quality.desc': 'We provide the best quality in the market at competitive prices',
 
       // Contact
       'contact.telegram': 'Telegram',
