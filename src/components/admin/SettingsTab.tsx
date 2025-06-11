@@ -1,19 +1,33 @@
 
 import React, { useState, useEffect } from 'react';
 import { Save, Settings, Palette, Type, Globe } from 'lucide-react';
-import AdminStorage, { SiteSettings } from '../../utils/adminStorage';
+import SettingsService from '../../utils/settingsService';
+import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
 
 const SettingsTab = () => {
-  const [settings, setSettings] = useState<SiteSettings>(AdminStorage.getSiteSettings());
+  const [settings, setSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
   const [hasChanges, setHasChanges] = useState(false);
-  const [originalSettings, setOriginalSettings] = useState<SiteSettings>(AdminStorage.getSiteSettings());
+  const [originalSettings, setOriginalSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadedSettings = AdminStorage.getSiteSettings();
+    const loadedSettings = SettingsService.getSiteSettings();
     setSettings(loadedSettings);
     setOriginalSettings(loadedSettings);
+
+    // الاستماع لتحديثات الإعدادات
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('SettingsTab: Settings updated via event:', event.detail.settings);
+      setSettings(event.detail.settings);
+      setOriginalSettings(event.detail.settings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -23,13 +37,23 @@ const SettingsTab = () => {
   }, [settings, originalSettings]);
 
   const saveSettings = () => {
-    AdminStorage.saveSiteSettings(settings);
-    setOriginalSettings(settings);
-    setHasChanges(false);
-    toast({
-      title: "تم حفظ الإعدادات",
-      description: "تم حفظ إعدادات الموقع بنجاح"
-    });
+    try {
+      console.log('SettingsTab: Saving settings:', settings);
+      SettingsService.saveSiteSettings(settings);
+      setOriginalSettings(settings);
+      setHasChanges(false);
+      toast({
+        title: "تم حفظ الإعدادات",
+        description: "تم حفظ إعدادات الموقع بنجاح"
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ الإعدادات",
+        variant: "destructive"
+      });
+    }
   };
 
   const resetSettings = () => {

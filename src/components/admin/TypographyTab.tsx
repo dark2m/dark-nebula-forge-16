@@ -1,15 +1,30 @@
 
 import React, { useState, useEffect } from 'react';
 import { Type, Save, RotateCcw } from 'lucide-react';
-import AdminStorage, { SiteSettings } from '../../utils/adminStorage';
+import SettingsService from '../../utils/settingsService';
+import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
 
 const TypographyTab = () => {
-  const [settings, setSettings] = useState<SiteSettings>(AdminStorage.getSiteSettings());
+  const [settings, setSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
   const { toast } = useToast();
 
   useEffect(() => {
-    setSettings(AdminStorage.getSiteSettings());
+    const loadedSettings = SettingsService.getSiteSettings();
+    console.log('TypographyTab: Loading settings:', loadedSettings);
+    setSettings(loadedSettings);
+
+    // الاستماع لتحديثات الإعدادات
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('TypographyTab: Settings updated via event:', event.detail.settings);
+      setSettings(event.detail.settings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
   }, []);
 
   const updateTypography = (updates: Partial<SiteSettings['typography']>) => {
@@ -47,11 +62,21 @@ const TypographyTab = () => {
   };
 
   const saveSettings = () => {
-    AdminStorage.saveSiteSettings(settings);
-    toast({
-      title: "تم حفظ الإعدادات",
-      description: "تم حفظ إعدادات النصوص بنجاح"
-    });
+    try {
+      console.log('TypographyTab: Saving settings:', settings);
+      SettingsService.saveSiteSettings(settings);
+      toast({
+        title: "تم حفظ الإعدادات",
+        description: "تم حفظ إعدادات النصوص بنجاح"
+      });
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ الإعدادات",
+        variant: "destructive"
+      });
+    }
   };
 
   const resetToDefault = () => {

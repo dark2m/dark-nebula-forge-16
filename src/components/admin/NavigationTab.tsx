@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Trash2 } from 'lucide-react';
-import { SiteSettings } from '../../utils/adminStorage';
+import { Trash2, Save } from 'lucide-react';
+import { SiteSettings } from '../../types/admin';
 
 interface NavigationTabProps {
   siteSettings: SiteSettings;
@@ -14,6 +14,11 @@ const NavigationTab: React.FC<NavigationTabProps> = ({
   setSiteSettings, 
   saveSiteSettings 
 }) => {
+  const handleSave = () => {
+    console.log('NavigationTab: Saving navigation settings:', siteSettings.navigation);
+    saveSiteSettings();
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-white">إدارة شريط التنقل</h2>
@@ -96,9 +101,10 @@ const NavigationTab: React.FC<NavigationTabProps> = ({
         </div>
 
         <button
-          onClick={saveSiteSettings}
-          className="w-full glow-button mt-6"
+          onClick={handleSave}
+          className="w-full glow-button mt-6 flex items-center justify-center gap-2"
         >
+          <Save className="w-4 h-4" />
           حفظ إعدادات التنقل
         </button>
       </div>

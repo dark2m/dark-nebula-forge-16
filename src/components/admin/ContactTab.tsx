@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Save } from 'lucide-react';
-import { SiteSettings } from '../../utils/adminStorage';
+import { SiteSettings } from '../../types/admin';
 
 interface ContactTabProps {
   siteSettings: SiteSettings;
@@ -14,6 +14,11 @@ const ContactTab: React.FC<ContactTabProps> = ({
   setSiteSettings, 
   saveSiteSettings 
 }) => {
+  const handleSave = () => {
+    console.log('ContactTab: Saving contact settings:', siteSettings.contactInfo);
+    saveSiteSettings();
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-white">إعدادات التواصل</h2>
@@ -79,7 +84,7 @@ const ContactTab: React.FC<ContactTabProps> = ({
           </div>
 
           <button
-            onClick={saveSiteSettings}
+            onClick={handleSave}
             className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
           >
             <Save className="w-4 h-4" />
