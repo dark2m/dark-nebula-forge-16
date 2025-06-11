@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, X } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -12,21 +12,8 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  useEffect(() => {
-    const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLang(event.detail.language);
-    };
-
-    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
-    };
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,21 +24,21 @@ const AdminLogin = () => {
       
       if (isAuthenticated) {
         toast({
-          title: currentLang === 'ar' ? "تم تسجيل الدخول بنجاح" : "Login Successful",
-          description: currentLang === 'ar' ? "مرحباً بك في لوحة التحكم" : "Welcome to the admin dashboard"
+          title: "تم تسجيل الدخول بنجاح",
+          description: "مرحباً بك في لوحة التحكم"
         });
         navigate('/admin/dashboard');
       } else {
         toast({
-          title: currentLang === 'ar' ? "خطأ في تسجيل الدخول" : "Login Error",
-          description: currentLang === 'ar' ? "اسم المستخدم أو كلمة المرور غير صحيحة" : "Incorrect username or password",
+          title: "خطأ في تسجيل الدخول",
+          description: "اسم المستخدم أو كلمة المرور غير صحيحة",
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: currentLang === 'ar' ? "خطأ" : "Error",
-        description: currentLang === 'ar' ? "حدث خطأ أثناء تسجيل الدخول" : "An error occurred during login",
+        title: "خطأ",
+        description: "حدث خطأ أثناء تسجيل الدخول",
         variant: "destructive"
       });
     } finally {
