@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
-import { Save, FileText, Globe, MessageSquare, Download, Upload, Copy, Languages } from 'lucide-react';
+import { Save, FileText, Globe, MessageSquare, Download, Upload, Copy } from 'lucide-react';
 import AdminStorage, { SiteSettings } from '../../utils/adminStorage';
 import { useToast } from '@/hooks/use-toast';
 import TextEditor from './TextEditor';
-import TranslationService from '../../utils/translationService';
 
 const TextsTab = () => {
   const [settings, setSettings] = useState<SiteSettings>(AdminStorage.getSiteSettings());
@@ -80,14 +78,6 @@ const TextsTab = () => {
     reader.readAsText(file);
   };
 
-  const copyTextContent = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "تم نسخ النص",
-      description: "تم نسخ النص إلى الحافظة"
-    });
-  };
-
   const sections = [
     { id: 'home', name: 'الصفحة الرئيسية', icon: Globe },
     { id: 'official', name: 'الصفحة الرسمية', icon: FileText },
@@ -116,7 +106,7 @@ const TextsTab = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-white">إدارة النصوص المتقدمة</h2>
+        <h2 className="text-3xl font-bold text-white">إدارة النصوص</h2>
         <div className="flex gap-3">
           {/* أدوات الاستيراد والتصدير */}
           <input
@@ -149,37 +139,6 @@ const TextsTab = () => {
             <Save className="w-4 h-4" />
             <span>حفظ التغييرات</span>
           </button>
-        </div>
-      </div>
-
-      {/* إعدادات الترجمة */}
-      <div className="admin-card rounded-xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Languages className="w-5 h-5" />
-          إعدادات الترجمة
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-gray-400 text-sm mb-2">اللغة الحالية</label>
-            <div className="flex items-center gap-3">
-              <span className="text-white font-medium">
-                {TranslationService.getCurrentLanguage() === 'ar' ? 'العربية' : 'English'}
-              </span>
-              <button
-                onClick={() => TranslationService.toggleLanguage()}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
-              >
-                <Languages className="w-4 h-4" />
-                تبديل اللغة
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-gray-400 text-sm mb-2">إعدادات اللغة</label>
-            <p className="text-gray-300 text-sm">
-              يمكنك تبديل لغة الموقع بين العربية والإنجليزية من أي صفحة
-            </p>
-          </div>
         </div>
       </div>
 
@@ -434,7 +393,7 @@ const TextsTab = () => {
       {/* أدوات إضافية */}
       <div className="admin-card rounded-xl p-6">
         <h3 className="text-xl font-bold text-white mb-4">أدوات إضافية</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
             <h4 className="text-blue-400 font-semibold mb-2">📊 إحصائيات النصوص</h4>
             <p className="text-gray-300 text-sm">
@@ -450,13 +409,6 @@ const TextsTab = () => {
             >
               إنشاء نسخة احتياطية
             </button>
-          </div>
-          
-          <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-            <h4 className="text-purple-400 font-semibold mb-2">🌐 الترجمة</h4>
-            <p className="text-gray-300 text-sm">
-              اللغة الحالية: {TranslationService.getCurrentLanguage() === 'ar' ? 'العربية' : 'English'}
-            </p>
           </div>
         </div>
       </div>

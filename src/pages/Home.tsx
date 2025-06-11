@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Code, Bot, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Shield, Code, Bot, ArrowLeft } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage from '../utils/adminStorage';
 import GlobalCart from '../components/GlobalCart';
@@ -9,43 +9,30 @@ import TranslationService from '../utils/translationService';
 
 const Home = () => {
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
-  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
 
   useEffect(() => {
     const loadedSettings = AdminStorage.getSiteSettings();
     setSiteSettings(loadedSettings);
   }, []);
 
-  useEffect(() => {
-    const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLang(event.detail.language);
-    };
-
-    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
-    };
-  }, []);
-
   const services = [
     {
-      title: currentLang === 'ar' ? siteSettings.pageTexts.navigation.pubgTitle : TranslationService.translate('services.pubg.title'),
-      description: currentLang === 'ar' ? 'أحدث الهاكات والأدوات لببجي موبايل' : TranslationService.translate('services.pubg.description'),
+      title: siteSettings.pageTexts.navigation.pubgTitle,
+      description: 'أحدث الهاكات والأدوات لببجي موبايل',
       icon: Shield,
       path: '/pubg-hacks',
       gradient: 'from-red-500 to-pink-600'
     },
     {
-      title: currentLang === 'ar' ? siteSettings.pageTexts.navigation.webTitle : TranslationService.translate('services.web.title'),
-      description: currentLang === 'ar' ? 'تطوير مواقع احترافية ومتقدمة' : TranslationService.translate('services.web.description'),
+      title: siteSettings.pageTexts.navigation.webTitle,
+      description: 'تطوير مواقع احترافية ومتقدمة',
       icon: Code,
       path: '/web-development',
       gradient: 'from-blue-500 to-cyan-600'
     },
     {
-      title: currentLang === 'ar' ? siteSettings.pageTexts.navigation.discordTitle : TranslationService.translate('services.discord.title'),
-      description: currentLang === 'ar' ? 'بوتات ديسكورد مخصصة ومتطورة' : TranslationService.translate('services.discord.description'),
+      title: siteSettings.pageTexts.navigation.discordTitle,
+      description: 'بوتات ديسكورد مخصصة ومتطورة',
       icon: Bot,
       path: '/discord-bots',
       gradient: 'from-purple-500 to-indigo-600'
@@ -54,8 +41,6 @@ const Home = () => {
 
   const homeTexts = siteSettings.pageTexts.home;
   const visibleFeatures = homeTexts.features.filter(feature => feature.visible);
-
-  const ArrowIcon = currentLang === 'ar' ? ArrowLeft : ArrowRight;
 
   return (
     <div className="min-h-screen relative">
@@ -66,10 +51,10 @@ const Home = () => {
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-blue-400 bg-clip-text text-transparent">
-            {currentLang === 'ar' ? homeTexts.heroTitle : TranslationService.translate('page.home.title')}
+            {homeTexts.heroTitle}
           </h1>
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-            {currentLang === 'ar' ? homeTexts.heroSubtitle : TranslationService.translate('page.home.subtitle')}
+            {homeTexts.heroSubtitle}
           </p>
           
           {/* Services Grid */}
@@ -92,10 +77,10 @@ const Home = () => {
                     {service.description}
                   </p>
                   <div className="flex items-center justify-center text-blue-400 group-hover:text-white transition-colors">
-                    <span className={currentLang === 'ar' ? 'mr-2' : 'ml-2'}>
-                      {TranslationService.translate('common.explore_now')}
+                    <span className="mr-2">
+                      استكشف الآن
                     </span>
-                    <ArrowIcon className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4" />
                   </div>
                 </Link>
               );

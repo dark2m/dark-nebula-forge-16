@@ -8,26 +8,11 @@ import GlobalCart from '../components/GlobalCart';
 
 const OfficialPage = () => {
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
-  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
 
   useEffect(() => {
     const loadedSettings = AdminStorage.getSiteSettings();
     setSiteSettings(loadedSettings);
   }, []);
-
-  useEffect(() => {
-    const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLang(event.detail.language);
-    };
-
-    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
-    };
-  }, []);
-
-  const pageTexts = siteSettings.pageTexts.official;
 
   return (
     <div className="min-h-screen relative">

@@ -3,50 +3,36 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users } from 'lucide-react';
 import AdminStorage from '../utils/adminStorage';
-import LanguageSwitch from './LanguageSwitch';
 import TranslationService from '../utils/translationService';
 
 const Navigation = () => {
   const location = useLocation();
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
-  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
   
   useEffect(() => {
     setSiteSettings(AdminStorage.getSiteSettings());
-  }, []);
-
-  useEffect(() => {
-    const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLang(event.detail.language);
-    };
-
-    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
-    };
   }, []);
 
   const navTexts = siteSettings.pageTexts.navigation;
   
   const navItems = [
     { 
-      name: currentLang === 'ar' ? navTexts.pubgTitle : TranslationService.translate('services.pubg.title'), 
+      name: navTexts.pubgTitle, 
       path: '/pubg-hacks', 
       icon: Shield 
     },
     { 
-      name: currentLang === 'ar' ? navTexts.webTitle : TranslationService.translate('services.web.title'), 
+      name: navTexts.webTitle, 
       path: '/web-development', 
       icon: Code 
     },
     { 
-      name: currentLang === 'ar' ? navTexts.discordTitle : TranslationService.translate('services.discord.title'), 
+      name: navTexts.discordTitle, 
       path: '/discord-bots', 
       icon: Bot 
     },
     { 
-      name: currentLang === 'ar' ? navTexts.officialTitle : TranslationService.translate('nav.official'), 
+      name: navTexts.officialTitle, 
       path: '/official', 
       icon: Users 
     },
@@ -82,16 +68,14 @@ const Navigation = () => {
             })}
           </div>
 
-          {/* Language Switch & Admin Login */}
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <LanguageSwitch />
-            
+          {/* Admin Login */}
+          <div className="flex items-center">
             <Link
               to="/admin/login"
               className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
             >
               <User className="w-4 h-4" />
-              <span>{currentLang === 'ar' ? navTexts.adminTitle : TranslationService.translate('nav.admin')}</span>
+              <span>{navTexts.adminTitle}</span>
             </Link>
           </div>
         </div>

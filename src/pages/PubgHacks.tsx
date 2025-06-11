@@ -14,24 +14,11 @@ import GlobalCart from '../components/GlobalCart';
 const PubgHacks = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
   const { addToCart } = useCart();
 
   useEffect(() => {
     setProducts(ProductService.getProducts().filter(p => p.category === 'pubg'));
     setSettings(SettingsService.getSiteSettings());
-  }, []);
-
-  useEffect(() => {
-    const handleLanguageChange = (event: CustomEvent) => {
-      setCurrentLang(event.detail.language);
-    };
-
-    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
-    };
   }, []);
 
   if (!settings) return null;
