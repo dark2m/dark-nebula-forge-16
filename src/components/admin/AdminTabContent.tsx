@@ -104,7 +104,13 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       return canAccess('مبرمج') ? <SettingsTab /> : <AccessDenied />;
 
     case 'texts':
-      return canAccess('مدير عام') ? <TextsTab /> : <AccessDenied />;
+      return canAccess('مدير عام') ? (
+        <TextsTab 
+          siteSettings={siteSettings}
+          setSiteSettings={setSiteSettings}
+          saveSiteSettings={saveSiteSettings}
+        />
+      ) : <AccessDenied />;
     
     default:
       return canAccess('مشرف') ? <OverviewTab products={products} /> : <AccessDenied />;

@@ -1,74 +1,46 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Save, FileText, Globe, MessageSquare, Download, Upload } from 'lucide-react';
-import SettingsService from '../../utils/settingsService';
 import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
 import TextEditor from './TextEditor';
 
-const TextsTab = () => {
-  const [settings, setSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
+interface TextsTabProps {
+  siteSettings: SiteSettings;
+  setSiteSettings: (settings: SiteSettings) => void;
+  saveSiteSettings: () => void;
+}
+
+const TextsTab: React.FC<TextsTabProps> = ({ 
+  siteSettings, 
+  setSiteSettings, 
+  saveSiteSettings 
+}) => {
   const [activeSection, setActiveSection] = useState('home');
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    // تحميل الإعدادات عند بداية التشغيل
-    const loadedSettings = SettingsService.getSiteSettings();
-    console.log('TextsTab: Loaded settings:', loadedSettings);
-    setSettings(loadedSettings);
-
-    // الاستماع لتحديثات الإعدادات
-    const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('TextsTab: Settings updated via event:', event.detail.settings);
-      setSettings(event.detail.settings);
-    };
-
-    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    };
-  }, []);
-
-  const saveSettings = () => {
-    try {
-      console.log('TextsTab: Saving settings:', settings);
-      SettingsService.saveSiteSettings(settings);
-      toast({
-        title: "تم حفظ النصوص",
-        description: "تم حفظ جميع النصوص بنجاح"
-      });
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      toast({
-        title: "خطأ في الحفظ",
-        description: "حدث خطأ أثناء حفظ النصوص",
-        variant: "destructive"
-      });
-    }
+  const handleSave = () => {
+    console.log('TextsTab: Saving text settings:', siteSettings.pageTexts);
+    saveSiteSettings();
   };
 
   const updatePageTexts = (page: string, field: string, value: any) => {
     console.log('TextsTab: Updating page texts:', page, field, value);
-    setSettings(prev => {
-      const newSettings = {
-        ...prev,
-        pageTexts: {
-          ...prev.pageTexts,
-          [page]: {
-            ...prev.pageTexts[page as keyof typeof prev.pageTexts],
-            [field]: value
-          }
+    setSiteSettings({
+      ...siteSettings,
+      pageTexts: {
+        ...siteSettings.pageTexts,
+        [page]: {
+          ...siteSettings.pageTexts[page as keyof typeof siteSettings.pageTexts],
+          [field]: value
         }
-      };
-      console.log('TextsTab: New settings:', newSettings);
-      return newSettings;
+      }
     });
   };
 
   const exportTexts = () => {
-    const textsData = JSON.stringify(settings.pageTexts, null, 2);
+    const textsData = JSON.stringify(siteSettings.pageTexts, null, 2);
     const blob = new Blob([textsData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -91,10 +63,10 @@ const TextsTab = () => {
     reader.onload = (e) => {
       try {
         const importedTexts = JSON.parse(e.target?.result as string);
-        setSettings(prev => ({
-          ...prev,
+        setSiteSettings({
+          ...siteSettings,
           pageTexts: importedTexts
-        }));
+        });
         toast({
           title: "تم استيراد النصوص",
           description: "تم استيراد النصوص بنجاح"
@@ -126,7 +98,7 @@ const TextsTab = () => {
 
   // Helper function to safely get page section data
   const getPageSection = (sectionId: string) => {
-    return settings.pageTexts[sectionId as keyof typeof settings.pageTexts];
+    return siteSettings.pageTexts[sectionId as keyof typeof siteSettings.pageTexts];
   };
 
   // Helper function to check if a section has specific properties
@@ -165,7 +137,7 @@ const TextsTab = () => {
           </button>
           
           <button
-            onClick={saveSettings}
+            onClick={handleSave}
             className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
           >
             <Save className="w-4 h-4" />
@@ -216,21 +188,21 @@ const TextsTab = () => {
               
               <TextEditor
                 label="عنوان البطل"
-                value={settings.pageTexts.home.heroTitle}
+                value={siteSettings.pageTexts.home.heroTitle}
                 onChange={(value) => updatePageTexts('home', 'heroTitle', value)}
                 placeholder="أدخل عنوان البطل هنا..."
               />
               
               <TextEditor
                 label="نص تحت العنوان"
-                value={settings.pageTexts.home.heroSubtitle}
+                value={siteSettings.pageTexts.home.heroSubtitle}
                 onChange={(value) => updatePageTexts('home', 'heroSubtitle', value)}
                 placeholder="أدخل النص التوضيحي هنا..."
               />
               
               <TextEditor
                 label="عنوان المميزات"
-                value={settings.pageTexts.home.featuresTitle}
+                value={siteSettings.pageTexts.home.featuresTitle}
                 onChange={(value) => updatePageTexts('home', 'featuresTitle', value)}
                 placeholder="أدخل عنوان قسم المميزات..."
               />
@@ -244,29 +216,29 @@ const TextsTab = () => {
               
               <TextEditor
                 label="عنوان الصفحة"
-                value={settings.pageTexts.official.pageTitle}
+                value={siteSettings.pageTexts.official.pageTitle}
                 onChange={(value) => updatePageTexts('official', 'pageTitle', value)}
               />
               
               <TextEditor
                 label="وصف الصفحة"
-                value={settings.pageTexts.official.pageSubtitle}
+                value={siteSettings.pageTexts.official.pageSubtitle}
                 onChange={(value) => updatePageTexts('official', 'pageSubtitle', value)}
               />
               
               <TextEditor
                 label="عنوان من نحن"
-                value={settings.pageTexts.official.aboutTitle}
+                value={siteSettings.pageTexts.official.aboutTitle}
                 onChange={(value) => updatePageTexts('official', 'aboutTitle', value)}
               />
               
-              {settings.pageTexts.official.aboutContent.map((content, index) => (
+              {siteSettings.pageTexts.official.aboutContent.map((content, index) => (
                 <TextEditor
                   key={index}
                   label={`محتوى من نحن - الفقرة ${index + 1}`}
                   value={content}
                   onChange={(value) => {
-                    const newContent = [...settings.pageTexts.official.aboutContent];
+                    const newContent = [...siteSettings.pageTexts.official.aboutContent];
                     newContent[index] = value;
                     updatePageTexts('official', 'aboutContent', newContent);
                   }}
@@ -275,7 +247,7 @@ const TextsTab = () => {
               
               <TextEditor
                 label="عنوان التواصل"
-                value={settings.pageTexts.official.contactTitle}
+                value={siteSettings.pageTexts.official.contactTitle}
                 onChange={(value) => updatePageTexts('official', 'contactTitle', value)}
               />
             </div>
@@ -310,14 +282,14 @@ const TextsTab = () => {
                   {hasProperty(activeSection, 'safetyTitle') && (
                     <TextEditor
                       label="عنوان الأمان"
-                      value={settings.pageTexts.pubgHacks.safetyTitle}
+                      value={siteSettings.pageTexts.pubgHacks.safetyTitle}
                       onChange={(value) => updatePageTexts('pubgHacks', 'safetyTitle', value)}
                     />
                   )}
                   {hasProperty(activeSection, 'safetyDescription') && (
                     <TextEditor
                       label="وصف الأمان"
-                      value={settings.pageTexts.pubgHacks.safetyDescription}
+                      value={siteSettings.pageTexts.pubgHacks.safetyDescription}
                       onChange={(value) => updatePageTexts('pubgHacks', 'safetyDescription', value)}
                     />
                   )}
@@ -327,7 +299,7 @@ const TextsTab = () => {
               {activeSection === 'webDevelopment' && hasProperty(activeSection, 'servicesTitle') && (
                 <TextEditor
                   label="عنوان الخدمات"
-                  value={settings.pageTexts.webDevelopment.servicesTitle}
+                  value={siteSettings.pageTexts.webDevelopment.servicesTitle}
                   onChange={(value) => updatePageTexts('webDevelopment', 'servicesTitle', value)}
                 />
               )}
@@ -335,7 +307,7 @@ const TextsTab = () => {
               {activeSection === 'discordBots' && hasProperty(activeSection, 'featuresTitle') && (
                 <TextEditor
                   label="عنوان المميزات"
-                  value={settings.pageTexts.discordBots.featuresTitle}
+                  value={siteSettings.pageTexts.discordBots.featuresTitle}
                   onChange={(value) => updatePageTexts('discordBots', 'featuresTitle', value)}
                 />
               )}
@@ -350,25 +322,25 @@ const TextsTab = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <TextEditor
                   label="عنوان السلة"
-                  value={settings.pageTexts.cart.cartTitle}
+                  value={siteSettings.pageTexts.cart.cartTitle}
                   onChange={(value) => updatePageTexts('cart', 'cartTitle', value)}
                 />
                 
                 <TextEditor
                   label="رسالة السلة الفارغة"
-                  value={settings.pageTexts.cart.emptyCartMessage}
+                  value={siteSettings.pageTexts.cart.emptyCartMessage}
                   onChange={(value) => updatePageTexts('cart', 'emptyCartMessage', value)}
                 />
                 
                 <TextEditor
                   label="زر الشراء"
-                  value={settings.pageTexts.cart.purchaseButton}
+                  value={siteSettings.pageTexts.cart.purchaseButton}
                   onChange={(value) => updatePageTexts('cart', 'purchaseButton', value)}
                 />
                 
                 <TextEditor
                   label="زر إضافة للسلة"
-                  value={settings.pageTexts.cart.addToCartButton}
+                  value={siteSettings.pageTexts.cart.addToCartButton}
                   onChange={(value) => updatePageTexts('cart', 'addToCartButton', value)}
                 />
               </div>
@@ -383,37 +355,37 @@ const TextsTab = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <TextEditor
                   label="عنوان الرئيسية"
-                  value={settings.pageTexts.navigation.homeTitle}
+                  value={siteSettings.pageTexts.navigation.homeTitle}
                   onChange={(value) => updatePageTexts('navigation', 'homeTitle', value)}
                 />
                 
                 <TextEditor
                   label="عنوان ببجي"
-                  value={settings.pageTexts.navigation.pubgTitle}
+                  value={siteSettings.pageTexts.navigation.pubgTitle}
                   onChange={(value) => updatePageTexts('navigation', 'pubgTitle', value)}
                 />
                 
                 <TextEditor
                   label="عنوان البرمجة"
-                  value={settings.pageTexts.navigation.webTitle}
+                  value={siteSettings.pageTexts.navigation.webTitle}
                   onChange={(value) => updatePageTexts('navigation', 'webTitle', value)}
                 />
                 
                 <TextEditor
                   label="عنوان الديسكورد"
-                  value={settings.pageTexts.navigation.discordTitle}
+                  value={siteSettings.pageTexts.navigation.discordTitle}
                   onChange={(value) => updatePageTexts('navigation', 'discordTitle', value)}
                 />
                 
                 <TextEditor
                   label="عنوان الصفحة الرسمية"
-                  value={settings.pageTexts.navigation.officialTitle}
+                  value={siteSettings.pageTexts.navigation.officialTitle}
                   onChange={(value) => updatePageTexts('navigation', 'officialTitle', value)}
                 />
                 
                 <TextEditor
                   label="عنوان الإدارة"
-                  value={settings.pageTexts.navigation.adminTitle}
+                  value={siteSettings.pageTexts.navigation.adminTitle}
                   onChange={(value) => updatePageTexts('navigation', 'adminTitle', value)}
                 />
               </div>
@@ -429,7 +401,7 @@ const TextsTab = () => {
           <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
             <h4 className="text-blue-400 font-semibold mb-2">📊 إحصائيات النصوص</h4>
             <p className="text-gray-300 text-sm">
-              عدد النصوص: {Object.keys(settings.pageTexts).length} قسم
+              عدد النصوص: {Object.keys(siteSettings.pageTexts).length} قسم
             </p>
           </div>
           
