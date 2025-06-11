@@ -138,11 +138,11 @@ const PasswordsTab = () => {
             <select
               value={newUser.role}
               onChange={(e) => setNewUser({...newUser, role: e.target.value as 'مدير عام' | 'مبرمج' | 'مشرف'})}
-              className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+              className="w-full bg-gray-800 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
-              <option value="مشرف">مشرف</option>
-              <option value="مبرمج">مبرمج</option>
-              <option value="مدير عام">مدير عام</option>
+              <option value="مشرف" className="bg-gray-800 text-white">مشرف</option>
+              <option value="مبرمج" className="bg-gray-800 text-white">مبرمج</option>
+              <option value="مدير عام" className="bg-gray-800 text-white">مدير عام</option>
             </select>
           </div>
           <div className="flex items-end">
@@ -211,11 +211,11 @@ const PasswordsTab = () => {
                   <select
                     value={getUserValue(user, 'role')}
                     onChange={(e) => handleUserChange(user.id, 'role', e.target.value)}
-                    className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                    className="w-full bg-gray-800 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                   >
-                    <option value="مشرف">مشرف</option>
-                    <option value="مبرمج">مبرمج</option>
-                    <option value="مدير عام">مدير عام</option>
+                    <option value="مشرف" className="bg-gray-800 text-white">مشرف</option>
+                    <option value="مبرمج" className="bg-gray-800 text-white">مبرمج</option>
+                    <option value="مدير عام" className="bg-gray-800 text-white">مدير عام</option>
                   </select>
                 </div>
                 <div>
