@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User, Eye, EyeOff, X } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AuthService from '../utils/auth';
+import TranslationService from '../utils/translationService';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
@@ -11,8 +12,21 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const handleLanguageChange = (event: CustomEvent) => {
+      setCurrentLang(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+    };
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,21 +37,21 @@ const AdminLogin = () => {
       
       if (isAuthenticated) {
         toast({
-          title: "تم تسجيل الدخول بنجاح",
-          description: "مرحباً بك في لوحة التحكم"
+          title: currentLang === 'ar' ? "تم تسجيل الدخول بنجاح" : "Login Successful",
+          description: currentLang === 'ar' ? "مرحباً بك في لوحة التحكم" : "Welcome to the admin dashboard"
         });
         navigate('/admin/dashboard');
       } else {
         toast({
-          title: "خطأ في تسجيل الدخول",
-          description: "اسم المستخدم أو كلمة المرور غير صحيحة",
+          title: currentLang === 'ar' ? "خطأ في تسجيل الدخول" : "Login Error",
+          description: currentLang === 'ar' ? "اسم المستخدم أو كلمة المرور غير صحيحة" : "Incorrect username or password",
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء تسجيل الدخول",
+        title: currentLang === 'ar' ? "خطأ" : "Error",
+        description: currentLang === 'ar' ? "حدث خطأ أثناء تسجيل الدخول" : "An error occurred during login",
         variant: "destructive"
       });
     } finally {
@@ -57,7 +71,7 @@ const AdminLogin = () => {
       <button
         onClick={handleBackToHome}
         className="fixed top-6 right-6 z-20 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 transition-all duration-300 hover:scale-110"
-        title="العودة للموقع"
+        title={TranslationService.translate('admin.back_to_site')}
       >
         <X className="w-6 h-6" />
       </button>
@@ -68,14 +82,18 @@ const AdminLogin = () => {
             <div className="inline-flex p-4 rounded-full bg-blue-500/20 mb-4">
               <Lock className="w-8 h-8 text-blue-400" />
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">تسجيل دخول الإدارة</h1>
-            <p className="text-gray-400">قم بإدخال بيانات الدخول للوصول للوحة التحكم</p>
+            <h1 className="text-2xl font-bold text-white mb-2">
+              {TranslationService.translate('admin.login')}
+            </h1>
+            <p className="text-gray-400">
+              {TranslationService.translate('admin.login_description')}
+            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-gray-300 text-sm font-medium mb-2">
-                اسم المستخدم
+                {TranslationService.translate('admin.username')}
               </label>
               <div className="relative">
                 <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -84,7 +102,7 @@ const AdminLogin = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg pl-4 pr-12 py-3 text-white focus:outline-none focus:border-blue-400"
-                  placeholder="أدخل اسم المستخدم"
+                  placeholder={TranslationService.translate('admin.enter_username')}
                   required
                 />
               </div>
@@ -92,7 +110,7 @@ const AdminLogin = () => {
 
             <div>
               <label className="block text-gray-300 text-sm font-medium mb-2">
-                كلمة المرور
+                {TranslationService.translate('admin.password')}
               </label>
               <div className="relative">
                 <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -101,7 +119,7 @@ const AdminLogin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg pl-12 pr-12 py-3 text-white focus:outline-none focus:border-blue-400"
-                  placeholder="أدخل كلمة المرور"
+                  placeholder={TranslationService.translate('admin.enter_password')}
                   required
                 />
                 <button
@@ -119,7 +137,7 @@ const AdminLogin = () => {
               disabled={isLoading}
               className="w-full glow-button py-3 disabled:opacity-50"
             >
-              {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+              {isLoading ? TranslationService.translate('admin.logging_in') : TranslationService.translate('admin.login_button')}
             </button>
           </form>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -5,6 +6,7 @@ import ProductImageViewer from '../components/ProductImageViewer';
 import ProductVideoViewer from '../components/ProductVideoViewer';
 import SettingsService from '../utils/settingsService';
 import ProductService from '../utils/productService';
+import TranslationService from '../utils/translationService';
 import { useCart } from '../hooks/useCart';
 import type { Product, SiteSettings } from '../types/admin';
 import GlobalCart from '../components/GlobalCart';
@@ -12,11 +14,24 @@ import GlobalCart from '../components/GlobalCart';
 const PubgHacks = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
   const { addToCart } = useCart();
 
   useEffect(() => {
     setProducts(ProductService.getProducts().filter(p => p.category === 'pubg'));
     setSettings(SettingsService.getSiteSettings());
+  }, []);
+
+  useEffect(() => {
+    const handleLanguageChange = (event: CustomEvent) => {
+      setCurrentLang(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+    };
   }, []);
 
   if (!settings) return null;
@@ -38,20 +53,20 @@ const PubgHacks = () => {
         <div className="container mx-auto px-6 py-12">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              {settings.pageTexts.pubgHacks.pageTitle}
+              {currentLang === 'ar' ? settings.pageTexts.pubgHacks.pageTitle : TranslationService.translate('pubg.page.title')}
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              {settings.pageTexts.pubgHacks.pageSubtitle}
+              {currentLang === 'ar' ? settings.pageTexts.pubgHacks.pageSubtitle : TranslationService.translate('pubg.page.subtitle')}
             </p>
           </div>
 
           {/* Safety Section */}
           <div className="mb-12 p-8 bg-green-500/10 border border-green-500/30 rounded-xl">
             <h2 className="text-2xl font-bold text-green-400 mb-4">
-              {settings.pageTexts.pubgHacks.safetyTitle}
+              {currentLang === 'ar' ? settings.pageTexts.pubgHacks.safetyTitle : TranslationService.translate('services.pubg.safety_title')}
             </h2>
             <p className="text-gray-300">
-              {settings.pageTexts.pubgHacks.safetyDescription}
+              {currentLang === 'ar' ? settings.pageTexts.pubgHacks.safetyDescription : TranslationService.translate('services.pubg.safety_description')}
             </p>
           </div>
 
@@ -85,7 +100,9 @@ const PubgHacks = () => {
                     {/* Features */}
                     {product.features && product.features.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="text-blue-400 font-semibold mb-2">المميزات:</h4>
+                        <h4 className="text-blue-400 font-semibold mb-2">
+                          {TranslationService.translate('common.features')}:
+                        </h4>
                         <ul className="space-y-1">
                           {product.features.map((feature, index) => (
                             <li key={index} className={`text-gray-300 ${getTextSize(product.textSize || 'medium')}`}>
@@ -103,7 +120,7 @@ const PubgHacks = () => {
                         className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
                       >
                         <ShoppingCart className="w-4 h-4" />
-                        <span>{settings.pageTexts.cart.addToCartButton}</span>
+                        <span>{TranslationService.translate('common.add_to_cart')}</span>
                       </button>
                       
                       <ProductImageViewer 
@@ -130,7 +147,9 @@ const PubgHacks = () => {
 
           {products.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-400 text-xl">لا توجد منتجات متاحة حالياً</p>
+              <p className="text-gray-400 text-xl">
+                {TranslationService.translate('common.no_products')}
+              </p>
             </div>
           )}
         </div>

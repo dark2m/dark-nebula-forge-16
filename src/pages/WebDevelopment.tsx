@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -5,6 +6,7 @@ import ProductImageViewer from '../components/ProductImageViewer';
 import ProductVideoViewer from '../components/ProductVideoViewer';
 import SettingsService from '../utils/settingsService';
 import ProductService from '../utils/productService';
+import TranslationService from '../utils/translationService';
 import { useCart } from '../hooks/useCart';
 import type { Product, SiteSettings } from '../types/admin';
 import GlobalCart from '../components/GlobalCart';
@@ -12,11 +14,24 @@ import GlobalCart from '../components/GlobalCart';
 const WebDevelopment = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
   const { addToCart } = useCart();
 
   useEffect(() => {
     setProducts(ProductService.getProducts().filter(p => p.category === 'web'));
     setSettings(SettingsService.getSiteSettings());
+  }, []);
+
+  useEffect(() => {
+    const handleLanguageChange = (event: CustomEvent) => {
+      setCurrentLang(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+    };
   }, []);
 
   if (!settings) return null;
@@ -38,17 +53,17 @@ const WebDevelopment = () => {
         <div className="container mx-auto px-6 py-12">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              {settings.pageTexts.webDevelopment.pageTitle}
+              {currentLang === 'ar' ? settings.pageTexts.webDevelopment.pageTitle : TranslationService.translate('web.page.title')}
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              {settings.pageTexts.webDevelopment.pageSubtitle}
+              {currentLang === 'ar' ? settings.pageTexts.webDevelopment.pageSubtitle : TranslationService.translate('web.page.subtitle')}
             </p>
           </div>
 
           {/* Services Section */}
           <div className="mb-12">
             <h2 className="text-3xl font-bold text-white text-center mb-8">
-              {settings.pageTexts.webDevelopment.servicesTitle}
+              {currentLang === 'ar' ? settings.pageTexts.webDevelopment.servicesTitle : TranslationService.translate('services.web.services_title')}
             </h2>
           </div>
 
@@ -82,7 +97,9 @@ const WebDevelopment = () => {
                     {/* Features */}
                     {product.features && product.features.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="text-green-400 font-semibold mb-2">المميزات:</h4>
+                        <h4 className="text-green-400 font-semibold mb-2">
+                          {TranslationService.translate('common.features')}:
+                        </h4>
                         <ul className="space-y-1">
                           {product.features.map((feature, index) => (
                             <li key={index} className={`text-gray-300 ${getTextSize(product.textSize || 'medium')}`}>
@@ -100,7 +117,7 @@ const WebDevelopment = () => {
                         className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
                       >
                         <ShoppingCart className="w-4 h-4" />
-                        <span>{settings.pageTexts.cart.addToCartButton}</span>
+                        <span>{TranslationService.translate('common.add_to_cart')}</span>
                       </button>
                       
                       <ProductImageViewer 
@@ -127,7 +144,9 @@ const WebDevelopment = () => {
 
           {products.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-400 text-xl">لا توجد خدمات متاحة حالياً</p>
+              <p className="text-gray-400 text-xl">
+                {TranslationService.translate('common.no_services')}
+              </p>
             </div>
           )}
         </div>
