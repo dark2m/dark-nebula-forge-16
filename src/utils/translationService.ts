@@ -18,6 +18,7 @@ class TranslationService {
     'nav.discord': { ar: 'برمجة بوتات ديسكورد', en: 'Discord Bots' },
     'nav.official': { ar: 'الصفحة الرئيسية', en: 'Official Page' },
     'nav.admin': { ar: 'الإدارة', en: 'Admin' },
+    'nav.language': { ar: 'عَرَبِيّ', en: 'English' },
     
     // Common
     'common.cart': { ar: 'السلة', en: 'Cart' },
@@ -26,6 +27,7 @@ class TranslationService {
     'common.price': { ar: 'السعر', en: 'Price' },
     'common.features': { ar: 'المميزات', en: 'Features' },
     'common.contact': { ar: 'تواصل معنا', en: 'Contact Us' },
+    'common.explore_now': { ar: 'استكشف الآن', en: 'Explore Now' },
     
     // Admin Panel
     'admin.dashboard': { ar: 'لوحة التحكم', en: 'Dashboard' },
@@ -43,6 +45,14 @@ class TranslationService {
     'page.home.subtitle': { ar: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة', en: 'We provide you with the best services in technology and programming' },
     'page.about.title': { ar: 'من نحن', en: 'About Us' },
     'page.contact.title': { ar: 'تواصل معنا', en: 'Contact Us' },
+    
+    // Services
+    'services.pubg.title': { ar: 'هكر ببجي موبايل', en: 'PUBG Mobile Hacks' },
+    'services.pubg.description': { ar: 'أحدث الهاكات والأدوات لببجي موبايل', en: 'Latest hacks and tools for PUBG Mobile' },
+    'services.web.title': { ar: 'برمجة مواقع', en: 'Web Development' },
+    'services.web.description': { ar: 'تطوير مواقع احترافية ومتقدمة', en: 'Professional and advanced website development' },
+    'services.discord.title': { ar: 'برمجة بوتات ديسكورد', en: 'Discord Bots' },
+    'services.discord.description': { ar: 'بوتات ديسكورد مخصصة ومتطورة', en: 'Custom and advanced Discord bots' },
   };
 
   static getCurrentLanguage(): 'ar' | 'en' {

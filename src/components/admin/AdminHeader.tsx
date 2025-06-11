@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { LogOut, User, Shield } from 'lucide-react';
-import LanguageToggle from '../LanguageToggle';
 import type { AdminUser } from '../../types/admin';
 
 interface AdminHeaderProps {
@@ -21,9 +20,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ currentUser, onLogout }) => {
           </div>
           
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            {/* زر الترجمة */}
-            <LanguageToggle size="sm" />
-            
             {/* معلومات المستخدم */}
             {currentUser && (
               <div className="flex items-center space-x-3 rtl:space-x-reverse text-white">

@@ -4,13 +4,27 @@ import { MessageCircle, Mail, Phone, MapPin, Users, Star, Shield } from 'lucide-
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage from '../utils/adminStorage';
 import GlobalCart from '../components/GlobalCart';
+import TranslationService from '../utils/translationService';
 
 const OfficialPage = () => {
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+  const [currentLang, setCurrentLang] = useState(TranslationService.getCurrentLanguage());
 
   useEffect(() => {
     const loadedSettings = AdminStorage.getSiteSettings();
     setSiteSettings(loadedSettings);
+  }, []);
+
+  useEffect(() => {
+    const handleLanguageChange = (event: CustomEvent) => {
+      setCurrentLang(event.detail.language);
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+    };
   }, []);
 
   const pageTexts = siteSettings.pageTexts.official;
@@ -65,32 +79,44 @@ const OfficialPage = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6 text-center">
                 <MessageCircle className="w-8 h-8 text-blue-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-white mb-2">تليجرام</h3>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {currentLang === 'ar' ? 'تليجرام' : 'Telegram'}
+                </h3>
                 <p className="text-blue-400">{siteSettings.contactInfo.telegram}</p>
               </div>
               <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-6 text-center">
                 <MessageCircle className="w-8 h-8 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-white mb-2">ديسكورد</h3>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {currentLang === 'ar' ? 'ديسكورد' : 'Discord'}
+                </h3>
                 <p className="text-purple-400">{siteSettings.contactInfo.discord}</p>
               </div>
               <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-6 text-center">
                 <Phone className="w-8 h-8 text-green-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-white mb-2">واتساب</h3>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {currentLang === 'ar' ? 'واتساب' : 'WhatsApp'}
+                </h3>
                 <p className="text-green-400">{siteSettings.contactInfo.whatsapp}</p>
               </div>
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
                 <Mail className="w-8 h-8 text-red-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-white mb-2">البريد الإلكتروني</h3>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {currentLang === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                </h3>
                 <p className="text-red-400">{siteSettings.contactInfo.email}</p>
               </div>
               <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6 text-center">
                 <Phone className="w-8 h-8 text-blue-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-white mb-2">الهاتف</h3>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {currentLang === 'ar' ? 'الهاتف' : 'Phone'}
+                </h3>
                 <p className="text-blue-400">{siteSettings.contactInfo.phone}</p>
               </div>
               <div className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-6 text-center">
                 <MapPin className="w-8 h-8 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-white mb-2">العنوان</h3>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  {currentLang === 'ar' ? 'العنوان' : 'Address'}
+                </h3>
                 <p className="text-gray-400">{siteSettings.contactInfo.address}</p>
               </div>
             </div>
