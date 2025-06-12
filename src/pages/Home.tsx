@@ -6,6 +6,7 @@ import StarryBackground from '../components/StarryBackground';
 import AdminStorage from '../utils/adminStorage';
 import GlobalCart from '../components/GlobalCart';
 import TranslationService from '../utils/translationService';
+import { getTextContent } from '../utils/textUtils';
 
 const Home = () => {
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
@@ -17,21 +18,21 @@ const Home = () => {
 
   const services = [
     {
-      title: siteSettings.pageTexts.navigation.pubgTitle,
+      title: getTextContent(siteSettings.pageTexts.navigation.pubgTitle),
       description: 'أحدث الهاكات والأدوات لببجي موبايل',
       icon: Shield,
       path: '/pubg-hacks',
       gradient: 'from-red-500 to-pink-600'
     },
     {
-      title: siteSettings.pageTexts.navigation.webTitle,
+      title: getTextContent(siteSettings.pageTexts.navigation.webTitle),
       description: 'تطوير مواقع احترافية ومتقدمة',
       icon: Code,
       path: '/web-development',
       gradient: 'from-blue-500 to-cyan-600'
     },
     {
-      title: siteSettings.pageTexts.navigation.discordTitle,
+      title: getTextContent(siteSettings.pageTexts.navigation.discordTitle),
       description: 'بوتات ديسكورد مخصصة ومتطورة',
       icon: Bot,
       path: '/discord-bots',
@@ -51,10 +52,10 @@ const Home = () => {
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-blue-400 bg-clip-text text-transparent">
-            {homeTexts.heroTitle}
+            {getTextContent(homeTexts.heroTitle)}
           </h1>
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-            {homeTexts.heroSubtitle}
+            {getTextContent(homeTexts.heroSubtitle)}
           </p>
           
           {/* Services Grid */}
@@ -94,7 +95,7 @@ const Home = () => {
         <div className="relative z-10 py-20 bg-black/30">
           <div className="container mx-auto px-6 text-center">
             <h2 className="text-4xl font-bold text-white mb-12">
-              {homeTexts.featuresTitle}
+              {getTextContent(homeTexts.featuresTitle)}
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {visibleFeatures.map((feature) => (
