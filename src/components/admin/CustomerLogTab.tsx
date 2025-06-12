@@ -566,7 +566,7 @@ const CustomerLogTab = () => {
                                   ))}
                                 </div>
                               )}
-                              {message.files && message.files.length > 0 && (
+                              {'files' in message && message.files && message.files.length > 0 && (
                                 <div className="mt-2 space-y-2">
                                   {message.files.map((file, index) => (
                                     <div key={index} className="flex items-center justify-between p-2 bg-gray-700 rounded-md">
