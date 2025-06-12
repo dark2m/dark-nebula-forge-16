@@ -1,4 +1,3 @@
-
 interface MediaAttachment {
   type: 'image' | 'video';
   data: string;
@@ -331,6 +330,32 @@ class CustomerChatService {
     if (session) {
       session.status = 'closed';
       this.saveChatSessions(sessions);
+    }
+  }
+
+  static deleteCustomerSession(customerId: string): boolean {
+    try {
+      const sessions = this.getChatSessions();
+      const messages = this.getChatMessages();
+      const adminMessages = this.getAdminMessages();
+      
+      // حذف الجلسة من قائمة الجلسات
+      const filteredSessions = sessions.filter(session => session.customerId !== customerId);
+      this.saveChatSessions(filteredSessions);
+      
+      // حذف رسائل العميل
+      const filteredMessages = messages.filter(message => message.customerId !== customerId);
+      this.saveChatMessages(filteredMessages);
+      
+      // حذف رسائل الإدارة للعميل
+      const filteredAdminMessages = adminMessages.filter(message => message.customerId !== customerId);
+      this.saveAdminMessages(filteredAdminMessages);
+      
+      console.log('CustomerChatService: Customer session deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('CustomerChatService: Error deleting customer session:', error);
+      return false;
     }
   }
 }
