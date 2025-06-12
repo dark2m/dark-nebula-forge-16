@@ -48,6 +48,14 @@ const CustomerSupport = () => {
     friday: '2:00 م - 11:00 م'
   };
 
+  // Ensure supportPolicies is always an array
+  const supportPolicies = customerSupportTexts.supportPolicies || [
+    'استجابة فورية للاستفسارات العامة',
+    'دعم فني متخصص لجميع المنتجات',
+    'ضمان الجودة وحل المشاكل',
+    'متابعة مستمرة لرضا العملاء'
+  ];
+
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
@@ -149,7 +157,7 @@ const CustomerSupport = () => {
                 {customerSupportTexts.supportPolicyTitle}
               </h2>
               <div className="space-y-4">
-                {customerSupportTexts.supportPolicies.map((policy, index) => (
+                {supportPolicies.map((policy, index) => (
                   <div key={index} className="flex items-start space-x-3 rtl:space-x-reverse">
                     <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
                     <p className="text-gray-300">{policy}</p>
