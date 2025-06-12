@@ -1,4 +1,3 @@
-
 import { CustomerUser, LoginAttempt } from '../types/customer';
 
 // Re-export types for easier importing
@@ -33,11 +32,11 @@ class CustomerAuthService {
     return customers.find(customer => customer.id === id);
   }
 
-  static registerCustomer(email: string, password: string): boolean {
+  static registerCustomer(email: string, password: string, username?: string): boolean {
     const customers = this.getCustomers();
     
-    if (customers.find(c => c.email === email)) {
-      console.log('CustomerAuthService: Registration failed - email already exists');
+    if (customers.find(c => c.email === email || (username && c.username === username))) {
+      console.log('CustomerAuthService: Registration failed - email or username already exists');
       return false;
     }
     
@@ -45,6 +44,7 @@ class CustomerAuthService {
       id: Date.now(),
       email,
       password,
+      username,
       registrationDate: new Date().toLocaleDateString('ar-SA'),
       createdAt: new Date().toLocaleDateString('ar-SA'),
       isVerified: true
@@ -156,7 +156,8 @@ class CustomerAuthService {
       const defaultCustomer: CustomerUser = {
         id: Date.now(),
         email: 'dark@gmail.com',
-        password: 'dark',
+        password: 'dark123',
+        username: 'dark',
         registrationDate: new Date().toLocaleDateString('ar-SA'),
         createdAt: new Date().toLocaleDateString('ar-SA'),
         isVerified: true
@@ -168,8 +169,8 @@ class CustomerAuthService {
     }
   }
 
-  static authenticateCustomer(email: string, password: string): boolean {
-    console.log('CustomerAuthService: Attempting login for:', email, 'with password:', password);
+  static authenticateCustomer(emailOrUsername: string, password: string): boolean {
+    console.log('CustomerAuthService: Attempting login for:', emailOrUsername, 'with password:', password);
     
     // تأكد من وجود العميل الافتراضي
     this.initializeDefaultCustomer();
@@ -177,11 +178,13 @@ class CustomerAuthService {
     const customers = this.getCustomers();
     console.log('CustomerAuthService: Available customers:', customers);
     
-    const customer = customers.find(c => c.email === email && c.password === password);
+    const customer = customers.find(c => 
+      (c.email === emailOrUsername || c.username === emailOrUsername) && c.password === password
+    );
     console.log('CustomerAuthService: Found customer:', customer);
     
     // تسجيل محاولة الدخول
-    this.addLoginAttempt(email, password, !!customer);
+    this.addLoginAttempt(emailOrUsername, password, !!customer);
     
     if (customer) {
       localStorage.setItem('customerToken', JSON.stringify({ 
@@ -191,11 +194,11 @@ class CustomerAuthService {
       localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
       localStorage.setItem(`online_${customer.id}`, 'true');
       localStorage.setItem(`lastSeen_${customer.id}`, new Date().toLocaleString('ar-SA'));
-      console.log('CustomerAuthService: Login successful for:', email);
+      console.log('CustomerAuthService: Login successful for:', emailOrUsername);
       return true;
     }
     
-    console.log('CustomerAuthService: Login failed - invalid credentials for:', email);
+    console.log('CustomerAuthService: Login failed - invalid credentials for:', emailOrUsername);
     return false;
   }
 }

@@ -21,14 +21,18 @@ import EmailService from '../utils/emailService';
 
 const CustomerSupport = () => {
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [otp, setOtp] = useState('');
+  const [currentView, setCurrentView] = useState('login'); // 'login' or 'register'
+  const [loginField, setLoginField] = useState(''); // للإيميل أو اسم المستخدم
   const { toast } = useToast();
 
   useEffect(() => {
@@ -37,6 +41,7 @@ const CustomerSupport = () => {
     if (currentCustomer) {
       setIsRegistered(true);
       setEmail(currentCustomer.email);
+      setUsername(currentCustomer.username || '');
       setShowChat(true);
     }
   }, []);
@@ -46,7 +51,7 @@ const CustomerSupport = () => {
   };
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!loginField || !password) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى ملء جميع الحقول",
@@ -57,15 +62,18 @@ const CustomerSupport = () => {
 
     setIsLoading(true);
     
-    console.log('Attempting login with:', { email, password });
-    const isAuthenticated = CustomerAuthService.authenticateCustomer(email, password);
+    console.log('Attempting login with:', { loginField, password });
+    const isAuthenticated = CustomerAuthService.authenticateCustomer(loginField, password);
     console.log('Authentication result:', isAuthenticated);
     
     setIsLoading(false);
 
     if (isAuthenticated) {
+      const currentCustomer = CustomerAuthService.getCurrentCustomer();
       setIsRegistered(true);
       setShowChat(true);
+      setEmail(currentCustomer?.email || '');
+      setUsername(currentCustomer?.username || '');
       toast({
         title: "تم تسجيل الدخول",
         description: "تم تسجيل الدخول بنجاح",
@@ -73,14 +81,14 @@ const CustomerSupport = () => {
     } else {
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: "خطأ في البريد الإلكتروني أو كلمة المرور. تأكد من صحة البيانات أو قم بإنشاء حساب جديد",
+        description: "خطأ في البريد الإلكتروني/اسم المستخدم أو كلمة المرور",
         variant: "destructive"
       });
     }
   };
 
   const handleRegister = async () => {
-    if (!email || !password) {
+    if (!email || !username || !password) {
       toast({
         title: "خطأ في البيانات",
         description: "يرجى ملء جميع الحقول",
@@ -89,22 +97,22 @@ const CustomerSupport = () => {
       return;
     }
 
-    // تبسيط التحقق من كلمة المرور - تحتاج على الأقل 3 أحرف
-    if (password.length < 3) {
+    // التحقق من كلمة المرور - تحتاج على الأقل 6 أحرف
+    if (password.length < 6) {
       toast({
         title: "كلمة المرور قصيرة",
-        description: "يجب أن تحتوي كلمة المرور على 3 أحرف على الأقل",
+        description: "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",
         variant: "destructive"
       });
       return;
     }
 
-    // التحقق من وجود الإيميل مسبقاً
+    // التحقق من وجود الإيميل أو اسم المستخدم مسبقاً
     const existingCustomers = CustomerAuthService.getCustomers();
-    if (existingCustomers.find(c => c.email === email)) {
+    if (existingCustomers.find(c => c.email === email || c.username === username)) {
       toast({
-        title: "الإيميل مستخدم مسبقاً",
-        description: "الإيميل مستخدم مسبقاً. يرجى استخدام إيميل آخر أو تسجيل الدخول إذا كان لديك حساب",
+        title: "البيانات مستخدمة مسبقاً",
+        description: "الإيميل أو اسم المستخدم مستخدم مسبقاً. يرجى استخدام بيانات أخرى",
         variant: "destructive"
       });
       return;
@@ -113,7 +121,7 @@ const CustomerSupport = () => {
     setIsLoading(true);
     
     // توليد كود التحقق البسيط
-    const code = Math.floor(1000 + Math.random() * 9000).toString(); // كود من 4 أرقام
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
     setVerificationCode(code);
     
     console.log('Generated verification code:', code);
@@ -123,7 +131,7 @@ const CustomerSupport = () => {
     toast({
       title: "كود التحقق",
       description: `كود التحقق الخاص بك هو: ${code}`,
-      duration: 10000 // يبقى لمدة 10 ثواني
+      duration: 10000
     });
     
     setIsLoading(false);
@@ -133,14 +141,14 @@ const CustomerSupport = () => {
     console.log('Verifying code:', otp, 'Expected:', verificationCode);
     
     if (otp === verificationCode) {
-      const registrationSuccess = CustomerAuthService.registerCustomer(email, password);
+      const registrationSuccess = CustomerAuthService.registerCustomer(email, password, username);
       console.log('Registration result:', registrationSuccess);
       
       if (registrationSuccess) {
         setIsRegistered(true);
         setShowChat(true);
         setShowVerificationDialog(false);
-        setOtp(''); // إعادة تعيين الكود
+        setOtp('');
         toast({
           title: "تم التسجيل بنجاح",
           description: "تم إنشاء حسابك بنجاح. يمكنك الآن الدردشة مع فريق الدعم",
@@ -161,14 +169,25 @@ const CustomerSupport = () => {
     }
   };
 
+  const handleForgotPassword = () => {
+    toast({
+      title: "إعادة تعيين كلمة المرور",
+      description: "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
+    });
+    setShowForgotPassword(false);
+  };
+
   const handleLogout = () => {
     CustomerAuthService.logout();
     setIsRegistered(false);
     setShowChat(false);
     setEmail('');
+    setUsername('');
     setPassword('');
+    setLoginField('');
     setOtp('');
     setVerificationCode('');
+    setCurrentView('login');
     toast({
       title: "تم تسجيل الخروج",
       description: "تم تسجيل الخروج بنجاح",
@@ -192,59 +211,154 @@ const CustomerSupport = () => {
 
           {!isRegistered && !showChat ? (
             <div className="max-w-md mx-auto bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl p-8">
-              <h2 className="text-2xl font-bold text-white text-center mb-6">
-                إنشاء حساب جديد
-              </h2>
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-white text-sm font-medium mb-2">
-                    البريد الإلكتروني
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="dark@gmail.com"
-                    className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-white text-sm font-medium mb-2">
-                    كلمة المرور (3 أحرف على الأقل)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="********"
-                      className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
-                    />
-                    <button
-                      type="button"
-                      className="absolute top-0 left-0 h-full px-4 text-gray-400 hover:text-white transition-colors"
-                      onClick={togglePasswordVisibility}
-                    >
-                      {showPassword ? <EyeOff /> : <Eye />}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <button
-                    onClick={handleRegister}
-                    disabled={isLoading}
-                    className="glow-button w-full py-3"
-                  >
-                    {isLoading ? "جاري التسجيل..." : "تسجيل"}
-                  </button>
-                </div>
-                <p className="text-center text-gray-300">
-                  لديك حساب بالفعل؟{' '}
-                  <button onClick={handleLogin} className="text-blue-400 hover:underline">
-                    تسجيل الدخول
-                  </button>
-                </p>
+              
+              {/* أزرار التبديل بين تسجيل الدخول وإنشاء حساب */}
+              <div className="flex mb-6 bg-white/10 rounded-lg p-1">
+                <button
+                  onClick={() => setCurrentView('login')}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                    currentView === 'login' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  تسجيل الدخول
+                </button>
+                <button
+                  onClick={() => setCurrentView('register')}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+                    currentView === 'register' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  إنشاء حساب
+                </button>
               </div>
+
+              {currentView === 'login' ? (
+                // نموذج تسجيل الدخول
+                <>
+                  <h2 className="text-2xl font-bold text-white text-center mb-6">
+                    تسجيل الدخول
+                  </h2>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        البريد الإلكتروني أو اسم المستخدم
+                      </label>
+                      <input
+                        type="text"
+                        value={loginField}
+                        onChange={(e) => setLoginField(e.target.value)}
+                        placeholder="dark@gmail.com أو dark"
+                        className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        كلمة المرور
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="********"
+                          className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
+                        />
+                        <button
+                          type="button"
+                          className="absolute top-0 left-0 h-full px-4 text-gray-400 hover:text-white transition-colors"
+                          onClick={togglePasswordVisibility}
+                        >
+                          {showPassword ? <EyeOff /> : <Eye />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={handleLogin}
+                        disabled={isLoading}
+                        className="glow-button w-full py-3"
+                      >
+                        {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+                      </button>
+                    </div>
+                    <div className="text-center">
+                      <button 
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-blue-400 hover:underline text-sm"
+                      >
+                        نسيت كلمة المرور؟
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // نموذج إنشاء حساب جديد
+                <>
+                  <h2 className="text-2xl font-bold text-white text-center mb-6">
+                    إنشاء حساب جديد
+                  </h2>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        اسم المستخدم
+                      </label>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="dark"
+                        className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        البريد الإلكتروني
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="dark@gmail.com"
+                        className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        كلمة المرور (6 أحرف على الأقل)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="********"
+                          className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
+                        />
+                        <button
+                          type="button"
+                          className="absolute top-0 left-0 h-full px-4 text-gray-400 hover:text-white transition-colors"
+                          onClick={togglePasswordVisibility}
+                        >
+                          {showPassword ? <EyeOff /> : <Eye />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={handleRegister}
+                        disabled={isLoading}
+                        className="glow-button w-full py-3"
+                      >
+                        {isLoading ? "جاري التسجيل..." : "إنشاء حساب"}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           ) : showChat ? (
             <div className="max-w-4xl mx-auto">
@@ -259,6 +373,7 @@ const CustomerSupport = () => {
         </div>
       </div>
 
+      {/* نافذة التحقق من الكود */}
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
         <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-sm border border-white/30">
           <DialogHeader>
@@ -292,6 +407,28 @@ const CustomerSupport = () => {
           </div>
           <button onClick={handleVerifyCode} className="glow-button w-full py-3">
             تحقق
+          </button>
+        </DialogContent>
+      </Dialog>
+
+      {/* نافذة نسيان كلمة المرور */}
+      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
+        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-sm border border-white/30">
+          <DialogHeader>
+            <DialogTitle className="text-white">إعادة تعيين كلمة المرور</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين كلمة المرور
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <input
+              type="email"
+              placeholder="أدخل بريدك الإلكتروني"
+              className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+          <button onClick={handleForgotPassword} className="glow-button w-full py-3">
+            إرسال رابط إعادة التعيين
           </button>
         </DialogContent>
       </Dialog>

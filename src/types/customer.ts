@@ -3,6 +3,7 @@ export interface CustomerUser {
   id: number;
   email: string;
   password: string;
+  username?: string;
   registrationDate: string;
   createdAt: string;
   isVerified: boolean;
