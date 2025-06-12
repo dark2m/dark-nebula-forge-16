@@ -1,12 +1,18 @@
-
 interface MediaAttachment {
   type: 'image' | 'video';
   data: string;
 }
 
+interface FileAttachment {
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}
+
 interface ChatMessage {
   id: number;
-  customerId: number;
+  customerId: string;
   customerEmail: string;
   message: string;
   timestamp: string;
@@ -15,19 +21,23 @@ interface ChatMessage {
   adminReply?: string;
   adminReplyTimestamp?: string;
   attachments?: MediaAttachment[];
+  sender?: 'customer' | 'support';
+  files?: FileAttachment[];
 }
 
 interface AdminMessage {
   id: number;
-  customerId: number;
+  customerId: string;
   message: string;
   timestamp: string;
   isFromAdmin: true;
   attachments?: MediaAttachment[];
+  sender: 'support';
+  files?: FileAttachment[];
 }
 
 interface ChatSession {
-  customerId: number;
+  customerId: string;
   customerEmail: string;
   messages: (ChatMessage | AdminMessage)[];
   lastActivity: string;
@@ -94,8 +104,64 @@ class CustomerChatService {
     }
   }
 
+  static getActiveCustomers(): string[] {
+    try {
+      const sessions = this.getChatSessions();
+      return sessions
+        .filter(session => session.status === 'active' || session.status === 'waiting')
+        .map(session => session.customerId);
+    } catch (error) {
+      console.error('CustomerChatService: Error getting active customers:', error);
+      return [];
+    }
+  }
+
+  static getMessages(customerId: string): (ChatMessage | AdminMessage)[] {
+    try {
+      const sessions = this.getChatSessions();
+      const session = sessions.find(s => s.customerId === customerId);
+      return session ? session.messages : [];
+    } catch (error) {
+      console.error('CustomerChatService: Error getting messages:', error);
+      return [];
+    }
+  }
+
+  static addMessage(messageData: Omit<ChatMessage | AdminMessage, 'id' | 'timestamp'>): void {
+    try {
+      const sessions = this.getChatSessions();
+      const newMessage = {
+        ...messageData,
+        id: Date.now(),
+        timestamp: new Date().toLocaleString('ar-SA')
+      };
+
+      let session = sessions.find(s => s.customerId === messageData.customerId);
+      if (session) {
+        session.messages.push(newMessage);
+        session.lastActivity = newMessage.timestamp;
+        session.status = 'active';
+      } else {
+        session = {
+          customerId: messageData.customerId,
+          customerEmail: `customer${messageData.customerId}@example.com`,
+          messages: [newMessage],
+          lastActivity: newMessage.timestamp,
+          status: 'active',
+          unreadCount: 0
+        };
+        sessions.push(session);
+      }
+
+      this.saveChatSessions(sessions);
+      console.log('CustomerChatService: Message added successfully');
+    } catch (error) {
+      console.error('CustomerChatService: Error adding message:', error);
+    }
+  }
+
   static sendCustomerMessage(
-    customerId: number, 
+    customerId: string, 
     customerEmail: string, 
     message: string, 
     attachments?: MediaAttachment[]
@@ -112,7 +178,8 @@ class CustomerChatService {
         timestamp: new Date().toLocaleString('ar-SA'),
         isFromCustomer: true,
         isRead: false,
-        attachments: attachments || []
+        attachments: attachments || [],
+        sender: 'customer'
       };
 
       messages.push(newMessage);
@@ -145,7 +212,7 @@ class CustomerChatService {
     }
   }
 
-  static sendAdminMessage(customerId: number, message: string, attachments?: MediaAttachment[]): boolean {
+  static sendAdminMessage(customerId: string, message: string, attachments?: MediaAttachment[]): boolean {
     try {
       const sessions = this.getChatSessions();
       const adminMessages = this.getAdminMessages();
@@ -156,7 +223,8 @@ class CustomerChatService {
         message,
         timestamp: new Date().toLocaleString('ar-SA'),
         isFromAdmin: true,
-        attachments: attachments || []
+        attachments: attachments || [],
+        sender: 'support'
       };
 
       adminMessages.push(newAdminMessage);
@@ -178,7 +246,7 @@ class CustomerChatService {
     }
   }
 
-  static sendAdminReply(customerId: number, messageId: number, reply: string): boolean {
+  static sendAdminReply(customerId: string, messageId: number, reply: string): boolean {
     try {
       const messages = this.getChatMessages();
       const sessions = this.getChatSessions();
@@ -213,7 +281,7 @@ class CustomerChatService {
     }
   }
 
-  static getCustomerMessages(customerId: number): (ChatMessage | AdminMessage)[] {
+  static getCustomerMessages(customerId: string): (ChatMessage | AdminMessage)[] {
     const customerMessages = this.getChatMessages().filter(m => m.customerId === customerId);
     const adminMessages = this.getAdminMessages().filter(m => m.customerId === customerId);
     
@@ -225,7 +293,7 @@ class CustomerChatService {
     });
   }
 
-  static markMessagesAsRead(customerId: number): void {
+  static markMessagesAsRead(customerId: string): void {
     const sessions = this.getChatSessions();
     const session = sessions.find(s => s.customerId === customerId);
     if (session) {
@@ -239,7 +307,7 @@ class CustomerChatService {
     return sessions.reduce((total, session) => total + session.unreadCount, 0);
   }
 
-  static closeSession(customerId: number): void {
+  static closeSession(customerId: string): void {
     const sessions = this.getChatSessions();
     const session = sessions.find(s => s.customerId === customerId);
     if (session) {
@@ -250,4 +318,4 @@ class CustomerChatService {
 }
 
 export default CustomerChatService;
-export type { ChatMessage, ChatSession, AdminMessage, MediaAttachment };
+export type { ChatMessage, ChatSession, AdminMessage, MediaAttachment, FileAttachment };
