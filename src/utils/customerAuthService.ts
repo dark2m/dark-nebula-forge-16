@@ -22,6 +22,7 @@ class CustomerAuthService {
   static saveCustomers(customers: CustomerUser[]): void {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(customers));
+      console.log('CustomerAuthService: Customers saved:', customers);
     } catch (error) {
       console.error('CustomerAuthService: Error saving customers:', error);
     }
@@ -46,12 +47,12 @@ class CustomerAuthService {
       password,
       registrationDate: new Date().toLocaleDateString('ar-SA'),
       createdAt: new Date().toLocaleDateString('ar-SA'),
-      isVerified: false
+      isVerified: true
     };
     
     customers.push(newCustomer);
     this.saveCustomers(customers);
-    console.log('CustomerAuthService: Registration successful');
+    console.log('CustomerAuthService: Registration successful for:', email);
     return true;
   }
 
@@ -94,11 +95,11 @@ class CustomerAuthService {
       password,
       timestamp: new Date().toLocaleString('ar-SA'),
       success,
-      ipAddress: '127.0.0.1' // Placeholder IP address
+      ipAddress: '127.0.0.1'
     };
     attempts.push(newAttempt);
     this.saveLoginAttempts(attempts);
-    console.log('CustomerAuthService: Login attempt recorded');
+    console.log('CustomerAuthService: Login attempt recorded:', { email, success });
   }
 
   static clearLoginAttempts(): void {
@@ -144,11 +145,16 @@ class CustomerAuthService {
   }
 
   static initializeDefaultCustomer(): void {
+    console.log('CustomerAuthService: Initializing default customer...');
     const customers = this.getCustomers();
+    console.log('CustomerAuthService: Current customers:', customers);
+    
     const defaultExists = customers.some(c => c.email === 'dark@gmail.com');
+    console.log('CustomerAuthService: Default customer exists:', defaultExists);
     
     if (!defaultExists) {
-      const defaultCustomer: Omit<CustomerUser, 'id'> = {
+      const defaultCustomer: CustomerUser = {
+        id: Date.now(),
         email: 'dark@gmail.com',
         password: 'dark',
         registrationDate: new Date().toLocaleDateString('ar-SA'),
@@ -156,22 +162,23 @@ class CustomerAuthService {
         isVerified: true
       };
       
-      this.registerCustomer(defaultCustomer.email, defaultCustomer.password);
-      console.log('CustomerAuthService: Default customer created');
+      customers.push(defaultCustomer);
+      this.saveCustomers(customers);
+      console.log('CustomerAuthService: Default customer created successfully');
     }
   }
 
   static authenticateCustomer(email: string, password: string): boolean {
-    console.log('CustomerAuthService: Attempting login for:', email);
+    console.log('CustomerAuthService: Attempting login for:', email, 'with password:', password);
     
     // تأكد من وجود العميل الافتراضي
     this.initializeDefaultCustomer();
     
     const customers = this.getCustomers();
-    console.log('CustomerAuthService: Available customers:', customers.map(c => c.email));
+    console.log('CustomerAuthService: Available customers:', customers);
     
     const customer = customers.find(c => c.email === email && c.password === password);
-    console.log('CustomerAuthService: Found customer:', customer ? 'Yes' : 'No');
+    console.log('CustomerAuthService: Found customer:', customer);
     
     // تسجيل محاولة الدخول
     this.addLoginAttempt(email, password, !!customer);
@@ -184,16 +191,17 @@ class CustomerAuthService {
       localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
       localStorage.setItem(`online_${customer.id}`, 'true');
       localStorage.setItem(`lastSeen_${customer.id}`, new Date().toLocaleString('ar-SA'));
-      console.log('CustomerAuthService: Login successful');
+      console.log('CustomerAuthService: Login successful for:', email);
       return true;
     }
     
-    console.log('CustomerAuthService: Login failed - invalid credentials');
+    console.log('CustomerAuthService: Login failed - invalid credentials for:', email);
     return false;
   }
 }
 
 // تأكد من تشغيل التهيئة عند تحميل الملف
+console.log('CustomerAuthService: Module loaded, initializing...');
 CustomerAuthService.initializeDefaultCustomer();
 
 export default CustomerAuthService;
