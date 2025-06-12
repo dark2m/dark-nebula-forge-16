@@ -50,7 +50,7 @@ const ContactTab: React.FC<ContactTabProps> = ({
                   contactInfo: { ...siteSettings.contactInfo, discord: e.target.value }
                 })}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
-                placeholder="Discord Server"
+                placeholder="Discord Server Invite Link"
               />
             </div>
 
@@ -79,6 +79,34 @@ const ContactTab: React.FC<ContactTabProps> = ({
                 })}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
                 placeholder="support@dark.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 text-sm font-medium mb-2">الهاتف</label>
+              <input
+                type="tel"
+                value={siteSettings.contactInfo?.phone || ''}
+                onChange={(e) => setSiteSettings({
+                  ...siteSettings,
+                  contactInfo: { ...siteSettings.contactInfo, phone: e.target.value }
+                })}
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
+                placeholder="+966 XX XXX XXXX"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 text-sm font-medium mb-2">العنوان</label>
+              <input
+                type="text"
+                value={siteSettings.contactInfo?.address || ''}
+                onChange={(e) => setSiteSettings({
+                  ...siteSettings,
+                  contactInfo: { ...siteSettings.contactInfo, address: e.target.value }
+                })}
+                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
+                placeholder="المملكة العربية السعودية"
               />
             </div>
           </div>
