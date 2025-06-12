@@ -129,6 +129,16 @@ class SettingsService {
           icon: '📷',
           visible: true,
           category: 'general'
+        },
+        {
+          id: 4,
+          title: 'مولد الجيميل',
+          description: 'إنشاء جميع الاختلافات الممكنة لعناوين Gmail باستخدام النقاط',
+          buttonText: 'استخدام المولد',
+          url: '/gmail-generator',
+          icon: '📧',
+          visible: true,
+          category: 'general'
         }
       ],
       pageTexts: {

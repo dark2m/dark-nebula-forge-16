@@ -46,7 +46,13 @@ const Tools = () => {
 
   const handleToolClick = (tool: Tool) => {
     if (tool.url) {
-      window.open(tool.url, '_blank');
+      if (tool.url.startsWith('/')) {
+        // رابط داخلي - استخدام router navigation
+        window.location.href = tool.url;
+      } else {
+        // رابط خارجي
+        window.open(tool.url, '_blank');
+      }
     }
   };
 
