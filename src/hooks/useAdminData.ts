@@ -46,6 +46,20 @@ export const useAdminData = () => {
     };
   }, [navigate]);
 
+  // تحديث setSiteSettings لحفظ التغييرات تلقائياً
+  const updateSiteSettings = (newSettings: SiteSettings) => {
+    console.log('useAdminData: Updating settings:', newSettings);
+    setSiteSettings(newSettings);
+    
+    // حفظ فوري عند التحديث
+    try {
+      SettingsService.saveSiteSettings(newSettings);
+      console.log('useAdminData: Settings saved successfully');
+    } catch (error) {
+      console.error('useAdminData: Error saving settings:', error);
+    }
+  };
+
   const canAccess = (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean => {
     return AuthService.hasPermission(requiredRole);
   };
@@ -55,7 +69,7 @@ export const useAdminData = () => {
     products,
     setProducts,
     siteSettings,
-    setSiteSettings,
+    setSiteSettings: updateSiteSettings,
     canAccess,
     toast
   };

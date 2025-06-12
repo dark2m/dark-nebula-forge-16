@@ -37,11 +37,17 @@ const AdminDashboard = () => {
 
   const saveSiteSettings = () => {
     try {
-      console.log('AdminDashboard: Saving settings:', siteSettings);
+      console.log('AdminDashboard: Force saving settings:', siteSettings);
       SettingsService.saveSiteSettings(siteSettings);
+      
+      // إطلاق حدث لتحديث جميع المكونات
+      window.dispatchEvent(new CustomEvent('settingsUpdated', {
+        detail: { settings: siteSettings }
+      }));
+      
       toast({
         title: "تم حفظ الإعدادات",
-        description: "تم حفظ إعدادات الموقع بنجاح"
+        description: "تم حفظ إعدادات الموقع بنجاح وتطبيقها على الموقع"
       });
     } catch (error) {
       console.error('Error saving settings:', error);

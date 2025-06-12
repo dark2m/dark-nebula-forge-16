@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Save, Eye, EyeOff, Plus, Trash2, Edit3, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -83,9 +82,12 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
 
     setSiteSettings(newSettings);
     
-    // Auto-save after visibility change
+    // حفظ فوري وإطلاق حدث للتحديث
     setTimeout(() => {
       saveSiteSettings();
+      window.dispatchEvent(new CustomEvent('settingsUpdated', {
+        detail: { settings: newSettings }
+      }));
     }, 100);
   };
 
@@ -105,10 +107,12 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       }
     ];
 
-    setSiteSettings({
+    const newSettings = {
       ...siteSettings,
       navigation: updatedNavigation
-    });
+    };
+
+    setSiteSettings(newSettings);
 
     setNewItem({
       id: '',
@@ -119,9 +123,12 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       position: 0
     });
 
-    // Auto-save after adding item
+    // حفظ فوري وإطلاق حدث للتحديث
     setTimeout(() => {
       saveSiteSettings();
+      window.dispatchEvent(new CustomEvent('settingsUpdated', {
+        detail: { settings: newSettings }
+      }));
     }, 100);
   };
 
@@ -133,14 +140,19 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       return currentId !== itemId;
     }) || [];
 
-    setSiteSettings({
+    const newSettings = {
       ...siteSettings,
       navigation: updatedNavigation
-    });
+    };
 
-    // Auto-save after deleting item
+    setSiteSettings(newSettings);
+
+    // حفظ فوري وإطلاق حدث للتحديث
     setTimeout(() => {
       saveSiteSettings();
+      window.dispatchEvent(new CustomEvent('settingsUpdated', {
+        detail: { settings: newSettings }
+      }));
     }, 100);
   };
 
@@ -156,17 +168,22 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
         : item;
     }) || [];
 
-    setSiteSettings({
+    const newSettings = {
       ...siteSettings,
       navigation: updatedNavigation
-    });
+    };
+
+    setSiteSettings(newSettings);
 
     setEditingItem(null);
     setIsEditDialogOpen(false);
 
-    // Auto-save after updating item
+    // حفظ فوري وإطلاق حدث للتحديث
     setTimeout(() => {
       saveSiteSettings();
+      window.dispatchEvent(new CustomEvent('settingsUpdated', {
+        detail: { settings: newSettings }
+      }));
     }, 100);
   };
 
