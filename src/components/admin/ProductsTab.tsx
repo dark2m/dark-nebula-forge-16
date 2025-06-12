@@ -275,7 +275,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">حجم النص</label>
                     <select
@@ -299,9 +299,9 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                     />
                   </div>
                   
-                  <div>
+                  <div className="lg:col-span-2">
                     <label className="block text-gray-400 text-sm mb-2">صورة الخلفية</label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
                       <input
                         type="file"
                         accept="image/*"
@@ -315,16 +315,16 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                             reader.readAsDataURL(file);
                           }
                         }}
-                        className="flex-1 bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                        className="flex-1 bg-white/10 text-white border border-white/20 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400"
                       />
                       {getProductValue(product, 'backgroundImage') && (
                         <button
                           onClick={() => removeBackgroundImage(product.id)}
-                          className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded transition-colors flex items-center gap-1"
+                          className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded transition-colors flex items-center gap-1 text-xs"
                           title="إزالة صورة الخلفية"
                         >
-                          <X className="w-4 h-4" />
-                          إزالة
+                          <X className="w-3 h-3" />
+                          <span className="hidden sm:inline">إزالة</span>
                         </button>
                       )}
                     </div>
@@ -333,7 +333,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                         <img
                           src={getProductValue(product, 'backgroundImage')}
                           alt="معاينة صورة الخلفية"
-                          className="w-full h-20 object-cover rounded border border-white/20"
+                          className="w-full h-16 object-cover rounded border border-white/20"
                         />
                       </div>
                     )}
