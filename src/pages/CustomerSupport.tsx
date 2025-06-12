@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Clock, Shield, User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -113,6 +114,9 @@ const CustomerSupport = () => {
 
   // إذا كان العميل مسجل دخول، عرض واجهة خدمة العملاء
   if (isAuthenticated && currentCustomer) {
+    // استخراج اسم المستخدم من الإيميل (الجزء قبل @)
+    const username = currentCustomer.email.split('@')[0];
+    
     return (
       <div className="min-h-screen relative">
         <StarryBackground />
@@ -121,7 +125,7 @@ const CustomerSupport = () => {
           <div className="container mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
               <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
-                مرحباً {currentCustomer.email}
+                مرحباً {username}
               </h1>
               <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
                 نحن سعداء لخدمتك. يمكنك الآن الوصول إلى جميع خدمات الدعم المتاحة
