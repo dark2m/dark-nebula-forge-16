@@ -4,34 +4,65 @@ import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '../hooks/use-mobile';
 import AdminStorage from '../utils/adminStorage';
+import SettingsService from '../utils/settingsService';
 import { getTextContent } from '../utils/textUtils';
 
 const Navigation = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+  const [siteSettings, setSiteSettings] = useState(SettingsService.getSiteSettings());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [navigationKey, setNavigationKey] = useState(0); // للإجبار على إعادة التحديث
   
   useEffect(() => {
     // تحميل الإعدادات عند التحميل
-    setSiteSettings(AdminStorage.getSiteSettings());
+    const loadSettings = () => {
+      const settings = SettingsService.getSiteSettings();
+      console.log('Navigation: Loading fresh settings:', settings);
+      setSiteSettings(settings);
+    };
+
+    loadSettings();
 
     // الاستماع لتحديثات الإعدادات
     const handleSettingsUpdate = (event: CustomEvent) => {
       console.log('Navigation: Settings updated via event:', event.detail.settings);
       setSiteSettings(event.detail.settings);
+      setNavigationKey(prev => prev + 1); // إجبار إعادة التحديث
+    };
+
+    // الاستماع لتحديثات التنقل المحددة
+    const handleNavigationUpdate = (event: CustomEvent) => {
+      console.log('Navigation: Navigation updated via event:', event.detail.navigation);
+      const currentSettings = SettingsService.getSiteSettings();
+      setSiteSettings(currentSettings);
+      setNavigationKey(prev => prev + 1);
     };
 
     window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    window.addEventListener('navigationUpdated', handleNavigationUpdate as EventListener);
+    
+    // تحديث دوري للتأكد من عدم فقدان التغييرات
+    const intervalUpdate = setInterval(() => {
+      const freshSettings = SettingsService.getSiteSettings();
+      if (JSON.stringify(freshSettings.navigation) !== JSON.stringify(siteSettings.navigation)) {
+        console.log('Navigation: Detected navigation changes via interval update');
+        setSiteSettings(freshSettings);
+        setNavigationKey(prev => prev + 1);
+      }
+    }, 2000);
     
     return () => {
       window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+      window.removeEventListener('navigationUpdated', handleNavigationUpdate as EventListener);
+      clearInterval(intervalUpdate);
     };
-  }, []);
+  }, [siteSettings.navigation]);
 
   // إنشاء قائمة التنقل من إعدادات الموقع
   const getNavigationItems = () => {
     if (!siteSettings.navigation || siteSettings.navigation.length === 0) {
+      console.log('Navigation: No navigation items found in settings');
       return [];
     }
 
@@ -45,16 +76,30 @@ const Navigation = () => {
       'Menu': Home,
       'Wrench': Wrench,
       'Tools': Wrench,
-      'Support': MessageCircle
+      'Support': MessageCircle,
+      'MessageCircle': MessageCircle,
+      'MessageSquare': MessageCircle,
+      'Phone': MessageCircle,
+      'Mail': MessageCircle,
+      'Send': MessageCircle,
+      'Gamepad2': Shield,
+      'Target': Shield,
+      'Globe': Code,
+      'Server': Code,
+      'Database': Code
     };
 
-    return siteSettings.navigation
+    const items = siteSettings.navigation
       .filter(item => item.visible !== false)
       .map(item => ({
         name: item.name,
         path: item.path,
-        icon: iconMap[item.icon] || Home
+        icon: iconMap[item.icon] || Home,
+        id: item.id
       }));
+
+    console.log('Navigation: Generated navigation items:', items);
+    return items;
   };
 
   const navItems = getNavigationItems();
@@ -68,7 +113,7 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50">
+    <nav className="fixed top-0 left-0 right-0 z-50" key={navigationKey}>
       <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -80,11 +125,11 @@ const Navigation = () => {
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-6 rtl:space-x-reverse">
-            {navItems.map((item) => {
+            {navItems.map((item, index) => {
               const Icon = item.icon;
               return (
                 <Link
-                  key={item.path}
+                  key={`${item.id || item.path}-${index}-${navigationKey}`}
                   to={item.path}
                   className={`nav-link flex items-center space-x-2 rtl:space-x-reverse ${
                     location.pathname === item.path ? 'text-blue-400' : ''
@@ -124,11 +169,11 @@ const Navigation = () => {
         {isMenuOpen && (isMobile || window.innerWidth <= 1024) && (
           <div className="md:hidden mt-4 bg-black/90 backdrop-blur-sm rounded-lg p-4 border border-white/20">
             <div className="space-y-3">
-              {navItems.map((item) => {
+              {navItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
                   <Link
-                    key={item.path}
+                    key={`mobile-${item.id || item.path}-${index}-${navigationKey}`}
                     to={item.path}
                     onClick={closeMenu}
                     className={`flex items-center space-x-3 rtl:space-x-reverse p-3 rounded-lg transition-colors ${

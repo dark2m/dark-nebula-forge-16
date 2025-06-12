@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Save, Eye, EyeOff, Plus, Trash2, Edit3, Menu, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -151,75 +152,50 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
     { path: '/sport', label: 'خدمة العملاء' }
   ];
 
-  // التحقق من صحة المسار
-  const validateRoute = (path: string): boolean => {
-    // إذا كان مسار مخصص (يبدأ بـ /)
-    if (path.startsWith('/') && path !== '/') {
-      return true; // نسمح بالمسارات المخصصة
-    }
-    return availableRoutes.some(route => route.path === path);
-  };
-
-  // الحصول على حالة المسار
-  const getRouteStatus = (path: string) => {
-    const isKnownRoute = availableRoutes.some(route => route.path === path);
-    const isCustomRoute = path.startsWith('/') && !isKnownRoute;
-    
-    if (isKnownRoute) {
-      return {
-        isValid: true,
-        icon: CheckCircle,
-        color: 'text-green-400',
-        message: 'مسار صحيح'
-      };
-    } else if (isCustomRoute) {
-      return {
-        isValid: true,
-        icon: AlertTriangle,
-        color: 'text-yellow-400',
-        message: 'مسار مخصص - تأكد من وجوده'
-      };
-    } else {
-      return {
-        isValid: false,
-        icon: AlertTriangle,
-        color: 'text-red-400',
-        message: 'مسار غير صحيح'
-      };
-    }
-  };
-
-  // دالة حفظ محسنة لضمان الثبات
-  const saveSettingsWithPersistence = (newSettings: SiteSettings) => {
+  // دالة الحفظ الفوري مع إعادة تحديث شامل
+  const forceSaveAndReload = async (newSettings: SiteSettings) => {
     try {
-      console.log('TaskbarControl: Saving settings with persistence:', newSettings);
+      console.log('TaskbarControl: Force saving and reloading settings:', newSettings);
       
+      // 1. حفظ في الحالة المحلية أولاً
       setSiteSettings(newSettings);
+      
+      // 2. حفظ في localStorage مع التحقق
       SettingsService.saveSiteSettings(newSettings);
       
-      const event = new CustomEvent('settingsUpdated', {
+      // 3. التحقق من الحفظ
+      const verification = SettingsService.getSiteSettings();
+      console.log('TaskbarControl: Settings after save verification:', verification);
+      
+      // 4. إطلاق أحداث التحديث متعددة
+      const updateEvent = new CustomEvent('settingsUpdated', {
         detail: { settings: newSettings }
       });
-      window.dispatchEvent(event);
+      window.dispatchEvent(updateEvent);
       
-      console.log('TaskbarControl: Settings saved successfully');
-      
-      toast({
-        title: "تم الحفظ",
-        description: "تم حفظ التغييرات في شريط المهام بنجاح",
+      // 5. إطلاق حدث إضافي للتأكد من التحديث
+      const navigationUpdateEvent = new CustomEvent('navigationUpdated', {
+        detail: { navigation: newSettings.navigation }
       });
+      window.dispatchEvent(navigationUpdateEvent);
       
+      // 6. تحديث إضافي بعد تأخير قصير
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('settingsUpdated', {
+          detail: { settings: newSettings }
+        }));
+      }, 100);
+      
+      console.log('TaskbarControl: All update events dispatched successfully');
+      
+      return true;
     } catch (error) {
-      console.error('TaskbarControl: Error saving settings:', error);
-      toast({
-        title: "خطأ في الحفظ",
-        description: "حدث خطأ أثناء حفظ الإعدادات",
-        variant: "destructive"
-      });
+      console.error('TaskbarControl: Error in forceSaveAndReload:', error);
+      return false;
     }
   };
 
-  const toggleItemVisibility = (itemId: string) => {
+  const toggleItemVisibility = async (itemId: string) => {
     console.log('Toggling visibility for item:', itemId);
     
     const updatedNavigation = siteSettings.navigation?.map(item => {
@@ -231,17 +207,28 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       return item;
     }) || [];
 
-    console.log('Updated navigation:', updatedNavigation);
-
     const newSettings = {
       ...siteSettings,
       navigation: updatedNavigation
     };
 
-    saveSettingsWithPersistence(newSettings);
+    const success = await forceSaveAndReload(newSettings);
+    
+    if (success) {
+      toast({
+        title: "تم التحديث",
+        description: "تم تغيير حالة العرض بنجاح",
+      });
+    } else {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء التحديث",
+        variant: "destructive"
+      });
+    }
   };
 
-  const addNewItem = () => {
+  const addNewItem = async () => {
     if (!newItem.name || !newItem.path) {
       toast({
         title: "خطأ في البيانات",
@@ -251,19 +238,9 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       return;
     }
 
-    // التحقق من صحة المسار قبل الإضافة
-    if (!validateRoute(newItem.path)) {
-      toast({
-        title: "تحذير",
-        description: "تأكد من صحة المسار المدخل",
-        variant: "destructive"
-      });
-      return;
-    }
-
     const uniqueId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
-    console.log('Adding new item:', { ...newItem, id: uniqueId });
+    console.log('Adding new item with ID:', uniqueId, newItem);
 
     const newNavItem = {
       id: uniqueId,
@@ -283,24 +260,34 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       navigation: updatedNavigation
     };
 
-    saveSettingsWithPersistence(newSettings);
+    console.log('New settings with added item:', newSettings);
 
-    setNewItem({
-      id: '',
-      name: '',
-      icon: 'Menu',
-      path: '',
-      visible: true,
-      position: 0
-    });
+    const success = await forceSaveAndReload(newSettings);
 
-    toast({
-      title: "تم الإضافة",
-      description: `تم إضافة "${newItem.name}" إلى شريط المهام بنجاح`,
-    });
+    if (success) {
+      setNewItem({
+        id: '',
+        name: '',
+        icon: 'Menu',
+        path: '',
+        visible: true,
+        position: 0
+      });
+
+      toast({
+        title: "تم الإضافة",
+        description: `تم إضافة "${newItem.name}" إلى شريط المهام بنجاح`,
+      });
+    } else {
+      toast({
+        title: "خطأ في الإضافة",
+        description: "حدث خطأ أثناء إضافة العنصر",
+        variant: "destructive"
+      });
+    }
   };
 
-  const deleteItem = (itemId: string) => {
+  const deleteItem = async (itemId: string) => {
     console.log('Deleting item:', itemId);
     
     const updatedNavigation = siteSettings.navigation?.filter(item => {
@@ -313,25 +300,24 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       navigation: updatedNavigation
     };
 
-    saveSettingsWithPersistence(newSettings);
+    const success = await forceSaveAndReload(newSettings);
     
-    toast({
-      title: "تم الحذف",
-      description: "تم حذف العنصر من شريط المهام",
-    });
-  };
-
-  const updateItem = (updates: Partial<TaskbarItem>) => {
-    if (!editingItem) return;
-
-    if (updates.path && !validateRoute(updates.path)) {
+    if (success) {
       toast({
-        title: "تحذير",
-        description: "تأكد من صحة المسار المدخل",
+        title: "تم الحذف",
+        description: "تم حذف العنصر من شريط المهام",
+      });
+    } else {
+      toast({
+        title: "خطأ في الحذف",
+        description: "حدث خطأ أثناء حذف العنصر",
         variant: "destructive"
       });
-      return;
     }
+  };
+
+  const updateItem = async (updates: Partial<TaskbarItem>) => {
+    if (!editingItem) return;
 
     console.log('Updating item:', editingItem.id, 'with:', updates);
 
@@ -347,15 +333,23 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       navigation: updatedNavigation
     };
 
-    saveSettingsWithPersistence(newSettings);
+    const success = await forceSaveAndReload(newSettings);
 
-    setEditingItem(null);
-    setIsEditDialogOpen(false);
-    
-    toast({
-      title: "تم التحديث",
-      description: "تم تحديث العنصر بنجاح",
-    });
+    if (success) {
+      setEditingItem(null);
+      setIsEditDialogOpen(false);
+      
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث العنصر بنجاح",
+      });
+    } else {
+      toast({
+        title: "خطأ في التحديث",
+        description: "حدث خطأ أثناء تحديث العنصر",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -386,71 +380,61 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           {taskbarItems.length === 0 ? (
             <p className="text-gray-400 text-center py-4">لا توجد عناصر في شريط المهام</p>
           ) : (
-            taskbarItems.map((item) => {
-              const routeStatus = getRouteStatus(item.path);
-              const StatusIcon = routeStatus.icon;
-              
-              return (
-                <div
-                  key={item.id}
-                  className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
-                    item.visible 
-                      ? 'bg-green-500/10 border-green-500/30' 
-                      : 'bg-red-500/10 border-red-500/30'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${item.visible ? 'bg-green-400' : 'bg-red-400'}`} />
-                    <span className="text-white font-medium">{item.name}</span>
-                    <span className="text-gray-400 text-sm">({item.path})</span>
-                    <span className="text-gray-500 text-xs">{item.icon}</span>
-                    
-                    <div className={`flex items-center gap-1 ${routeStatus.color}`}>
-                      <StatusIcon className="w-4 h-4" />
-                      <span className="text-xs">{routeStatus.message}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => toggleItemVisibility(item.id)}
-                      className={`text-white hover:bg-white/10 ${
-                        item.visible ? 'text-green-400' : 'text-red-400'
-                      }`}
-                    >
-                      {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </Button>
-                    
-                    {isEditMode && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingItem(item);
-                            setIsEditDialogOpen(true);
-                          }}
-                          className="text-blue-400 hover:bg-blue-500/20"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteItem(item.id)}
-                          className="text-red-400 hover:bg-red-500/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
+            taskbarItems.map((item) => (
+              <div
+                key={item.id}
+                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
+                  item.visible 
+                    ? 'bg-green-500/10 border-green-500/30' 
+                    : 'bg-red-500/10 border-red-500/30'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${item.visible ? 'bg-green-400' : 'bg-red-400'}`} />
+                  <span className="text-white font-medium">{item.name}</span>
+                  <span className="text-gray-400 text-sm">({item.path})</span>
+                  <span className="text-gray-500 text-xs">{item.icon}</span>
                 </div>
-              );
-            })
+                
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => toggleItemVisibility(item.id)}
+                    className={`text-white hover:bg-white/10 ${
+                      item.visible ? 'text-green-400' : 'text-red-400'
+                    }`}
+                  >
+                    {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </Button>
+                  
+                  {isEditMode && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingItem(item);
+                          setIsEditDialogOpen(true);
+                        }}
+                        className="text-blue-400 hover:bg-blue-500/20"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
+                      
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteItem(item.id)}
+                        className="text-red-400 hover:bg-red-500/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
           )}
         </div>
 
@@ -549,42 +533,18 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           </div>
         )}
 
-        {/* معلومات المسارات */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
-              المسارات الجاهزة
-            </h3>
-            <div className="space-y-1">
-              {availableRoutes.map(route => (
-                <div key={route.path} className="flex items-center gap-2 text-sm">
-                  <CheckCircle className="w-3 h-3 text-green-400" />
-                  <span className="text-gray-300">{route.path}</span>
-                  <span className="text-gray-500">({route.label})</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              المسارات المخصصة
-            </h3>
-            <div className="text-sm text-gray-300 space-y-2">
-              <p>• يمكنك إنشاء مسارات مخصصة</p>
-              <p>• يجب أن تبدأ بـ /</p>
-              <p>• مثال: /my-page</p>
-              <p>• تأكد من وجود الصفحة</p>
-            </div>
-          </div>
-        </div>
-
         {/* زر الحفظ العام */}
         <div className="flex justify-end pt-4 border-t border-white/20">
           <Button 
-            onClick={() => saveSettingsWithPersistence(siteSettings)} 
+            onClick={async () => {
+              const success = await forceSaveAndReload(siteSettings);
+              if (success) {
+                toast({
+                  title: "تم الحفظ",
+                  description: "تم حفظ جميع التغييرات بنجاح",
+                });
+              }
+            }} 
             className="glow-button"
           >
             <Save className="w-4 h-4 mr-2" />
