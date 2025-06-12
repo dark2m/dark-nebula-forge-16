@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut } from 'lucide-react';
-import CustomerAuthService from '../../utils/customerAuthService';
+import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2 } from 'lucide-react';
+import CustomerAuthService, { type LoginAttempt } from '../../utils/customerAuthService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CustomerUser {
   id: number;
@@ -19,11 +20,13 @@ interface CustomerUser {
 
 const CustomerLogTab = () => {
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
+  const [loginAttempts, setLoginAttempts] = useState<LoginAttempt[]>([]);
   const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
   const { toast } = useToast();
 
   useEffect(() => {
     loadCustomers();
+    loadLoginAttempts();
     
     // تحديث حالة الاتصال كل 30 ثانية
     const interval = setInterval(updateOnlineStatus, 30000);
@@ -40,6 +43,11 @@ const CustomerLogTab = () => {
       lastSeen: localStorage.getItem(`lastSeen_${customer.id}`) || 'غير معروف'
     }));
     setCustomers(enrichedCustomers);
+  };
+
+  const loadLoginAttempts = () => {
+    const attempts = CustomerAuthService.getLoginAttempts();
+    setLoginAttempts(attempts.reverse()); // عرض الأحدث أولاً
   };
 
   const updateOnlineStatus = () => {
@@ -68,7 +76,7 @@ const CustomerLogTab = () => {
     loadCustomers();
     toast({
       title: "تم حظر العميل",
-      description: "تم حظر العميل وتسجيل خروجه تلقائياً"
+      description: "تم حظر العميل وتسجيل خروجه تلقائياً - لن يتمكن من تسجيل الدخول مرة أخرى"
     });
   };
 
@@ -77,7 +85,7 @@ const CustomerLogTab = () => {
     loadCustomers();
     toast({
       title: "تم إلغاء حظر العميل",
-      description: "تم إلغاء حظر العميل بنجاح"
+      description: "تم إلغاء حظر العميل بنجاح - يمكنه الآن تسجيل الدخول"
     });
   };
 
@@ -128,15 +136,28 @@ const CustomerLogTab = () => {
     return <span className="bg-gray-500/20 text-gray-400 px-2 py-1 rounded text-xs">غير متصل</span>;
   };
 
+  const clearLoginAttempts = () => {
+    CustomerAuthService.clearLoginAttempts();
+    setLoginAttempts([]);
+    toast({
+      title: "تم مسح سجل المحاولات",
+      description: "تم مسح جميع محاولات تسجيل الدخول"
+    });
+  };
+
   const onlineCustomers = customers.filter(c => c.isOnline && !c.isBlocked).length;
   const blockedCustomers = customers.filter(c => c.isBlocked).length;
+  const failedAttempts = loginAttempts.filter(a => !a.success).length;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-white">سجل العملاء</h2>
         <Button 
-          onClick={loadCustomers}
+          onClick={() => {
+            loadCustomers();
+            loadLoginAttempts();
+          }}
           className="glow-button"
         >
           تحديث البيانات
@@ -144,7 +165,7 @@ const CustomerLogTab = () => {
       </div>
 
       {/* إحصائيات سريعة */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2 rtl:space-x-reverse">
@@ -172,7 +193,7 @@ const CustomerLogTab = () => {
         <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <UserX className="w-5 h-5 text-red-400" />
+              <Ban className="w-5 h-5 text-red-400" />
               <div>
                 <p className="text-gray-400 text-sm">محظور</p>
                 <p className="text-white text-xl font-bold">{blockedCustomers}</p>
@@ -192,123 +213,224 @@ const CustomerLogTab = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <AlertTriangle className="w-5 h-5 text-orange-400" />
+              <div>
+                <p className="text-gray-400 text-sm">محاولات فاشلة</p>
+                <p className="text-white text-xl font-bold">{failedAttempts}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* جدول العملاء */}
-      <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            قائمة العملاء
-          </CardTitle>
-          <CardDescription className="text-gray-400">
-            إدارة جميع العملاء المسجلين في النظام (يتم تسجيل الخروج تلقائياً عند الحذف أو الحظر)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-white/10">
-                  <TableHead className="text-gray-300">المعرف</TableHead>
-                  <TableHead className="text-gray-300">البريد الإلكتروني</TableHead>
-                  <TableHead className="text-gray-300">كلمة المرور</TableHead>
-                  <TableHead className="text-gray-300">تاريخ التسجيل</TableHead>
-                  <TableHead className="text-gray-300">الحالة</TableHead>
-                  <TableHead className="text-gray-300">آخر ظهور</TableHead>
-                  <TableHead className="text-gray-300">الإجراءات</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.map((customer) => (
-                  <TableRow key={customer.id} className="border-white/10">
-                    <TableCell className="text-white">#{customer.id}</TableCell>
-                    <TableCell className="text-white">{customer.email}</TableCell>
-                    <TableCell className="text-white">
-                      <div className="flex items-center gap-2">
-                        <span>
-                          {showPasswords[customer.id] ? customer.password : '••••••••'}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => togglePasswordVisibility(customer.id)}
-                          className="text-gray-400 hover:text-white p-1"
-                        >
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-gray-300">
-                      {new Date(customer.createdAt).toLocaleDateString('ar-SA')}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(customer)}
-                    </TableCell>
-                    <TableCell className="text-gray-300 text-sm">
-                      {customer.lastSeen}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        {customer.isBlocked ? (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => unblockCustomer(customer.id)}
-                            className="text-green-400 hover:text-green-300 p-1"
-                            title="إلغاء الحظر"
-                          >
-                            <UserCheck className="w-3 h-3" />
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => blockCustomer(customer.id)}
-                            className="text-red-400 hover:text-red-300 p-1"
-                            title="حظر العميل (تسجيل خروج تلقائي)"
-                          >
-                            <Ban className="w-3 h-3" />
-                          </Button>
-                        )}
-                        
-                        {customer.isOnline && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => forceLogout(customer.id)}
-                            className="text-orange-400 hover:text-orange-300 p-1"
-                            title="تسجيل خروج إجباري"
-                          >
-                            <LogOut className="w-3 h-3" />
-                          </Button>
-                        )}
-                        
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteCustomer(customer.id)}
-                          className="text-red-400 hover:text-red-300 p-1"
-                          title="حذف العميل (تسجيل خروج تلقائي)"
-                        >
-                          <UserX className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {customers.length === 0 && (
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-400">لا يوجد عملاء مسجلين حتى الآن</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* التبويبات */}
+      <Tabs defaultValue="customers" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2 bg-white/10">
+          <TabsTrigger value="customers" className="text-white data-[state=active]:bg-blue-500/20">
+            العملاء المسجلون
+          </TabsTrigger>
+          <TabsTrigger value="attempts" className="text-white data-[state=active]:bg-blue-500/20">
+            محاولات تسجيل الدخول
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="customers">
+          {/* جدول العملاء */}
+          <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                قائمة العملاء
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                إدارة جميع العملاء المسجلين في النظام (العميل المحظور لن يتمكن من تسجيل الدخول نهائياً)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/10">
+                      <TableHead className="text-gray-300">المعرف</TableHead>
+                      <TableHead className="text-gray-300">البريد الإلكتروني</TableHead>
+                      <TableHead className="text-gray-300">كلمة المرور</TableHead>
+                      <TableHead className="text-gray-300">تاريخ التسجيل</TableHead>
+                      <TableHead className="text-gray-300">الحالة</TableHead>
+                      <TableHead className="text-gray-300">آخر ظهور</TableHead>
+                      <TableHead className="text-gray-300">الإجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {customers.map((customer) => (
+                      <TableRow key={customer.id} className="border-white/10">
+                        <TableCell className="text-white">#{customer.id}</TableCell>
+                        <TableCell className="text-white">{customer.email}</TableCell>
+                        <TableCell className="text-white">
+                          <div className="flex items-center gap-2">
+                            <span>
+                              {showPasswords[customer.id] ? customer.password : '••••••••'}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => togglePasswordVisibility(customer.id)}
+                              className="text-gray-400 hover:text-white p-1"
+                            >
+                              <Eye className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-gray-300">
+                          {new Date(customer.createdAt).toLocaleDateString('ar-SA')}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(customer)}
+                        </TableCell>
+                        <TableCell className="text-gray-300 text-sm">
+                          {customer.lastSeen}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            {customer.isBlocked ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => unblockCustomer(customer.id)}
+                                className="text-green-400 hover:text-green-300 p-1"
+                                title="إلغاء الحظر (تمكين تسجيل الدخول)"
+                              >
+                                <UserCheck className="w-3 h-3" />
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => blockCustomer(customer.id)}
+                                className="text-red-400 hover:text-red-300 p-1"
+                                title="حظر العميل (منع تسجيل الدخول نهائياً)"
+                              >
+                                <Ban className="w-3 h-3" />
+                              </Button>
+                            )}
+                            
+                            {customer.isOnline && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => forceLogout(customer.id)}
+                                className="text-orange-400 hover:text-orange-300 p-1"
+                                title="تسجيل خروج إجباري"
+                              >
+                                <LogOut className="w-3 h-3" />
+                              </Button>
+                            )}
+                            
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => deleteCustomer(customer.id)}
+                              className="text-red-400 hover:text-red-300 p-1"
+                              title="حذف العميل نهائياً"
+                            >
+                              <UserX className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {customers.length === 0 && (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400">لا يوجد عملاء مسجلين حتى الآن</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="attempts">
+          {/* جدول محاولات تسجيل الدخول */}
+          <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                محاولات تسجيل الدخول
+              </CardTitle>
+              <CardDescription className="text-gray-400 flex items-center justify-between">
+                <span>جميع محاولات تسجيل الدخول الناجحة والفاشلة</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearLoginAttempts}
+                  className="text-red-400 hover:text-red-300"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  مسح السجل
+                </Button>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/10">
+                      <TableHead className="text-gray-300">الوقت</TableHead>
+                      <TableHead className="text-gray-300">البريد الإلكتروني</TableHead>
+                      <TableHead className="text-gray-300">كلمة المرور المستخدمة</TableHead>
+                      <TableHead className="text-gray-300">النتيجة</TableHead>
+                      <TableHead className="text-gray-300">عنوان IP</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loginAttempts.map((attempt) => (
+                      <TableRow key={attempt.id} className="border-white/10">
+                        <TableCell className="text-gray-300 text-sm">
+                          {attempt.timestamp}
+                        </TableCell>
+                        <TableCell className="text-white">
+                          {attempt.email}
+                        </TableCell>
+                        <TableCell className="text-gray-300">
+                          {attempt.password}
+                        </TableCell>
+                        <TableCell>
+                          {attempt.success ? (
+                            <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">
+                              نجح
+                            </span>
+                          ) : (
+                            <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs">
+                              فشل
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-gray-400 text-sm">
+                          {attempt.ipAddress || 'غير معروف'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {loginAttempts.length === 0 && (
+                <div className="text-center py-8">
+                  <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400">لا توجد محاولات تسجيل دخول</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

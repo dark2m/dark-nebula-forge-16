@@ -1,4 +1,3 @@
-
 interface CustomerUser {
   id: number;
   email: string;
@@ -7,9 +6,19 @@ interface CustomerUser {
   isVerified: boolean;
 }
 
+interface LoginAttempt {
+  id: number;
+  email: string;
+  password: string;
+  timestamp: string;
+  success: boolean;
+  ipAddress?: string;
+}
+
 class CustomerAuthService {
   private static CUSTOMERS_KEY = 'customer_users';
   private static CURRENT_CUSTOMER_KEY = 'current_customer';
+  private static LOGIN_ATTEMPTS_KEY = 'login_attempts';
 
   static getCustomers(): CustomerUser[] {
     try {
@@ -56,6 +65,42 @@ class CustomerAuthService {
     }
   }
 
+  static getLoginAttempts(): LoginAttempt[] {
+    try {
+      const stored = localStorage.getItem(this.LOGIN_ATTEMPTS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('CustomerAuthService: Error loading login attempts:', error);
+      return [];
+    }
+  }
+
+  static saveLoginAttempt(email: string, password: string, success: boolean): void {
+    try {
+      const attempts = this.getLoginAttempts();
+      const newAttempt: LoginAttempt = {
+        id: Date.now(),
+        email,
+        password,
+        timestamp: new Date().toLocaleString('ar-SA'),
+        success,
+        ipAddress: 'محلي' // يمكن تطويرها لاحقاً
+      };
+      
+      attempts.push(newAttempt);
+      
+      // الحفاظ على آخر 100 محاولة فقط
+      if (attempts.length > 100) {
+        attempts.splice(0, attempts.length - 100);
+      }
+      
+      localStorage.setItem(this.LOGIN_ATTEMPTS_KEY, JSON.stringify(attempts));
+      console.log('CustomerAuthService: Login attempt saved:', newAttempt);
+    } catch (error) {
+      console.error('CustomerAuthService: Error saving login attempt:', error);
+    }
+  }
+
   static authenticateCustomer(email: string, password: string): boolean {
     console.log('CustomerAuthService: Attempting login for:', email);
     
@@ -65,6 +110,7 @@ class CustomerAuthService {
     
     if (customer && localStorage.getItem(`blocked_${customer.id}`) === 'true') {
       console.log('CustomerAuthService: Customer is blocked');
+      this.saveLoginAttempt(email, password, false);
       return false;
     }
     
@@ -81,10 +127,12 @@ class CustomerAuthService {
       localStorage.setItem(`online_${authenticatedCustomer.id}`, 'true');
       localStorage.setItem(`lastSeen_${authenticatedCustomer.id}`, new Date().toLocaleString('ar-SA'));
       
+      this.saveLoginAttempt(email, password, true);
       console.log('CustomerAuthService: Login successful');
       return true;
     }
     
+    this.saveLoginAttempt(email, password, false);
     console.log('CustomerAuthService: Login failed - invalid credentials');
     return false;
   }
@@ -161,7 +209,6 @@ class CustomerAuthService {
     console.log('CustomerAuthService: Logged out successfully');
   }
 
-  // إضافة دالة جديدة للتحقق من العميل المتصل حالياً وتسجيل خروجه إذا تم حذفه
   static checkAndLogoutDeletedCustomer(deletedCustomerId: number): void {
     const currentCustomer = this.getCurrentCustomer();
     if (currentCustomer && currentCustomer.id === deletedCustomerId) {
@@ -171,6 +218,12 @@ class CustomerAuthService {
       window.location.reload();
     }
   }
+
+  static clearLoginAttempts(): void {
+    localStorage.removeItem(this.LOGIN_ATTEMPTS_KEY);
+    console.log('CustomerAuthService: Login attempts cleared');
+  }
 }
 
 export default CustomerAuthService;
+export type { CustomerUser, LoginAttempt };
