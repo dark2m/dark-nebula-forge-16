@@ -30,10 +30,13 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
       <h3 className="text-xl font-bold text-white">نصوص الصفحة الرئيسية</h3>
       
       <TextEditor
-        label="عنوان البطل"
+        label="عنوان البطل الرئيسي"
         value={siteSettings.pageTexts.home.heroTitle}
         onChange={(value) => updatePageTexts('home', 'heroTitle', value)}
         placeholder="أدخل عنوان البطل هنا..."
+        allowStyleSaving={true}
+        showSizeControl={true}
+        showColorPicker={true}
       />
       
       <TextEditor
@@ -41,6 +44,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
         value={siteSettings.pageTexts.home.heroSubtitle}
         onChange={(value) => updatePageTexts('home', 'heroSubtitle', value)}
         placeholder="أدخل النص التوضيحي هنا..."
+        allowStyleSaving={true}
       />
       
       <TextEditor
@@ -48,6 +52,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
         value={siteSettings.pageTexts.home.featuresTitle}
         onChange={(value) => updatePageTexts('home', 'featuresTitle', value)}
         placeholder="أدخل عنوان قسم المميزات..."
+        allowStyleSaving={true}
       />
     </div>
   );
@@ -60,18 +65,21 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
         label="عنوان الصفحة"
         value={siteSettings.pageTexts.official.pageTitle}
         onChange={(value) => updatePageTexts('official', 'pageTitle', value)}
+        allowStyleSaving={true}
       />
       
       <TextEditor
         label="وصف الصفحة"
         value={siteSettings.pageTexts.official.pageSubtitle}
         onChange={(value) => updatePageTexts('official', 'pageSubtitle', value)}
+        allowStyleSaving={true}
       />
       
       <TextEditor
         label="عنوان من نحن"
         value={siteSettings.pageTexts.official.aboutTitle}
         onChange={(value) => updatePageTexts('official', 'aboutTitle', value)}
+        allowStyleSaving={true}
       />
       
       {siteSettings.pageTexts.official.aboutContent.map((content, index) => (
@@ -81,9 +89,10 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
           value={content}
           onChange={(value) => {
             const newContent = [...siteSettings.pageTexts.official.aboutContent];
-            newContent[index] = value;
+            newContent[index] = typeof value === 'string' ? value : value.content;
             updatePageTexts('official', 'aboutContent', newContent);
           }}
+          allowStyleSaving={false}
         />
       ))}
       
@@ -91,6 +100,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
         label="عنوان التواصل"
         value={siteSettings.pageTexts.official.contactTitle}
         onChange={(value) => updatePageTexts('official', 'contactTitle', value)}
+        allowStyleSaving={true}
       />
     </div>
   );
@@ -116,6 +126,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
             label="عنوان الصفحة"
             value={(getPageSection(activeSection) as any).pageTitle}
             onChange={(value) => updatePageTexts(activeSection, 'pageTitle', value)}
+            allowStyleSaving={true}
           />
         )}
         
@@ -124,6 +135,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
             label="وصف الصفحة"
             value={(getPageSection(activeSection) as any).pageSubtitle}
             onChange={(value) => updatePageTexts(activeSection, 'pageSubtitle', value)}
+            allowStyleSaving={true}
           />
         )}
 
@@ -135,6 +147,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
                 label="عنوان الأمان"
                 value={siteSettings.pageTexts.pubgHacks.safetyTitle}
                 onChange={(value) => updatePageTexts('pubgHacks', 'safetyTitle', value)}
+                allowStyleSaving={true}
               />
             )}
             {hasProperty(activeSection, 'safetyDescription') && (
@@ -142,6 +155,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
                 label="وصف الأمان"
                 value={siteSettings.pageTexts.pubgHacks.safetyDescription}
                 onChange={(value) => updatePageTexts('pubgHacks', 'safetyDescription', value)}
+                allowStyleSaving={false}
               />
             )}
           </>
@@ -152,6 +166,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
             label="عنوان الخدمات"
             value={siteSettings.pageTexts.webDevelopment.servicesTitle}
             onChange={(value) => updatePageTexts('webDevelopment', 'servicesTitle', value)}
+            allowStyleSaving={true}
           />
         )}
 
@@ -160,6 +175,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
             label="عنوان المميزات"
             value={siteSettings.pageTexts.discordBots.featuresTitle}
             onChange={(value) => updatePageTexts('discordBots', 'featuresTitle', value)}
+            allowStyleSaving={true}
           />
         )}
       </div>
@@ -175,24 +191,28 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
           label="عنوان السلة"
           value={siteSettings.pageTexts.cart.cartTitle}
           onChange={(value) => updatePageTexts('cart', 'cartTitle', value)}
+          allowStyleSaving={true}
         />
         
         <TextEditor
           label="رسالة السلة الفارغة"
           value={siteSettings.pageTexts.cart.emptyCartMessage}
           onChange={(value) => updatePageTexts('cart', 'emptyCartMessage', value)}
+          allowStyleSaving={false}
         />
         
         <TextEditor
           label="زر الشراء"
           value={siteSettings.pageTexts.cart.purchaseButton}
           onChange={(value) => updatePageTexts('cart', 'purchaseButton', value)}
+          allowStyleSaving={false}
         />
         
         <TextEditor
           label="زر إضافة للسلة"
           value={siteSettings.pageTexts.cart.addToCartButton}
           onChange={(value) => updatePageTexts('cart', 'addToCartButton', value)}
+          allowStyleSaving={false}
         />
       </div>
     </div>
@@ -207,36 +227,42 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
           label="عنوان الرئيسية"
           value={siteSettings.pageTexts.navigation.homeTitle}
           onChange={(value) => updatePageTexts('navigation', 'homeTitle', value)}
+          allowStyleSaving={false}
         />
         
         <TextEditor
           label="عنوان ببجي"
           value={siteSettings.pageTexts.navigation.pubgTitle}
           onChange={(value) => updatePageTexts('navigation', 'pubgTitle', value)}
+          allowStyleSaving={false}
         />
         
         <TextEditor
           label="عنوان البرمجة"
           value={siteSettings.pageTexts.navigation.webTitle}
           onChange={(value) => updatePageTexts('navigation', 'webTitle', value)}
+          allowStyleSaving={false}
         />
         
         <TextEditor
           label="عنوان الديسكورد"
           value={siteSettings.pageTexts.navigation.discordTitle}
           onChange={(value) => updatePageTexts('navigation', 'discordTitle', value)}
+          allowStyleSaving={false}
         />
         
         <TextEditor
           label="عنوان الصفحة الرسمية"
           value={siteSettings.pageTexts.navigation.officialTitle}
           onChange={(value) => updatePageTexts('navigation', 'officialTitle', value)}
+          allowStyleSaving={false}
         />
         
         <TextEditor
           label="عنوان الإدارة"
           value={siteSettings.pageTexts.navigation.adminTitle}
           onChange={(value) => updatePageTexts('navigation', 'adminTitle', value)}
+          allowStyleSaving={false}
         />
       </div>
     </div>

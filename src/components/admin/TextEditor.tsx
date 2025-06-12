@@ -1,14 +1,28 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bold, Italic, Underline, Type, Palette, RotateCcw, Save } from 'lucide-react';
 
+interface TextStyle {
+  fontSize: string;
+  fontWeight: string;
+  color: string;
+  textAlign: string;
+  textDecoration: string;
+}
+
+interface TextData {
+  content: string;
+  style?: TextStyle;
+}
+
 interface TextEditorProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: string | TextData;
+  onChange: (value: string | TextData) => void;
   placeholder?: string;
   label: string;
   showColorPicker?: boolean;
   showSizeControl?: boolean;
+  allowStyleSaving?: boolean;
 }
 
 const TextEditor: React.FC<TextEditorProps> = ({ 
@@ -17,25 +31,82 @@ const TextEditor: React.FC<TextEditorProps> = ({
   placeholder, 
   label,
   showColorPicker = true,
-  showSizeControl = true
+  showSizeControl = true,
+  allowStyleSaving = false
 }) => {
-  const [fontSize, setFontSize] = useState('16');
-  const [fontWeight, setFontWeight] = useState('normal');
-  const [textColor, setTextColor] = useState('#ffffff');
-  const [textAlign, setTextAlign] = useState('right');
-  const [textDecoration, setTextDecoration] = useState('none');
+  // تحديد ما إذا كان القيمة نص بسيط أم كائن مع تنسيق
+  const isTextData = typeof value === 'object' && value !== null && 'content' in value;
+  const textContent = isTextData ? (value as TextData).content : (value as string);
+  const savedStyle = isTextData ? (value as TextData).style : null;
+
+  const [fontSize, setFontSize] = useState(savedStyle?.fontSize || '16');
+  const [fontWeight, setFontWeight] = useState(savedStyle?.fontWeight || 'normal');
+  const [textColor, setTextColor] = useState(savedStyle?.color || '#ffffff');
+  const [textAlign, setTextAlign] = useState(savedStyle?.textAlign || 'right');
+  const [textDecoration, setTextDecoration] = useState(savedStyle?.textDecoration || 'none');
+
+  // تحديث القيم عند تغيير value من الخارج
+  useEffect(() => {
+    if (isTextData && (value as TextData).style) {
+      const style = (value as TextData).style!;
+      setFontSize(style.fontSize || '16');
+      setFontWeight(style.fontWeight || 'normal');
+      setTextColor(style.color || '#ffffff');
+      setTextAlign(style.textAlign || 'right');
+      setTextDecoration(style.textDecoration || 'none');
+    }
+  }, [value, isTextData]);
 
   const applyStyle = (style: string) => {
     switch (style) {
       case 'bold':
-        setFontWeight(fontWeight === 'bold' ? 'normal' : 'bold');
-        break;
-      case 'italic':
-        // يمكن إضافة المزيد من الأنماط هنا
+        const newWeight = fontWeight === 'bold' ? 'normal' : 'bold';
+        setFontWeight(newWeight);
+        updateValue(textContent, { fontSize, fontWeight: newWeight, color: textColor, textAlign, textDecoration });
         break;
       case 'underline':
-        setTextDecoration(textDecoration === 'underline' ? 'none' : 'underline');
+        const newDecoration = textDecoration === 'underline' ? 'none' : 'underline';
+        setTextDecoration(newDecoration);
+        updateValue(textContent, { fontSize, fontWeight, color: textColor, textAlign, textDecoration: newDecoration });
         break;
+    }
+  };
+
+  const updateValue = (content: string, style?: TextStyle) => {
+    if (allowStyleSaving && style) {
+      onChange({ content, style });
+    } else {
+      onChange(content);
+    }
+  };
+
+  const handleTextChange = (newText: string) => {
+    updateValue(newText, allowStyleSaving ? { fontSize, fontWeight, color: textColor, textAlign, textDecoration } : undefined);
+  };
+
+  const handleStyleChange = (styleKey: keyof TextStyle, styleValue: string) => {
+    const newStyle = { fontSize, fontWeight, color: textColor, textAlign, textDecoration, [styleKey]: styleValue };
+    
+    switch (styleKey) {
+      case 'fontSize':
+        setFontSize(styleValue);
+        break;
+      case 'fontWeight':
+        setFontWeight(styleValue);
+        break;
+      case 'color':
+        setTextColor(styleValue);
+        break;
+      case 'textAlign':
+        setTextAlign(styleValue);
+        break;
+      case 'textDecoration':
+        setTextDecoration(styleValue);
+        break;
+    }
+
+    if (allowStyleSaving) {
+      updateValue(textContent, newStyle);
     }
   };
 
@@ -45,6 +116,10 @@ const TextEditor: React.FC<TextEditorProps> = ({
     setTextColor('#ffffff');
     setTextAlign('right');
     setTextDecoration('none');
+    
+    if (allowStyleSaving) {
+      updateValue(textContent, { fontSize: '16', fontWeight: 'normal', color: '#ffffff', textAlign: 'right', textDecoration: 'none' });
+    }
   };
 
   return (
@@ -59,7 +134,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
             <Type className="w-4 h-4 text-gray-400" />
             <select
               value={fontSize}
-              onChange={(e) => setFontSize(e.target.value)}
+              onChange={(e) => handleStyleChange('fontSize', e.target.value)}
               className="bg-gray-700 text-white border border-white/20 rounded px-2 py-1 text-sm"
             >
               <option value="12" className="bg-gray-700 text-white">12px</option>
@@ -68,8 +143,11 @@ const TextEditor: React.FC<TextEditorProps> = ({
               <option value="18" className="bg-gray-700 text-white">18px</option>
               <option value="20" className="bg-gray-700 text-white">20px</option>
               <option value="24" className="bg-gray-700 text-white">24px</option>
+              <option value="28" className="bg-gray-700 text-white">28px</option>
               <option value="32" className="bg-gray-700 text-white">32px</option>
+              <option value="36" className="bg-gray-700 text-white">36px</option>
               <option value="48" className="bg-gray-700 text-white">48px</option>
+              <option value="64" className="bg-gray-700 text-white">64px</option>
             </select>
           </div>
         )}
@@ -101,7 +179,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
             <input
               type="color"
               value={textColor}
-              onChange={(e) => setTextColor(e.target.value)}
+              onChange={(e) => handleStyleChange('color', e.target.value)}
               className="w-8 h-8 rounded border border-white/20 cursor-pointer"
             />
           </div>
@@ -110,7 +188,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
         {/* محاذاة النص */}
         <select
           value={textAlign}
-          onChange={(e) => setTextAlign(e.target.value)}
+          onChange={(e) => handleStyleChange('textAlign', e.target.value)}
           className="bg-gray-700 text-white border border-white/20 rounded px-2 py-1 text-sm"
         >
           <option value="right" className="bg-gray-700 text-white">يمين</option>
@@ -131,8 +209,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
       {/* منطقة النص */}
       <div className="relative">
         <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={textContent}
+          onChange={(e) => handleTextChange(e.target.value)}
           placeholder={placeholder}
           style={{
             fontSize: `${fontSize}px`,
@@ -156,10 +234,16 @@ const TextEditor: React.FC<TextEditorProps> = ({
               textDecoration: textDecoration
             }}
           >
-            {value || placeholder || 'نص تجريبي...'}
+            {textContent || placeholder || 'نص تجريبي...'}
           </div>
         </div>
       </div>
+
+      {allowStyleSaving && (
+        <div className="text-xs text-blue-400">
+          💡 سيتم حفظ تنسيق النص مع المحتوى
+        </div>
+      )}
     </div>
   );
 };
