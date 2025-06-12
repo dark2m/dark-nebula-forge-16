@@ -88,7 +88,7 @@ class CustomerAuthService {
       const newAttempt: LoginAttempt = {
         id: Date.now().toString(),
         email,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toLocaleString('ar-SA'),
         success,
         ipAddress: 'Unknown'
       };

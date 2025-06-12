@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock, MessageCircle, Send, Reply, Paperclip, Image, Video, X, ExternalLink } from 'lucide-react';
-import CustomerAuthService, { type LoginAttempt } from '../../utils/customerAuthService';
+import CustomerAuthService, { type LoginAttempt, type CustomerUser } from '../../utils/customerAuthService';
 import CustomerChatService, { type ChatMessage, type ChatSession, type AdminMessage } from '../../utils/customerChatService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -10,18 +10,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-interface CustomerUser {
-  id: number;
-  email: string;
-  password: string;
-  createdAt: string;
-  isVerified: boolean;
-  isDefault?: boolean;
-  isBlocked?: boolean;
-  isOnline?: boolean;
-  lastSeen?: string;
-}
 
 const CustomerLogTab = () => {
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
@@ -51,8 +39,10 @@ const CustomerLogTab = () => {
   const loadCustomers = () => {
     const allCustomers = CustomerAuthService.getCustomers();
     // إضافة معلومات إضافية للعملاء
-    const enrichedCustomers = allCustomers.map(customer => ({
+    const enrichedCustomers: CustomerUser[] = allCustomers.map(customer => ({
       ...customer,
+      createdAt: customer.registrationDate,
+      isVerified: true,
       isBlocked: localStorage.getItem(`blocked_${customer.id}`) === 'true',
       isOnline: localStorage.getItem(`online_${customer.id}`) === 'true',
       lastSeen: localStorage.getItem(`lastSeen_${customer.id}`) || 'غير معروف'
@@ -103,7 +93,7 @@ const CustomerLogTab = () => {
     localStorage.setItem(`blocked_${customerId}`, 'true');
     
     // تسجيل خروج العميل إذا كان متصلاً حالياً
-    CustomerAuthService.checkAndLogoutDeletedCustomer(customerId);
+    CustomerAuthService.checkAndLogoutDeletedCustomer();
     
     loadCustomers();
     toast({
@@ -164,7 +154,7 @@ const CustomerLogTab = () => {
     CustomerAuthService.saveCustomers(updatedCustomers);
     
     // تسجيل خروج العميل تلقائياً إذا كان متصلاً حالياً
-    CustomerAuthService.checkAndLogoutDeletedCustomer(customerId);
+    CustomerAuthService.checkAndLogoutDeletedCustomer();
     
     // تنظيف البيانات الإضافية
     localStorage.removeItem(`blocked_${customerId}`);
@@ -370,7 +360,7 @@ const CustomerLogTab = () => {
   };
 
   const getStatusBadge = (customer: CustomerUser) => {
-    if (customer.isDefault) {
+    if (CustomerAuthService.isDefaultCustomer(customer.id)) {
       return <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs flex items-center gap-1">
         <Lock className="w-3 h-3" />
         محمي
@@ -747,7 +737,7 @@ const CustomerLogTab = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            {customer.isDefault ? (
+                            {CustomerAuthService.isDefaultCustomer(customer.id) ? (
                               <span className="text-blue-400 text-xs px-2">حساب محمي</span>
                             ) : (
                               <>
@@ -1053,7 +1043,6 @@ const CustomerLogTab = () => {
                     <TableRow className="border-white/10">
                       <TableHead className="text-gray-300">الوقت</TableHead>
                       <TableHead className="text-gray-300">البريد الإلكتروني</TableHead>
-                      <TableHead className="text-gray-300">كلمة المرور المستخدمة</TableHead>
                       <TableHead className="text-gray-300">النتيجة</TableHead>
                       <TableHead className="text-gray-300">عنوان IP</TableHead>
                     </TableRow>
@@ -1066,9 +1055,6 @@ const CustomerLogTab = () => {
                         </TableCell>
                         <TableCell className="text-white">
                           {attempt.email}
-                        </TableCell>
-                        <TableCell className="text-gray-300">
-                          {attempt.password}
                         </TableCell>
                         <TableCell>
                           {attempt.success ? (
