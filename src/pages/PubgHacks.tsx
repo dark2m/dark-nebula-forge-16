@@ -48,7 +48,7 @@ const PubgHacks = () => {
           </div>
 
           {/* Safety Section */}
-          <div className="mb-12 p-6 sm:p-8 bg-green-500/10 border border-green-500/30 rounded-xl">
+          <div className="mb-12 p-6 sm:p-8 bg-green-500/10 backdrop-blur-md border border-green-500/30 rounded-xl">
             <h2 className="text-xl sm:text-2xl font-bold text-green-400 mb-4">
               {TranslationService.translate('services.pubg.safety_title')}
             </h2>
@@ -61,17 +61,7 @@ const PubgHacks = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {products.map((product) => (
               <div key={product.id} className="group">
-                <div 
-                  className="relative overflow-hidden rounded-xl border border-white/20 hover:border-blue-500/50 transition-all duration-300 transform hover:scale-105"
-                  style={{
-                    backgroundColor: product.backgroundColor || '#1a1a2e',
-                    backgroundImage: product.backgroundImage ? `url(${product.backgroundImage})` : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <div className="absolute inset-0 bg-black/40" />
-                  
+                <div className="relative overflow-hidden rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:border-blue-500/50 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
                   <div className="relative p-4 sm:p-6">
                     <h3 className={`font-bold text-white mb-3 ${
                       product.titleSize === 'small' ? 'text-base sm:text-lg' :

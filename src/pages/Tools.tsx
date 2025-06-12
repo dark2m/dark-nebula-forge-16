@@ -131,7 +131,7 @@ const Tools = () => {
               {tools.map((tool) => (
                 <div 
                   key={tool.id}
-                  className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl p-6 hover:bg-white/30 transition-all duration-300 cursor-pointer"
+                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 hover:bg-white/20 hover:border-white/40 transition-all duration-300 cursor-pointer transform hover:scale-105"
                   onClick={() => handleToolClick(tool)}
                 >
                   <div className="text-center mb-4">
