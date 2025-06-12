@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, User, UserCheck, Upload, X, Image as ImageIcon, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,9 +36,9 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
   };
 
   const loadMessages = () => {
-    const customerMessages = CustomerChatService.getCustomerMessages(customerId);
+    const customerMessages = CustomerChatService.getCustomerMessages(customerId.toString());
     setMessages(customerMessages);
-    CustomerChatService.markMessagesAsRead(customerId);
+    CustomerChatService.markMessagesAsRead(customerId.toString());
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
@@ -151,7 +150,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
 
     setIsLoading(true);
     const success = CustomerChatService.sendCustomerMessage(
-      customerId, 
+      customerId.toString(), 
       customerEmail, 
       newMessage.trim(), 
       attachments
