@@ -52,15 +52,28 @@ class CustomerAuthService {
   static authenticateCustomer(email: string, password: string): boolean {
     console.log('CustomerAuthService: Attempting login for:', email);
     
+    // التحقق من حالة الحظر
     const customers = this.getCustomers();
+    const customer = customers.find(c => c.email === email);
+    
+    if (customer && localStorage.getItem(`blocked_${customer.id}`) === 'true') {
+      console.log('CustomerAuthService: Customer is blocked');
+      return false;
+    }
+    
     console.log('CustomerAuthService: Available customers:', customers);
     
-    const customer = customers.find(c => c.email === email && c.password === password);
-    console.log('CustomerAuthService: Found customer:', customer);
+    const authenticatedCustomer = customers.find(c => c.email === email && c.password === password);
+    console.log('CustomerAuthService: Found customer:', authenticatedCustomer);
     
-    if (customer) {
-      localStorage.setItem('customerToken', JSON.stringify({ userId: customer.id, timestamp: Date.now() }));
-      localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
+    if (authenticatedCustomer) {
+      localStorage.setItem('customerToken', JSON.stringify({ userId: authenticatedCustomer.id, timestamp: Date.now() }));
+      localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(authenticatedCustomer));
+      
+      // تحديث حالة الاتصال
+      localStorage.setItem(`online_${authenticatedCustomer.id}`, 'true');
+      localStorage.setItem(`lastSeen_${authenticatedCustomer.id}`, new Date().toLocaleString('ar-SA'));
+      
       console.log('CustomerAuthService: Login successful');
       return true;
     }
@@ -96,6 +109,10 @@ class CustomerAuthService {
     localStorage.setItem('customerToken', JSON.stringify({ userId: newCustomer.id, timestamp: Date.now() }));
     localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(newCustomer));
     
+    // تحديث حالة الاتصال
+    localStorage.setItem(`online_${newCustomer.id}`, 'true');
+    localStorage.setItem(`lastSeen_${newCustomer.id}`, new Date().toLocaleString('ar-SA'));
+    
     console.log('CustomerAuthService: Registration successful');
     return true;
   }
@@ -113,12 +130,25 @@ class CustomerAuthService {
   static isCustomerAuthenticated(): boolean {
     const token = localStorage.getItem('customerToken');
     const currentCustomer = this.getCurrentCustomer();
+    
+    // التحقق من حالة الحظر
+    if (currentCustomer && localStorage.getItem(`blocked_${currentCustomer.id}`) === 'true') {
+      this.logout();
+      return false;
+    }
+    
     const isAuth = !!token && !!currentCustomer;
     console.log('CustomerAuthService: Is authenticated:', isAuth);
     return isAuth;
   }
 
   static logout(): void {
+    const currentCustomer = this.getCurrentCustomer();
+    if (currentCustomer) {
+      localStorage.setItem(`online_${currentCustomer.id}`, 'false');
+      localStorage.setItem(`lastSeen_${currentCustomer.id}`, new Date().toLocaleString('ar-SA'));
+    }
+    
     localStorage.removeItem('customerToken');
     localStorage.removeItem(this.CURRENT_CUSTOMER_KEY);
     console.log('CustomerAuthService: Logged out successfully');

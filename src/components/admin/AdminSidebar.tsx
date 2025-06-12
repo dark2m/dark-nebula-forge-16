@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   LayoutDashboard, 
@@ -14,7 +13,8 @@ import {
   User,
   Key,
   Wrench,
-  HeadphonesIcon
+  HeadphonesIcon,
+  Users
 } from 'lucide-react';
 import type { AdminUser } from '../../types/admin';
 
@@ -54,6 +54,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       id: 'customer-support',
       name: 'إدارة خدمة العملاء',
       icon: HeadphonesIcon,
+      requiredRole: 'مشرف' as const
+    },
+    {
+      id: 'customer-log',
+      name: 'سجل العملاء',
+      icon: Users,
       requiredRole: 'مشرف' as const
     },
     {
