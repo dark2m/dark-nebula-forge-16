@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Clock, Shield, User, Lock, Eye, EyeOff, Mail, ArrowLeft } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -10,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { SiteSettings } from '../types/admin';
 
 const CustomerSupport = () => {
@@ -19,6 +19,9 @@ const CustomerSupport = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<any>(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState('');
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -32,10 +35,10 @@ const CustomerSupport = () => {
   const [forgotPasswordForm, setForgotPasswordForm] = useState({
     email: ''
   });
-  const [isVerificationStep, setIsVerificationStep] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
   const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
+  const [verificationError, setVerificationError] = useState('');
 
   useEffect(() => {
     setSettings(SettingsService.getSiteSettings());
@@ -105,8 +108,45 @@ const CustomerSupport = () => {
       return;
     }
     
-    console.log('محاولة إنشاء حساب:', registerForm);
+    // التحقق من وجود الإيميل مسبقاً
+    const customers = CustomerAuthService.getCustomers();
+    const existingCustomer = customers.find(c => c.email === registerForm.email);
     
+    if (existingCustomer) {
+      setRegisterError('الإيميل مستخدم مسبقاً. يرجى استخدام إيميل آخر أو تسجيل الدخول إذا كان لديك حساب');
+      return;
+    }
+    
+    // إظهار حوار التحقق
+    setVerificationEmail(registerForm.email);
+    setShowVerificationDialog(true);
+    
+    console.log('تم إرسال رمز التحقق إلى:', registerForm.email);
+    // في التطبيق الحقيقي، ستقوم بإرسال رمز التحقق عبر البريد الإلكتروني
+  };
+
+  const handleVerification = (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerificationError('');
+    
+    if (!verificationCode) {
+      setVerificationError('يرجى إدخال رمز التحقق');
+      return;
+    }
+    
+    if (verificationCode.length !== 6) {
+      setVerificationError('رمز التحقق يجب أن يكون 6 أرقام');
+      return;
+    }
+    
+    // في التطبيق الحقيقي، ستقوم بالتحقق من الرمز مع الخادم
+    // هنا سنقبل أي رمز من 6 أرقام كمثال
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setVerificationError('رمز التحقق يجب أن يحتوي على أرقام فقط');
+      return;
+    }
+    
+    // إنشاء الحساب بعد التحقق
     const success = CustomerAuthService.registerCustomer(registerForm.email, registerForm.password);
     
     if (success) {
@@ -115,12 +155,20 @@ const CustomerSupport = () => {
       if (loginSuccess) {
         setIsAuthenticated(true);
         setCurrentCustomer(CustomerAuthService.getCurrentCustomer());
+        setShowVerificationDialog(false);
+        setVerificationCode('');
+        setVerificationEmail('');
         console.log('تم إنشاء الحساب وتسجيل الدخول بنجاح');
       }
     } else {
-      setRegisterError('الإيميل مستخدم مسبقاً. يرجى استخدام إيميل آخر أو تسجيل الدخول إذا كان لديك حساب');
-      console.log('فشل في إنشاء الحساب - الإيميل مستخدم مسبقاً');
+      setVerificationError('حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى');
     }
+  };
+
+  const handleCloseVerificationDialog = () => {
+    setShowVerificationDialog(false);
+    setVerificationCode('');
+    setVerificationError('');
   };
 
   const handleForgotPassword = (e: React.FormEvent) => {
@@ -151,12 +199,6 @@ const CustomerSupport = () => {
     setRegisterForm({ email: '', password: '', confirmPassword: '', verificationCode: '' });
     setForgotPasswordForm({ email: '' });
     setShowForgotPassword(false);
-  };
-
-  const handleVerification = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('تأكيد الرمز:', registerForm.verificationCode);
-    // سيتم ربطها بـ Supabase لاحقاً
   };
 
   // إذا كان العميل مسجل دخول، عرض واجهة خدمة العملاء مع الشات
@@ -367,199 +409,238 @@ const CustomerSupport = () => {
                   دخول العملاء
                 </CardTitle>
                 <CardDescription className="text-gray-300">
-                  {isVerificationStep ? 'أدخل رمز التأكيد المرسل إلى بريدك الإلكتروني' : 'سجل دخولك أو أنشئ حساب جديد للوصول إلى الدعم'}
+                  سجل دخولك أو أنشئ حساب جديد للوصول إلى الدعم
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isVerificationStep ? (
-                  <form onSubmit={handleVerification} className="space-y-4">
-                    <div>
-                      <Label htmlFor="verificationCode" className="text-white">رمز التأكيد</Label>
-                      <Input
-                        id="verificationCode"
-                        type="text"
-                        placeholder="أدخل رمز التأكيد (6 أرقام)"
-                        value={registerForm.verificationCode}
-                        onChange={(e) => setRegisterForm({...registerForm, verificationCode: e.target.value})}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                        maxLength={6}
-                        required
-                      />
+                <Tabs defaultValue="login" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-2 bg-white/10">
+                    <TabsTrigger value="login" className="text-white data-[state=active]:bg-blue-500/20">
+                      تسجيل الدخول
+                    </TabsTrigger>
+                    <TabsTrigger value="register" className="text-white data-[state=active]:bg-blue-500/20">
+                      إنشاء حساب
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="login" className="space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      {loginError && (
+                        <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-red-300 text-sm">
+                          {loginError}
+                        </div>
+                      )}
+                      <div>
+                        <Label htmlFor="loginEmail" className="text-white">البريد الإلكتروني</Label>
+                        <div className="relative">
+                          <Input
+                            id="loginEmail"
+                            type="email"
+                            placeholder="أدخل بريدك الإلكتروني"
+                            value={loginForm.email}
+                            onChange={(e) => {
+                              setLoginForm({...loginForm, email: e.target.value});
+                              if (loginError) setLoginError('');
+                            }}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10"
+                            required
+                          />
+                          <Mail className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="loginPassword" className="text-white">كلمة المرور</Label>
+                        <div className="relative">
+                          <Input
+                            id="loginPassword"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="أدخل كلمة المرور"
+                            value={loginForm.password}
+                            onChange={(e) => {
+                              setLoginForm({...loginForm, password: e.target.value});
+                              if (loginError) setLoginError('');
+                            }}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
+                            required
+                          />
+                          <Lock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3 text-gray-400 hover:text-white"
+                          >
+                            {showPassword ? <EyeOff className="w-4 w-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <Button type="submit" className="w-full glow-button">
+                        تسجيل الدخول
+                      </Button>
+                      <div className="text-center">
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          className="text-blue-400 hover:text-blue-300 text-sm"
+                          onClick={() => setShowForgotPassword(true)}
+                        >
+                          نسيت كلمة المرور؟
+                        </Button>
+                      </div>
+                    </form>
+                  </TabsContent>
+
+                  <TabsContent value="register" className="space-y-4">
+                    <form onSubmit={handleRegister} className="space-y-4">
+                      {registerError && (
+                        <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-red-300 text-sm">
+                          {registerError}
+                        </div>
+                      )}
+                      <div>
+                        <Label htmlFor="registerEmail" className="text-white">البريد الإلكتروني</Label>
+                        <div className="relative">
+                          <Input
+                            id="registerEmail"
+                            type="email"
+                            placeholder="أدخل بريدك الإلكتروني"
+                            value={registerForm.email}
+                            onChange={(e) => {
+                              setRegisterForm({...registerForm, email: e.target.value});
+                              if (registerError) setRegisterError('');
+                            }}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10"
+                            required
+                          />
+                          <Mail className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="registerPassword" className="text-white">كلمة المرور</Label>
+                        <div className="relative">
+                          <Input
+                            id="registerPassword"
+                            type={showPassword ? "text" : "password"}
+                            placeholder="أدخل كلمة مرور قوية (6 أحرف على الأقل)"
+                            value={registerForm.password}
+                            onChange={(e) => {
+                              setRegisterForm({...registerForm, password: e.target.value});
+                              if (registerError) setRegisterError('');
+                            }}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
+                            required
+                            minLength={6}
+                          />
+                          <Lock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3 text-gray-400 hover:text-white"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="confirmPassword" className="text-white">تأكيد كلمة المرور</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="أعد إدخال كلمة المرور"
+                            value={registerForm.confirmPassword}
+                            onChange={(e) => {
+                              setRegisterForm({...registerForm, confirmPassword: e.target.value});
+                              if (registerError) setRegisterError('');
+                            }}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
+                            required
+                          />
+                          <Lock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-3 top-3 text-gray-400 hover:text-white"
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <Button type="submit" className="w-full glow-button">
+                        إنشاء حساب جديد
+                      </Button>
+                    </form>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+
+            {/* حوار التحقق من البريد الإلكتروني */}
+            <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+              <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border border-white/20">
+                <DialogHeader>
+                  <DialogTitle className="text-white text-center flex items-center justify-center gap-2">
+                    <Mail className="w-5 h-5 text-blue-400" />
+                    تحقق من بريدك الإلكتروني
+                  </DialogTitle>
+                  <DialogDescription className="text-gray-300 text-center">
+                    تم إرسال رمز التحقق إلى <strong className="text-blue-400">{verificationEmail}</strong>
+                    <br />
+                    يرجى إدخال الرمز المكون من 6 أرقام
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleVerification} className="space-y-4">
+                  {verificationError && (
+                    <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-red-300 text-sm">
+                      {verificationError}
                     </div>
-                    <Button type="submit" className="w-full glow-button">
-                      تأكيد الحساب
+                  )}
+                  <div>
+                    <Label htmlFor="verificationCode" className="text-white">رمز التحقق</Label>
+                    <Input
+                      id="verificationCode"
+                      type="text"
+                      placeholder="أدخل الرمز (مثال: 123456)"
+                      value={verificationCode}
+                      onChange={(e) => {
+                        // السماح بالأرقام فقط وحد أقصى 6 أرقام
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setVerificationCode(value);
+                        if (verificationError) setVerificationError('');
+                      }}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 text-center text-lg tracking-widest"
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1 glow-button">
+                      تأكيد
                     </Button>
                     <Button 
                       type="button" 
-                      variant="ghost" 
-                      className="w-full text-blue-400 hover:text-blue-300"
-                      onClick={() => setIsVerificationStep(false)}
+                      variant="outline" 
+                      onClick={handleCloseVerificationDialog}
+                      className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
                     >
-                      العودة للتسجيل
+                      إلغاء
                     </Button>
-                  </form>
-                ) : (
-                  <Tabs defaultValue="login" className="space-y-4">
-                    <TabsList className="grid w-full grid-cols-2 bg-white/10">
-                      <TabsTrigger value="login" className="text-white data-[state=active]:bg-blue-500/20">
-                        تسجيل الدخول
-                      </TabsTrigger>
-                      <TabsTrigger value="register" className="text-white data-[state=active]:bg-blue-500/20">
-                        إنشاء حساب
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="login" className="space-y-4">
-                      <form onSubmit={handleLogin} className="space-y-4">
-                        {loginError && (
-                          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-red-300 text-sm">
-                            {loginError}
-                          </div>
-                        )}
-                        <div>
-                          <Label htmlFor="loginEmail" className="text-white">البريد الإلكتروني</Label>
-                          <div className="relative">
-                            <Input
-                              id="loginEmail"
-                              type="email"
-                              placeholder="أدخل بريدك الإلكتروني"
-                              value={loginForm.email}
-                              onChange={(e) => {
-                                setLoginForm({...loginForm, email: e.target.value});
-                                if (loginError) setLoginError('');
-                              }}
-                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10"
-                              required
-                            />
-                            <Mail className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                          </div>
-                        </div>
-                        <div>
-                          <Label htmlFor="loginPassword" className="text-white">كلمة المرور</Label>
-                          <div className="relative">
-                            <Input
-                              id="loginPassword"
-                              type={showPassword ? "text" : "password"}
-                              placeholder="أدخل كلمة المرور"
-                              value={loginForm.password}
-                              onChange={(e) => {
-                                setLoginForm({...loginForm, password: e.target.value});
-                                if (loginError) setLoginError('');
-                              }}
-                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
-                              required
-                            />
-                            <Lock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-3 text-gray-400 hover:text-white"
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
-                        <Button type="submit" className="w-full glow-button">
-                          تسجيل الدخول
-                        </Button>
-                        <div className="text-center">
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            className="text-blue-400 hover:text-blue-300 text-sm"
-                            onClick={() => setShowForgotPassword(true)}
-                          >
-                            نسيت كلمة المرور؟
-                          </Button>
-                        </div>
-                      </form>
-                    </TabsContent>
-
-                    <TabsContent value="register" className="space-y-4">
-                      <form onSubmit={handleRegister} className="space-y-4">
-                        {registerError && (
-                          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-red-300 text-sm">
-                            {registerError}
-                          </div>
-                        )}
-                        <div>
-                          <Label htmlFor="registerEmail" className="text-white">البريد الإلكتروني</Label>
-                          <div className="relative">
-                            <Input
-                              id="registerEmail"
-                              type="email"
-                              placeholder="أدخل بريدك الإلكتروني"
-                              value={registerForm.email}
-                              onChange={(e) => {
-                                setRegisterForm({...registerForm, email: e.target.value});
-                                if (registerError) setRegisterError('');
-                              }}
-                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10"
-                              required
-                            />
-                            <Mail className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                          </div>
-                        </div>
-                        <div>
-                          <Label htmlFor="registerPassword" className="text-white">كلمة المرور</Label>
-                          <div className="relative">
-                            <Input
-                              id="registerPassword"
-                              type={showPassword ? "text" : "password"}
-                              placeholder="أدخل كلمة مرور قوية (6 أحرف على الأقل)"
-                              value={registerForm.password}
-                              onChange={(e) => {
-                                setRegisterForm({...registerForm, password: e.target.value});
-                                if (registerError) setRegisterError('');
-                              }}
-                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
-                              required
-                              minLength={6}
-                            />
-                            <Lock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-3 text-gray-400 hover:text-white"
-                            >
-                              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
-                        <div>
-                          <Label htmlFor="confirmPassword" className="text-white">تأكيد كلمة المرور</Label>
-                          <div className="relative">
-                            <Input
-                              id="confirmPassword"
-                              type={showConfirmPassword ? "text" : "password"}
-                              placeholder="أعد إدخال كلمة المرور"
-                              value={registerForm.confirmPassword}
-                              onChange={(e) => {
-                                setRegisterForm({...registerForm, confirmPassword: e.target.value});
-                                if (registerError) setRegisterError('');
-                              }}
-                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
-                              required
-                            />
-                            <Lock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-3 top-3 text-gray-400 hover:text-white"
-                            >
-                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
-                        <Button type="submit" className="w-full glow-button">
-                          إنشاء حساب جديد
-                        </Button>
-                      </form>
-                    </TabsContent>
-                  </Tabs>
-                )}
-              </CardContent>
-            </Card>
+                  </div>
+                  <div className="text-center">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      className="text-blue-400 hover:text-blue-300 text-sm"
+                      onClick={() => {
+                        console.log('إعادة إرسال رمز التحقق إلى:', verificationEmail);
+                        // في التطبيق الحقيقي، ستقوم بإعادة إرسال الرمز
+                      }}
+                    >
+                      إعادة إرسال الرمز
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
 
             {/* معلومات إضافية */}
             <div className="mt-8 text-center">
