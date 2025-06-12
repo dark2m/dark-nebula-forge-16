@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Save, Eye, EyeOff, Plus, Trash2, Edit3, Menu, Home, Settings, User } from 'lucide-react';
+import { Save, Eye, EyeOff, Plus, Trash2, Edit3, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingItem, setEditingItem] = useState<TaskbarItem | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState<TaskbarItem>({
     id: '',
     name: '',
@@ -53,29 +54,45 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
   const iconOptions = [
     { value: 'Home', label: 'الرئيسية' },
     { value: 'User', label: 'المستخدم' },
+    { value: 'Users', label: 'المستخدمين' },
     { value: 'Settings', label: 'الإعدادات' },
     { value: 'Menu', label: 'القائمة' },
     { value: 'Shield', label: 'الحماية' },
     { value: 'Code', label: 'البرمجة' },
-    { value: 'Bot', label: 'البوت' },
-    { value: 'Users', label: 'المستخدمين' }
+    { value: 'Bot', label: 'البوت' }
   ];
 
   const toggleItemVisibility = (itemId: string) => {
-    const updatedNavigation = siteSettings.navigation?.map(item =>
-      (item.id || `item-${siteSettings.navigation.indexOf(item)}`) === itemId
-        ? { ...item, visible: !item.visible }
-        : item
-    ) || [];
+    console.log('Toggling visibility for item:', itemId);
+    
+    const updatedNavigation = siteSettings.navigation?.map(item => {
+      const currentId = item.id || `item-${siteSettings.navigation.indexOf(item)}`;
+      if (currentId === itemId) {
+        console.log('Found item to toggle:', item.name, 'current visible:', item.visible);
+        return { ...item, visible: !item.visible };
+      }
+      return item;
+    }) || [];
 
-    setSiteSettings({
+    console.log('Updated navigation:', updatedNavigation);
+
+    const newSettings = {
       ...siteSettings,
       navigation: updatedNavigation
-    });
+    };
+
+    setSiteSettings(newSettings);
+    
+    // Auto-save after visibility change
+    setTimeout(() => {
+      saveSiteSettings();
+    }, 100);
   };
 
   const addNewItem = () => {
     if (!newItem.name || !newItem.path) return;
+
+    console.log('Adding new item:', newItem);
 
     const updatedNavigation = [
       ...(siteSettings.navigation || []),
@@ -101,23 +118,40 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       visible: true,
       position: 0
     });
+
+    // Auto-save after adding item
+    setTimeout(() => {
+      saveSiteSettings();
+    }, 100);
   };
 
   const deleteItem = (itemId: string) => {
-    const updatedNavigation = siteSettings.navigation?.filter(item =>
-      (item.id || `item-${siteSettings.navigation.indexOf(item)}`) !== itemId
-    ) || [];
+    console.log('Deleting item:', itemId);
+    
+    const updatedNavigation = siteSettings.navigation?.filter(item => {
+      const currentId = item.id || `item-${siteSettings.navigation.indexOf(item)}`;
+      return currentId !== itemId;
+    }) || [];
 
     setSiteSettings({
       ...siteSettings,
       navigation: updatedNavigation
     });
+
+    // Auto-save after deleting item
+    setTimeout(() => {
+      saveSiteSettings();
+    }, 100);
   };
 
-  const updateItem = (itemId: string, updates: Partial<TaskbarItem>) => {
+  const updateItem = (updates: Partial<TaskbarItem>) => {
+    if (!editingItem) return;
+
+    console.log('Updating item:', editingItem.id, 'with:', updates);
+
     const updatedNavigation = siteSettings.navigation?.map(item => {
       const currentId = item.id || `item-${siteSettings.navigation.indexOf(item)}`;
-      return currentId === itemId
+      return currentId === editingItem.id
         ? { ...item, ...updates }
         : item;
     }) || [];
@@ -126,6 +160,14 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       ...siteSettings,
       navigation: updatedNavigation
     });
+
+    setEditingItem(null);
+    setIsEditDialogOpen(false);
+
+    // Auto-save after updating item
+    setTimeout(() => {
+      saveSiteSettings();
+    }, 100);
   };
 
   return (
@@ -159,7 +201,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
             taskbarItems.map((item) => (
               <div
                 key={item.id}
-                className={`flex items-center justify-between p-3 rounded-lg border ${
+                className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
                   item.visible 
                     ? 'bg-green-500/10 border-green-500/30' 
                     : 'bg-red-500/10 border-red-500/30'
@@ -169,6 +211,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                   <div className={`w-2 h-2 rounded-full ${item.visible ? 'bg-green-400' : 'bg-red-400'}`} />
                   <span className="text-white font-medium">{item.name}</span>
                   <span className="text-gray-400 text-sm">({item.path})</span>
+                  <span className="text-gray-500 text-xs">{item.icon}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">
@@ -177,7 +220,9 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                     size="sm"
                     variant="ghost"
                     onClick={() => toggleItemVisibility(item.id)}
-                    className="text-white hover:bg-white/10"
+                    className={`text-white hover:bg-white/10 ${
+                      item.visible ? 'text-green-400' : 'text-red-400'
+                    }`}
                   >
                     {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                   </Button>
@@ -185,79 +230,17 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                   {/* زر التعديل */}
                   {isEditMode && (
                     <>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditingItem(item)}
-                            className="text-blue-400 hover:bg-blue-500/20"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="bg-gray-800 border-white/20">
-                          <DialogHeader>
-                            <DialogTitle className="text-white">تعديل العنصر</DialogTitle>
-                            <DialogDescription className="text-gray-400">
-                              تعديل خصائص عنصر شريط المهام
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <Label className="text-white">اسم العنصر</Label>
-                              <Input
-                                value={editingItem?.name || ''}
-                                onChange={(e) => setEditingItem(prev => 
-                                  prev ? { ...prev, name: e.target.value } : null
-                                )}
-                                className="bg-white/10 border-white/20 text-white"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-white">المسار</Label>
-                              <Input
-                                value={editingItem?.path || ''}
-                                onChange={(e) => setEditingItem(prev => 
-                                  prev ? { ...prev, path: e.target.value } : null
-                                )}
-                                className="bg-white/10 border-white/20 text-white"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-white">الأيقونة</Label>
-                              <Select
-                                value={editingItem?.icon || 'Menu'}
-                                onValueChange={(value) => setEditingItem(prev => 
-                                  prev ? { ...prev, icon: value } : null
-                                )}
-                              >
-                                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-gray-800 border-white/20">
-                                  {iconOptions.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button
-                              onClick={() => {
-                                if (editingItem) {
-                                  updateItem(editingItem.id, editingItem);
-                                  setEditingItem(null);
-                                }
-                              }}
-                              className="glow-button w-full"
-                            >
-                              حفظ التغييرات
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingItem(item);
+                          setIsEditDialogOpen(true);
+                        }}
+                        className="text-blue-400 hover:bg-blue-500/20"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
                       
                       <Button
                         size="sm"
@@ -342,6 +325,68 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           </Button>
         </div>
       </CardContent>
+
+      {/* Dialog للتعديل */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="bg-gray-800 border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-white">تعديل العنصر</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              تعديل خصائص عنصر شريط المهام
+            </DialogDescription>
+          </DialogHeader>
+          {editingItem && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-white">اسم العنصر</Label>
+                <Input
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem(prev => 
+                    prev ? { ...prev, name: e.target.value } : null
+                  )}
+                  className="bg-white/10 border-white/20 text-white"
+                />
+              </div>
+              <div>
+                <Label className="text-white">المسار</Label>
+                <Input
+                  value={editingItem.path}
+                  onChange={(e) => setEditingItem(prev => 
+                    prev ? { ...prev, path: e.target.value } : null
+                  )}
+                  className="bg-white/10 border-white/20 text-white"
+                />
+              </div>
+              <div>
+                <Label className="text-white">الأيقونة</Label>
+                <Select
+                  value={editingItem.icon}
+                  onValueChange={(value) => setEditingItem(prev => 
+                    prev ? { ...prev, icon: value } : null
+                  )}
+                >
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-white/20">
+                    {iconOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={() => updateItem(editingItem)}
+                className="glow-button w-full"
+              >
+                حفظ التغييرات
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
