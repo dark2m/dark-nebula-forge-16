@@ -1,4 +1,3 @@
-
 import { SiteSettings } from '../types/admin';
 
 class SettingsService {
@@ -100,6 +99,38 @@ class SettingsService {
         spacing: 'normal',
         animations: true
       },
+      tools: [
+        {
+          id: 1,
+          title: 'مولد كلمات المرور',
+          description: 'أنشئ كلمات مرور قوية وآمنة',
+          buttonText: 'إنشاء كلمة مرور',
+          url: '',
+          icon: '🔐',
+          visible: true,
+          category: 'security'
+        },
+        {
+          id: 2,
+          title: 'محول الألوان',
+          description: 'تحويل بين صيغ الألوان المختلفة',
+          buttonText: 'استخدام المحول',
+          url: '',
+          icon: '🎨',
+          visible: true,
+          category: 'design'
+        },
+        {
+          id: 3,
+          title: 'ضاغط الصور',
+          description: 'قلل حجم الصور مع الحفاظ على الجودة',
+          buttonText: 'ضغط الصور',
+          url: '',
+          icon: '📷',
+          visible: true,
+          category: 'general'
+        }
+      ],
       pageTexts: {
         home: {
           heroTitle: 'DARK',
@@ -142,6 +173,10 @@ class SettingsService {
           pageTitle: 'برمجة بوتات ديسكورد',
           pageSubtitle: 'بوتات ديسكورد مخصصة ومتطورة',
           featuresTitle: 'مميزات بوتاتنا'
+        },
+        tools: {
+          pageTitle: 'أدوات الموقع',
+          pageSubtitle: 'مجموعة من الأدوات المفيدة والمتقدمة'
         },
         navigation: {
           homeTitle: 'الرئيسية',

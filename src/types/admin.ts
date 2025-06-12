@@ -1,4 +1,3 @@
-
 // Admin system type definitions
 export interface Product {
   id: number;
@@ -20,6 +19,17 @@ export interface AdminUser {
   username: string;
   password: string;
   role: 'مدير عام' | 'مبرمج' | 'مشرف';
+}
+
+export interface Tool {
+  id: number;
+  title: string;
+  description: string;
+  buttonText: string;
+  url: string;
+  icon: string;
+  visible: boolean;
+  category: string;
 }
 
 export interface PageTexts {
@@ -79,6 +89,10 @@ export interface PageTexts {
     purchaseNote: string;
     addToCartButton: string;
     removeButton: string;
+  };
+  tools?: {
+    pageTitle: string;
+    pageSubtitle: string;
   };
 }
 
@@ -145,6 +159,7 @@ export interface SiteSettings {
     animations: boolean;
   };
   pageTexts: PageTexts;
+  tools?: Tool[];
 }
 
 export interface CartItem {

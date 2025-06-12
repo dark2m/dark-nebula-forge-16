@@ -11,6 +11,7 @@ import BackupTab from './BackupTab';
 import OverviewTab from './OverviewTab';
 import UsersTab from './UsersTab';
 import PasswordsTab from './PasswordsTab';
+import ToolsTab from './ToolsTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -59,6 +60,15 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
 
       case 'passwords':
         return <PasswordsTab />;
+
+      case 'tools':
+        return (
+          <ToolsTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
 
       case 'site-control':
         return (
