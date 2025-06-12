@@ -30,6 +30,7 @@ export interface Tool {
   icon: string;
   visible: boolean;
   category: string;
+  customHtml?: string;
 }
 
 export interface PageTexts {

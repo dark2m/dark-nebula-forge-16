@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Eye, EyeOff, Save, Wrench } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Save, Wrench, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { SiteSettings, Tool } from '../../types/admin';
 
 interface ToolsTabProps {
@@ -40,7 +42,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
       url: '',
       icon: '🔧',
       visible: true,
-      category: 'general'
+      category: 'general',
+      customHtml: ''
     };
 
     const updatedSettings = {
@@ -173,6 +176,12 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                       <div className="flex-1">
                         <h3 className="text-white font-bold text-lg">{tool.title}</h3>
                         <p className="text-gray-300">{tool.description}</p>
+                        {tool.customHtml && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <Code className="w-4 h-4 text-blue-400" />
+                            <span className="text-blue-400 text-sm">يحتوي على كود مخصص</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -209,7 +218,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                             <Edit className="w-5 h-5 text-blue-400" />
                           </button>
                         </DialogTrigger>
-                        <DialogContent className="bg-black/90 backdrop-blur-sm border-white/30 max-w-2xl">
+                        <DialogContent className="bg-black/90 backdrop-blur-sm border-white/30 max-w-4xl max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle className="text-white">تعديل الأداة</DialogTitle>
                             <DialogDescription className="text-gray-300">
@@ -217,71 +226,112 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                             </DialogDescription>
                           </DialogHeader>
                           {editingTool && (
-                            <div className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <Label className="text-white">عنوان الأداة</Label>
-                                  <Input
-                                    value={editingTool.title}
-                                    onChange={(e) => setEditingTool({ ...editingTool, title: e.target.value })}
-                                    className="bg-white/20 border-white/30 text-white"
-                                  />
+                            <Tabs defaultValue="basic" className="w-full">
+                              <TabsList className="grid w-full grid-cols-2 bg-gray-800">
+                                <TabsTrigger value="basic" className="text-white">المعلومات الأساسية</TabsTrigger>
+                                <TabsTrigger value="code" className="text-white">الكود المخصص</TabsTrigger>
+                              </TabsList>
+                              
+                              <TabsContent value="basic" className="space-y-4 mt-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label className="text-white">عنوان الأداة</Label>
+                                    <Input
+                                      value={editingTool.title}
+                                      onChange={(e) => setEditingTool({ ...editingTool, title: e.target.value })}
+                                      className="bg-white/20 border-white/30 text-white"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-white">أيقونة الأداة</Label>
+                                    <Input
+                                      value={editingTool.icon}
+                                      onChange={(e) => setEditingTool({ ...editingTool, icon: e.target.value })}
+                                      className="bg-white/20 border-white/30 text-white"
+                                      placeholder="🔧"
+                                    />
+                                  </div>
                                 </div>
                                 <div>
-                                  <Label className="text-white">أيقونة الأداة</Label>
-                                  <Input
-                                    value={editingTool.icon}
-                                    onChange={(e) => setEditingTool({ ...editingTool, icon: e.target.value })}
+                                  <Label className="text-white">وصف الأداة</Label>
+                                  <Textarea
+                                    value={editingTool.description}
+                                    onChange={(e) => setEditingTool({ ...editingTool, description: e.target.value })}
                                     className="bg-white/20 border-white/30 text-white"
-                                    placeholder="🔧"
+                                    rows={3}
                                   />
                                 </div>
-                              </div>
-                              <div>
-                                <Label className="text-white">وصف الأداة</Label>
-                                <Textarea
-                                  value={editingTool.description}
-                                  onChange={(e) => setEditingTool({ ...editingTool, description: e.target.value })}
-                                  className="bg-white/20 border-white/30 text-white"
-                                  rows={3}
-                                />
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label className="text-white">نص الزر</Label>
+                                    <Input
+                                      value={editingTool.buttonText}
+                                      onChange={(e) => setEditingTool({ ...editingTool, buttonText: e.target.value })}
+                                      className="bg-white/20 border-white/30 text-white"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-white">رابط الأداة (اختياري)</Label>
+                                    <Input
+                                      value={editingTool.url}
+                                      onChange={(e) => setEditingTool({ ...editingTool, url: e.target.value })}
+                                      className="bg-white/20 border-white/30 text-white"
+                                      placeholder="https://... أو اتركه فارغاً للكود المخصص"
+                                    />
+                                  </div>
+                                </div>
                                 <div>
-                                  <Label className="text-white">نص الزر</Label>
-                                  <Input
-                                    value={editingTool.buttonText}
-                                    onChange={(e) => setEditingTool({ ...editingTool, buttonText: e.target.value })}
-                                    className="bg-white/20 border-white/30 text-white"
+                                  <Label className="text-white">فئة الأداة</Label>
+                                  <Select
+                                    value={editingTool.category}
+                                    onValueChange={(value) => setEditingTool({ ...editingTool, category: value })}
+                                  >
+                                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-gray-800 backdrop-blur-sm border-white/30">
+                                      <SelectItem value="general" className="text-white hover:bg-white/20">عام</SelectItem>
+                                      <SelectItem value="development" className="text-white hover:bg-white/20">تطوير</SelectItem>
+                                      <SelectItem value="design" className="text-white hover:bg-white/20">تصميم</SelectItem>
+                                      <SelectItem value="security" className="text-white hover:bg-white/20">أمان</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </TabsContent>
+                              
+                              <TabsContent value="code" className="space-y-4 mt-4">
+                                <div className="space-y-2">
+                                  <Label className="text-white flex items-center gap-2">
+                                    <Code className="w-4 h-4" />
+                                    كود HTML مخصص
+                                  </Label>
+                                  <p className="text-gray-400 text-sm">
+                                    إذا تم إدخال كود HTML، سيتم عرضه بدلاً من توجيه المستخدم لرابط خارجي
+                                  </p>
+                                  <Textarea
+                                    value={editingTool.customHtml || ''}
+                                    onChange={(e) => setEditingTool({ ...editingTool, customHtml: e.target.value })}
+                                    className="bg-white/20 border-white/30 text-white font-mono"
+                                    rows={15}
+                                    placeholder="<!DOCTYPE html>
+<html>
+<head>
+    <title>أداتي المخصصة</title>
+</head>
+<body>
+    <h1>مرحباً بك في أداتي!</h1>
+    <!-- أضف كودك هنا -->
+</body>
+</html>"
                                   />
                                 </div>
-                                <div>
-                                  <Label className="text-white">رابط الأداة</Label>
-                                  <Input
-                                    value={editingTool.url}
-                                    onChange={(e) => setEditingTool({ ...editingTool, url: e.target.value })}
-                                    className="bg-white/20 border-white/30 text-white"
-                                    placeholder="https://..."
-                                  />
+                                <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                  <p className="text-yellow-400 text-sm">
+                                    ⚠️ تأكد من أن الكود آمن وقابل للعمل. سيتم عرضه مباشرة في الموقع.
+                                  </p>
                                 </div>
-                              </div>
-                              <div>
-                                <Label className="text-white">فئة الأداة</Label>
-                                <Select
-                                  value={editingTool.category}
-                                  onValueChange={(value) => setEditingTool({ ...editingTool, category: value })}
-                                >
-                                  <SelectTrigger className="bg-white/20 border-white/30 text-white">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-gray-800 backdrop-blur-sm border-white/30">
-                                    <SelectItem value="general" className="text-white hover:bg-white/20">عام</SelectItem>
-                                    <SelectItem value="development" className="text-white hover:bg-white/20">تطوير</SelectItem>
-                                    <SelectItem value="design" className="text-white hover:bg-white/20">تصميم</SelectItem>
-                                    <SelectItem value="security" className="text-white hover:bg-white/20">أمان</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                              </TabsContent>
+                              
                               <div className="flex gap-2 pt-4">
                                 <Button
                                   onClick={() => {
@@ -293,7 +343,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                                   حفظ التغييرات
                                 </Button>
                               </div>
-                            </div>
+                            </Tabs>
                           )}
                         </DialogContent>
                       </Dialog>

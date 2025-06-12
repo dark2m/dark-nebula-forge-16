@@ -7,6 +7,7 @@ import type { SiteSettings, Tool } from '../types/admin';
 const Tools = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({} as SiteSettings);
   const [loading, setLoading] = useState(true);
+  const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
 
   useEffect(() => {
     const loadSettings = () => {
@@ -45,6 +46,13 @@ const Tools = () => {
   };
 
   const handleToolClick = (tool: Tool) => {
+    // إذا كانت الأداة تحتوي على كود مخصص، عرضه
+    if (tool.customHtml && tool.customHtml.trim()) {
+      setSelectedTool(tool);
+      return;
+    }
+
+    // إذا كان هناك رابط، انتقل إليه
     if (tool.url) {
       if (tool.url.startsWith('/')) {
         // رابط داخلي - استخدام router navigation
@@ -55,6 +63,47 @@ const Tools = () => {
       }
     }
   };
+
+  const closeCustomTool = () => {
+    setSelectedTool(null);
+  };
+
+  // إذا تم اختيار أداة مخصصة، عرض كودها
+  if (selectedTool && selectedTool.customHtml) {
+    return (
+      <div className="min-h-screen relative">
+        <StarryBackground />
+        
+        <div className="relative z-10">
+          {/* شريط علوي للعودة */}
+          <div className="bg-black/50 backdrop-blur-sm border-b border-white/20 p-4">
+            <div className="container mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{selectedTool.icon}</span>
+                <h1 className="text-xl font-bold text-white">{selectedTool.title}</h1>
+              </div>
+              <button
+                onClick={closeCustomTool}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+              >
+                العودة للأدوات
+              </button>
+            </div>
+          </div>
+
+          {/* عرض الكود المخصص */}
+          <div className="w-full h-screen">
+            <iframe
+              srcDoc={selectedTool.customHtml}
+              className="w-full h-full border-none"
+              title={selectedTool.title}
+              sandbox="allow-scripts allow-forms allow-modals allow-popups allow-same-origin"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative">
@@ -89,6 +138,14 @@ const Tools = () => {
                     <div className="text-4xl mb-3">{tool.icon}</div>
                     <h3 className="text-xl font-bold text-white mb-3">{tool.title}</h3>
                     <p className="text-gray-300 mb-4">{tool.description}</p>
+                    {tool.customHtml && tool.customHtml.trim() && (
+                      <div className="mb-3">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 border border-blue-500/50 rounded-full text-blue-400 text-sm">
+                          <span>🔧</span>
+                          أداة مخصصة
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <button 
                     className="glow-button w-full"
