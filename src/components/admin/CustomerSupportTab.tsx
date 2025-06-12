@@ -35,7 +35,10 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
   };
 
   const updateWorkingHours = (day: string, hours: string) => {
-    const currentHours = siteSettings.pageTexts.customerSupport?.workingHours || {};
+    const currentHours = siteSettings.pageTexts.customerSupport?.workingHours || {
+      weekdays: '9:00 ص - 11:00 م',
+      friday: '2:00 م - 11:00 م'
+    };
     setSiteSettings({
       ...siteSettings,
       pageTexts: {
@@ -98,7 +101,32 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     });
   };
 
-  const customerSupportTexts = siteSettings.pageTexts.customerSupport || {};
+  const customerSupportTexts = siteSettings.pageTexts.customerSupport || {
+    pageTitle: 'خدمة العملاء',
+    pageDescription: 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة',
+    telegramTitle: 'تيليجرام',
+    telegramDescription: 'للدعم الفوري والاستفسارات العامة',
+    telegramButtonText: 'تواصل عبر تيليجرام',
+    discordTitle: 'ديسكورد',
+    discordDescription: 'انضم إلى مجتمعنا ودردش مع الفريق',
+    discordButtonText: 'انضم إلى الديسكورد',
+    whatsappTitle: 'واتساب',
+    whatsappDescription: 'للدعم الشخصي المباشر',
+    whatsappButtonText: 'راسل عبر واتساب',
+    workingHoursTitle: 'ساعات العمل',
+    workingHours: {
+      weekdays: '9:00 ص - 11:00 م',
+      friday: '2:00 م - 11:00 م'
+    },
+    supportNote: '💡 الدعم الفني متاح 24/7 عبر تيليجرام للحالات الطارئة',
+    supportPolicyTitle: 'سياسة الدعم',
+    supportPolicies: [
+      'استجابة فورية للاستفسارات العامة',
+      'دعم فني متخصص لجميع المنتجات',
+      'ضمان الجودة وحل المشاكل',
+      'متابعة مستمرة لرضا العملاء'
+    ]
+  };
 
   return (
     <div className="space-y-6">
@@ -128,7 +156,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
           <div>
             <Label className="text-white">العنوان الرئيسي</Label>
             <Input
-              value={customerSupportTexts.pageTitle || 'خدمة العملاء'}
+              value={customerSupportTexts.pageTitle}
               onChange={(e) => updateCustomerSupportTexts('pageTitle', e.target.value)}
               className="bg-white/10 border-white/20 text-white"
               placeholder="خدمة العملاء"
@@ -137,7 +165,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
           <div>
             <Label className="text-white">الوصف</Label>
             <Textarea
-              value={customerSupportTexts.pageDescription || 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة'}
+              value={customerSupportTexts.pageDescription}
               onChange={(e) => updateCustomerSupportTexts('pageDescription', e.target.value)}
               className="bg-white/10 border-white/20 text-white"
               placeholder="وصف الصفحة"
@@ -166,7 +194,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               <div>
                 <Label className="text-white">العنوان</Label>
                 <Input
-                  value={customerSupportTexts.telegramTitle || 'تيليجرام'}
+                  value={customerSupportTexts.telegramTitle}
                   onChange={(e) => updateCustomerSupportTexts('telegramTitle', e.target.value)}
                   className="bg-white/10 border-white/20 text-white"
                 />
@@ -174,7 +202,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               <div>
                 <Label className="text-white">نص الزر</Label>
                 <Input
-                  value={customerSupportTexts.telegramButtonText || 'تواصل عبر تيليجرام'}
+                  value={customerSupportTexts.telegramButtonText}
                   onChange={(e) => updateCustomerSupportTexts('telegramButtonText', e.target.value)}
                   className="bg-white/10 border-white/20 text-white"
                 />
@@ -183,7 +211,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
             <div>
               <Label className="text-white">الوصف</Label>
               <Textarea
-                value={customerSupportTexts.telegramDescription || 'للدعم الفوري والاستفسارات العامة'}
+                value={customerSupportTexts.telegramDescription}
                 onChange={(e) => updateCustomerSupportTexts('telegramDescription', e.target.value)}
                 className="bg-white/10 border-white/20 text-white"
                 rows={2}
@@ -203,7 +231,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               <div>
                 <Label className="text-white">العنوان</Label>
                 <Input
-                  value={customerSupportTexts.discordTitle || 'ديسكورد'}
+                  value={customerSupportTexts.discordTitle}
                   onChange={(e) => updateCustomerSupportTexts('discordTitle', e.target.value)}
                   className="bg-white/10 border-white/20 text-white"
                 />
@@ -211,7 +239,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               <div>
                 <Label className="text-white">نص الزر</Label>
                 <Input
-                  value={customerSupportTexts.discordButtonText || 'انضم إلى الديسكورد'}
+                  value={customerSupportTexts.discordButtonText}
                   onChange={(e) => updateCustomerSupportTexts('discordButtonText', e.target.value)}
                   className="bg-white/10 border-white/20 text-white"
                 />
@@ -220,7 +248,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
             <div>
               <Label className="text-white">الوصف</Label>
               <Textarea
-                value={customerSupportTexts.discordDescription || 'انضم إلى مجتمعنا ودردش مع الفريق'}
+                value={customerSupportTexts.discordDescription}
                 onChange={(e) => updateCustomerSupportTexts('discordDescription', e.target.value)}
                 className="bg-white/10 border-white/20 text-white"
                 rows={2}
@@ -240,7 +268,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               <div>
                 <Label className="text-white">العنوان</Label>
                 <Input
-                  value={customerSupportTexts.whatsappTitle || 'واتساب'}
+                  value={customerSupportTexts.whatsappTitle}
                   onChange={(e) => updateCustomerSupportTexts('whatsappTitle', e.target.value)}
                   className="bg-white/10 border-white/20 text-white"
                 />
@@ -248,7 +276,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               <div>
                 <Label className="text-white">نص الزر</Label>
                 <Input
-                  value={customerSupportTexts.whatsappButtonText || 'راسل عبر واتساب'}
+                  value={customerSupportTexts.whatsappButtonText}
                   onChange={(e) => updateCustomerSupportTexts('whatsappButtonText', e.target.value)}
                   className="bg-white/10 border-white/20 text-white"
                 />
@@ -257,7 +285,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
             <div>
               <Label className="text-white">الوصف</Label>
               <Textarea
-                value={customerSupportTexts.whatsappDescription || 'للدعم الشخصي المباشر'}
+                value={customerSupportTexts.whatsappDescription}
                 onChange={(e) => updateCustomerSupportTexts('whatsappDescription', e.target.value)}
                 className="bg-white/10 border-white/20 text-white"
                 rows={2}
@@ -282,7 +310,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
           <div>
             <Label className="text-white">عنوان القسم</Label>
             <Input
-              value={customerSupportTexts.workingHoursTitle || 'ساعات العمل'}
+              value={customerSupportTexts.workingHoursTitle}
               onChange={(e) => updateCustomerSupportTexts('workingHoursTitle', e.target.value)}
               className="bg-white/10 border-white/20 text-white"
             />
@@ -310,7 +338,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
           <div>
             <Label className="text-white">ملاحظة إضافية</Label>
             <Textarea
-              value={customerSupportTexts.supportNote || '💡 الدعم الفني متاح 24/7 عبر تيليجرام للحالات الطارئة'}
+              value={customerSupportTexts.supportNote}
               onChange={(e) => updateCustomerSupportTexts('supportNote', e.target.value)}
               className="bg-white/10 border-white/20 text-white"
               rows={2}
@@ -334,7 +362,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
           <div>
             <Label className="text-white">عنوان القسم</Label>
             <Input
-              value={customerSupportTexts.supportPolicyTitle || 'سياسة الدعم'}
+              value={customerSupportTexts.supportPolicyTitle}
               onChange={(e) => updateCustomerSupportTexts('supportPolicyTitle', e.target.value)}
               className="bg-white/10 border-white/20 text-white"
             />
@@ -352,12 +380,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               </Button>
             </div>
             
-            {(customerSupportTexts.supportPolicies || [
-              'استجابة فورية للاستفسارات العامة',
-              'دعم فني متخصص لجميع المنتجات',
-              'ضمان الجودة وحل المشاكل',
-              'متابعة مستمرة لرضا العملاء'
-            ]).map((policy, index) => (
+            {customerSupportTexts.supportPolicies?.map((policy, index) => (
               <div key={index} className="flex items-center gap-2">
                 <Input
                   value={policy}
@@ -391,3 +414,4 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
 };
 
 export default CustomerSupportTab;
+
