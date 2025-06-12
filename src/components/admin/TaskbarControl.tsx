@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Save, Eye, EyeOff, Plus, Trash2, Edit3, Menu, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,6 +34,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingItem, setEditingItem] = useState<TaskbarItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCustomPathMode, setIsCustomPathMode] = useState(false);
   const [newItem, setNewItem] = useState<TaskbarItem>({
     id: '',
     name: '',
@@ -54,21 +54,91 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
     position: index
   })) || [];
 
+  // قائمة شاملة بالأيقونات المتوفرة
   const iconOptions = [
-    { value: 'Home', label: 'الرئيسية' },
-    { value: 'User', label: 'المستخدم' },
-    { value: 'Users', label: 'المستخدمين' },
-    { value: 'Settings', label: 'الإعدادات' },
-    { value: 'Menu', label: 'القائمة' },
-    { value: 'Shield', label: 'الحماية' },
-    { value: 'Code', label: 'البرمجة' },
-    { value: 'Bot', label: 'البوت' },
-    { value: 'Wrench', label: 'الأدوات' },
-    { value: 'Tools', label: 'أدوات' },
-    { value: 'Support', label: 'دعم العملاء' },
-    { value: 'MessageCircle', label: 'خدمة العملاء' },
-    { value: 'HeadphonesIcon', label: 'الدعم الفني' }
+    // أيقونات أساسية
+    { value: 'Home', label: '🏠 الرئيسية', category: 'أساسي' },
+    { value: 'User', label: '👤 المستخدم', category: 'أساسي' },
+    { value: 'Users', label: '👥 المستخدمين', category: 'أساسي' },
+    { value: 'Settings', label: '⚙️ الإعدادات', category: 'أساسي' },
+    { value: 'Menu', label: '☰ القائمة', category: 'أساسي' },
+    
+    // أيقونات الأمان والحماية
+    { value: 'Shield', label: '🛡️ الحماية', category: 'أمان' },
+    { value: 'Lock', label: '🔒 القفل', category: 'أمان' },
+    { value: 'Key', label: '🔑 المفتاح', category: 'أمان' },
+    { value: 'Eye', label: '👁️ المراقبة', category: 'أمان' },
+    { value: 'ShieldCheck', label: '✅ الأمان المؤكد', category: 'أمان' },
+    
+    // أيقونات التقنية والبرمجة
+    { value: 'Code', label: '💻 البرمجة', category: 'تقنية' },
+    { value: 'Code2', label: '⌨️ الكود', category: 'تقنية' },
+    { value: 'Terminal', label: '📟 Terminal', category: 'تقنية' },
+    { value: 'Database', label: '🗄️ قاعدة البيانات', category: 'تقنية' },
+    { value: 'Server', label: '🖥️ الخادم', category: 'تقنية' },
+    { value: 'Globe', label: '🌐 الويب', category: 'تقنية' },
+    { value: 'Wifi', label: '📶 الشبكة', category: 'تقنية' },
+    
+    // أيقونات الألعاب
+    { value: 'Gamepad2', label: '🎮 الألعاب', category: 'ألعاب' },
+    { value: 'Joystick', label: '🕹️ عصا التحكم', category: 'ألعاب' },
+    { value: 'Target', label: '🎯 الهدف', category: 'ألعاب' },
+    { value: 'Crosshair', label: '⚡ التصويب', category: 'ألعاب' },
+    { value: 'Zap', label: '⚡ القوة', category: 'ألعاب' },
+    
+    // أيقونات التواصل
+    { value: 'MessageCircle', label: '💬 خدمة العملاء', category: 'تواصل' },
+    { value: 'MessageSquare', label: '💬 الرسائل', category: 'تواصل' },
+    { value: 'Phone', label: '📞 الهاتف', category: 'تواصل' },
+    { value: 'Mail', label: '📧 البريد', category: 'تواصل' },
+    { value: 'Send', label: '📤 إرسال', category: 'تواصل' },
+    { value: 'Bot', label: '🤖 البوت', category: 'تواصل' },
+    
+    // أيقونات الأدوات
+    { value: 'Wrench', label: '🔧 الأدوات', category: 'أدوات' },
+    { value: 'Tools', label: '🛠️ أدوات', category: 'أدوات' },
+    { value: 'Hammer', label: '🔨 المطرقة', category: 'أدوات' },
+    { value: 'Cog', label: '⚙️ الترس', category: 'أدوات' },
+    { value: 'Screwdriver', label: '🪛 المفك', category: 'أدوات' },
+    
+    // أيقونات الدعم والمساعدة
+    { value: 'HeadphonesIcon', label: '🎧 الدعم الفني', category: 'دعم' },
+    { value: 'HelpCircle', label: '❓ المساعدة', category: 'دعم' },
+    { value: 'Info', label: 'ℹ️ المعلومات', category: 'دعم' },
+    { value: 'LifeBuoy', label: '🛟 الإنقاذ', category: 'دعم' },
+    { value: 'Support', label: '🆘 الدعم', category: 'دعم' },
+    
+    // أيقونات التجارة
+    { value: 'ShoppingCart', label: '🛒 السلة', category: 'تجارة' },
+    { value: 'CreditCard', label: '💳 الدفع', category: 'تجارة' },
+    { value: 'Package', label: '📦 المنتجات', category: 'تجارة' },
+    { value: 'Store', label: '🏪 المتجر', category: 'تجارة' },
+    { value: 'DollarSign', label: '💲 السعر', category: 'تجارة' },
+    
+    // أيقونات المحتوى
+    { value: 'FileText', label: '📄 النص', category: 'محتوى' },
+    { value: 'Image', label: '🖼️ الصور', category: 'محتوى' },
+    { value: 'Video', label: '🎥 الفيديو', category: 'محتوى' },
+    { value: 'Music', label: '🎵 الموسيقى', category: 'محتوى' },
+    { value: 'Book', label: '📚 الكتب', category: 'محتوى' },
+    
+    // أيقونات خاصة
+    { value: 'Star', label: '⭐ النجمة', category: 'خاص' },
+    { value: 'Heart', label: '❤️ القلب', category: 'خاص' },
+    { value: 'Crown', label: '👑 التاج', category: 'خاص' },
+    { value: 'Award', label: '🏆 الجائزة', category: 'خاص' },
+    { value: 'Gift', label: '🎁 الهدية', category: 'خاص' },
+    { value: 'Sparkles', label: '✨ البريق', category: 'خاص' }
   ];
+
+  // تجميع الأيقونات حسب الفئة
+  const groupedIcons = iconOptions.reduce((acc, icon) => {
+    if (!acc[icon.category]) {
+      acc[icon.category] = [];
+    }
+    acc[icon.category].push(icon);
+    return acc;
+  }, {} as Record<string, typeof iconOptions>);
 
   // قائمة المسارات المتوفرة في التطبيق
   const availableRoutes = [
@@ -83,18 +153,40 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
 
   // التحقق من صحة المسار
   const validateRoute = (path: string): boolean => {
+    // إذا كان مسار مخصص (يبدأ بـ /)
+    if (path.startsWith('/') && path !== '/') {
+      return true; // نسمح بالمسارات المخصصة
+    }
     return availableRoutes.some(route => route.path === path);
   };
 
   // الحصول على حالة المسار
   const getRouteStatus = (path: string) => {
-    const isValid = validateRoute(path);
-    return {
-      isValid,
-      icon: isValid ? CheckCircle : AlertTriangle,
-      color: isValid ? 'text-green-400' : 'text-red-400',
-      message: isValid ? 'مسار صحيح' : 'مسار غير موجود - قد يسبب خطأ 404'
-    };
+    const isKnownRoute = availableRoutes.some(route => route.path === path);
+    const isCustomRoute = path.startsWith('/') && !isKnownRoute;
+    
+    if (isKnownRoute) {
+      return {
+        isValid: true,
+        icon: CheckCircle,
+        color: 'text-green-400',
+        message: 'مسار صحيح'
+      };
+    } else if (isCustomRoute) {
+      return {
+        isValid: true,
+        icon: AlertTriangle,
+        color: 'text-yellow-400',
+        message: 'مسار مخصص - تأكد من وجوده'
+      };
+    } else {
+      return {
+        isValid: false,
+        icon: AlertTriangle,
+        color: 'text-red-400',
+        message: 'مسار غير صحيح'
+      };
+    }
   };
 
   // دالة حفظ محسنة لضمان الثبات
@@ -102,13 +194,9 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
     try {
       console.log('TaskbarControl: Saving settings with persistence:', newSettings);
       
-      // تحديث الحالة المحلية
       setSiteSettings(newSettings);
-      
-      // حفظ في localStorage مباشرة
       SettingsService.saveSiteSettings(newSettings);
       
-      // إطلاق حدث التحديث
       const event = new CustomEvent('settingsUpdated', {
         detail: { settings: newSettings }
       });
@@ -167,13 +255,12 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
     if (!validateRoute(newItem.path)) {
       toast({
         title: "تحذير",
-        description: "المسار المحدد غير موجود في التطبيق. هذا قد يسبب خطأ 404.",
+        description: "تأكد من صحة المسار المدخل",
         variant: "destructive"
       });
       return;
     }
 
-    // إنشاء ID فريد للعنصر الجديد
     const uniqueId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     
     console.log('Adding new item:', { ...newItem, id: uniqueId });
@@ -183,7 +270,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       name: newItem.name,
       icon: newItem.icon,
       path: newItem.path,
-      visible: true // دائماً مرئي عند الإضافة
+      visible: true
     };
 
     const updatedNavigation = [
@@ -196,10 +283,8 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       navigation: updatedNavigation
     };
 
-    // حفظ فوري مع ضمان الثبات
     saveSettingsWithPersistence(newSettings);
 
-    // إعادة تعيين النموذج
     setNewItem({
       id: '',
       name: '',
@@ -239,11 +324,10 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
   const updateItem = (updates: Partial<TaskbarItem>) => {
     if (!editingItem) return;
 
-    // التحقق من صحة المسار عند التحديث
     if (updates.path && !validateRoute(updates.path)) {
       toast({
         title: "تحذير",
-        description: "المسار المحدد غير موجود في التطبيق. هذا قد يسبب خطأ 404.",
+        description: "تأكد من صحة المسار المدخل",
         variant: "destructive"
       });
       return;
@@ -280,7 +364,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
         <CardTitle className="flex items-center justify-between text-white">
           <div className="flex items-center gap-2">
             <Menu className="w-5 h-5" />
-            تحكم شريط المهام
+            تحكم شريط المهام المتقدم
           </div>
           <div className="flex items-center gap-2">
             <Switch
@@ -291,7 +375,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           </div>
         </CardTitle>
         <CardDescription className="text-gray-400">
-          إدارة عناصر شريط المهام وإعدادات الرؤية مع ضمان الثبات والاستمرارية
+          إدارة عناصر شريط المهام مع أيقونات متنوعة ومسارات مخصصة
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -321,7 +405,6 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                     <span className="text-gray-400 text-sm">({item.path})</span>
                     <span className="text-gray-500 text-xs">{item.icon}</span>
                     
-                    {/* مؤشر حالة المسار */}
                     <div className={`flex items-center gap-1 ${routeStatus.color}`}>
                       <StatusIcon className="w-4 h-4" />
                       <span className="text-xs">{routeStatus.message}</span>
@@ -329,7 +412,6 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {/* زر الرؤية */}
                     <Button
                       size="sm"
                       variant="ghost"
@@ -341,7 +423,6 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                       {item.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                     </Button>
                     
-                    {/* زر التعديل */}
                     {isEditMode && (
                       <>
                         <Button
@@ -378,7 +459,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           <div className="space-y-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
             <h3 className="text-white font-semibold flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              إضافة عنصر جديد (مع ضمان الثبات)
+              إضافة عنصر جديد
             </h3>
             
             <div className="grid grid-cols-2 gap-4">
@@ -393,7 +474,52 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                 />
               </div>
               <div>
+                <Label className="text-white">الأيقونة</Label>
+                <Select
+                  value={newItem.icon}
+                  onValueChange={(value) => setNewItem(prev => ({ ...prev, icon: value }))}
+                >
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-white/20 max-h-80">
+                    {Object.entries(groupedIcons).map(([category, icons]) => (
+                      <div key={category}>
+                        <div className="px-2 py-1 text-xs font-semibold text-gray-400 bg-gray-700">
+                          {category}
+                        </div>
+                        {icons.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center gap-2 mb-2">
                 <Label className="text-white">المسار *</Label>
+                <Switch
+                  checked={isCustomPathMode}
+                  onCheckedChange={setIsCustomPathMode}
+                />
+                <span className="text-sm text-gray-300">
+                  {isCustomPathMode ? 'مسار مخصص' : 'مسار جاهز'}
+                </span>
+              </div>
+              
+              {isCustomPathMode ? (
+                <Input
+                  value={newItem.path}
+                  onChange={(e) => setNewItem(prev => ({ ...prev, path: e.target.value }))}
+                  placeholder="/my-custom-page"
+                  className="bg-white/10 border-white/20 text-white"
+                />
+              ) : (
                 <Select
                   value={newItem.path}
                   onValueChange={(value) => setNewItem(prev => ({ ...prev, path: value }))}
@@ -409,26 +535,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-white">الأيقونة</Label>
-              <Select
-                value={newItem.icon}
-                onValueChange={(value) => setNewItem(prev => ({ ...prev, icon: value }))}
-              >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-white/20">
-                  {iconOptions.map(option => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              )}
             </div>
             
             <Button
@@ -437,25 +544,40 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
               className="glow-button w-full"
             >
               <Plus className="w-4 h-4 mr-2" />
-              إضافة العنصر (دائم)
+              إضافة العنصر
             </Button>
           </div>
         )}
 
-        {/* قائمة المسارات المتوفرة */}
-        <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-          <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" />
-            المسارات المتوفرة في التطبيق
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {availableRoutes.map(route => (
-              <div key={route.path} className="flex items-center gap-2 text-sm">
-                <CheckCircle className="w-3 h-3 text-green-400" />
-                <span className="text-gray-300">{route.path}</span>
-                <span className="text-gray-500">({route.label})</span>
-              </div>
-            ))}
+        {/* معلومات المسارات */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              المسارات الجاهزة
+            </h3>
+            <div className="space-y-1">
+              {availableRoutes.map(route => (
+                <div key={route.path} className="flex items-center gap-2 text-sm">
+                  <CheckCircle className="w-3 h-3 text-green-400" />
+                  <span className="text-gray-300">{route.path}</span>
+                  <span className="text-gray-500">({route.label})</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              المسارات المخصصة
+            </h3>
+            <div className="text-sm text-gray-300 space-y-2">
+              <p>• يمكنك إنشاء مسارات مخصصة</p>
+              <p>• يجب أن تبدأ بـ /</p>
+              <p>• مثال: /my-page</p>
+              <p>• تأكد من وجود الصفحة</p>
+            </div>
           </div>
         </div>
 
@@ -473,11 +595,11 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
 
       {/* Dialog للتعديل */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gray-800 border-white/20">
+        <DialogContent className="bg-gray-800 border-white/20 max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-white">تعديل العنصر</DialogTitle>
             <DialogDescription className="text-gray-400">
-              تعديل خصائص عنصر شريط المهام مع ضمان الثبات
+              تعديل خصائص عنصر شريط المهام
             </DialogDescription>
           </DialogHeader>
           {editingItem && (
@@ -492,26 +614,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                   className="bg-white/10 border-white/20 text-white"
                 />
               </div>
-              <div>
-                <Label className="text-white">المسار</Label>
-                <Select
-                  value={editingItem.path}
-                  onValueChange={(value) => setEditingItem(prev => 
-                    prev ? { ...prev, path: value } : null
-                  )}
-                >
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-white/20">
-                    {availableRoutes.map(route => (
-                      <SelectItem key={route.path} value={route.path}>
-                        {route.label} ({route.path})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              
               <div>
                 <Label className="text-white">الأيقونة</Label>
                 <Select
@@ -523,20 +626,43 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                   <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-white/20">
-                    {iconOptions.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
+                  <SelectContent className="bg-gray-800 border-white/20 max-h-80">
+                    {Object.entries(groupedIcons).map(([category, icons]) => (
+                      <div key={category}>
+                        <div className="px-2 py-1 text-xs font-semibold text-gray-400 bg-gray-700">
+                          {category}
+                        </div>
+                        {icons.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </div>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              
+              <div>
+                <Label className="text-white">المسار</Label>
+                <Input
+                  value={editingItem.path}
+                  onChange={(e) => setEditingItem(prev => 
+                    prev ? { ...prev, path: e.target.value } : null
+                  )}
+                  className="bg-white/10 border-white/20 text-white"
+                  placeholder="/custom-path أو اختر من القائمة"
+                />
+                <div className="mt-2 text-xs text-gray-400">
+                  المسارات الجاهزة: {availableRoutes.map(r => r.path).join(', ')}
+                </div>
+              </div>
+              
               <Button
                 onClick={() => updateItem(editingItem)}
                 className="glow-button w-full"
               >
-                حفظ التغييرات بشكل دائم
+                حفظ التغييرات
               </Button>
             </div>
           )}
