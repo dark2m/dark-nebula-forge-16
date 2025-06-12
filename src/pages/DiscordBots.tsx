@@ -50,7 +50,7 @@ const DiscordBots = () => {
           {/* Why Choose DARK Section */}
           <div className="mb-16">
             <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
-              {TranslationService.translate('why.choose.dark.title')}
+              لماذا تختار DARK؟
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
