@@ -11,6 +11,7 @@ import OfficialPage from "./pages/OfficialPage";
 import PubgHacks from "./pages/PubgHacks";
 import WebDevelopment from "./pages/WebDevelopment";
 import DiscordBots from "./pages/DiscordBots";
+import Tools from "./pages/Tools";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,12 @@ const App = () => (
               <>
                 <Navigation />
                 <DiscordBots />
+              </>
+            } />
+            <Route path="/tool" element={
+              <>
+                <Navigation />
+                <Tools />
               </>
             } />
             
