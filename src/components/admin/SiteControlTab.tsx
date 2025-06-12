@@ -25,7 +25,7 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
   saveSiteSettings
 }) => {
   return (
-    <div className="space-y-6 bg-white/10 backdrop-blur-sm rounded-xl p-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white">تحكم شامل في الموقع</h2>
