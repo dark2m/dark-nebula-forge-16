@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut } from 'lucide-react';
 import CustomerAuthService from '../../utils/customerAuthService';
@@ -62,10 +61,14 @@ const CustomerLogTab = () => {
 
   const blockCustomer = (customerId: number) => {
     localStorage.setItem(`blocked_${customerId}`, 'true');
+    
+    // تسجيل خروج العميل إذا كان متصلاً حالياً
+    CustomerAuthService.checkAndLogoutDeletedCustomer(customerId);
+    
     loadCustomers();
     toast({
       title: "تم حظر العميل",
-      description: "تم حظر العميل بنجاح"
+      description: "تم حظر العميل وتسجيل خروجه تلقائياً"
     });
   };
 
@@ -100,6 +103,9 @@ const CustomerLogTab = () => {
     const updatedCustomers = allCustomers.filter(c => c.id !== customerId);
     CustomerAuthService.saveCustomers(updatedCustomers);
     
+    // تسجيل خروج العميل تلقائياً إذا كان متصلاً حالياً
+    CustomerAuthService.checkAndLogoutDeletedCustomer(customerId);
+    
     // تنظيف البيانات الإضافية
     localStorage.removeItem(`blocked_${customerId}`);
     localStorage.removeItem(`online_${customerId}`);
@@ -108,7 +114,7 @@ const CustomerLogTab = () => {
     loadCustomers();
     toast({
       title: "تم حذف العميل",
-      description: "تم حذف العميل نهائياً"
+      description: "تم حذف العميل نهائياً وتسجيل خروجه تلقائياً"
     });
   };
 
@@ -196,7 +202,7 @@ const CustomerLogTab = () => {
             قائمة العملاء
           </CardTitle>
           <CardDescription className="text-gray-400">
-            إدارة جميع العملاء المسجلين في النظام
+            إدارة جميع العملاء المسجلين في النظام (يتم تسجيل الخروج تلقائياً عند الحذف أو الحظر)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -260,7 +266,7 @@ const CustomerLogTab = () => {
                             variant="ghost"
                             onClick={() => blockCustomer(customer.id)}
                             className="text-red-400 hover:text-red-300 p-1"
-                            title="حظر العميل"
+                            title="حظر العميل (تسجيل خروج تلقائي)"
                           >
                             <Ban className="w-3 h-3" />
                           </Button>
@@ -283,7 +289,7 @@ const CustomerLogTab = () => {
                           variant="ghost"
                           onClick={() => deleteCustomer(customer.id)}
                           className="text-red-400 hover:text-red-300 p-1"
-                          title="حذف العميل"
+                          title="حذف العميل (تسجيل خروج تلقائي)"
                         >
                           <UserX className="w-3 h-3" />
                         </Button>

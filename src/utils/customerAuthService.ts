@@ -23,11 +23,18 @@ class CustomerAuthService {
       console.error('CustomerAuthService: Error loading customers:', error);
     }
     
-    // إضافة العميل الافتراضي dark@gmail.com
+    // إضافة العملاء الافتراضيين المؤقتين للتطوير
     const defaultCustomers: CustomerUser[] = [
       { 
         id: 1, 
         email: 'dark@gmail.com', 
+        password: 'dark', 
+        createdAt: new Date().toISOString(),
+        isVerified: true
+      },
+      { 
+        id: 2, 
+        email: 'dark@gamil.com', 
         password: 'dark', 
         createdAt: new Date().toISOString(),
         isVerified: true
@@ -152,6 +159,17 @@ class CustomerAuthService {
     localStorage.removeItem('customerToken');
     localStorage.removeItem(this.CURRENT_CUSTOMER_KEY);
     console.log('CustomerAuthService: Logged out successfully');
+  }
+
+  // إضافة دالة جديدة للتحقق من العميل المتصل حالياً وتسجيل خروجه إذا تم حذفه
+  static checkAndLogoutDeletedCustomer(deletedCustomerId: number): void {
+    const currentCustomer = this.getCurrentCustomer();
+    if (currentCustomer && currentCustomer.id === deletedCustomerId) {
+      console.log('CustomerAuthService: Current customer was deleted, logging out...');
+      this.logout();
+      // إعادة تحميل الصفحة للعودة إلى شاشة تسجيل الدخول
+      window.location.reload();
+    }
   }
 }
 
