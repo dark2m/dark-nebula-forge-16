@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { MessageCircle, Phone, Mail, Users, Clock, Shield, User, Lock, Eye, EyeOff } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import SettingsService from '../utils/settingsService';
+import CustomerAuthService from '../utils/customerAuthService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,8 @@ const CustomerSupport = () => {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentCustomer, setCurrentCustomer] = useState<any>(null);
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -25,9 +28,19 @@ const CustomerSupport = () => {
     verificationCode: ''
   });
   const [isVerificationStep, setIsVerificationStep] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [registerError, setRegisterError] = useState('');
 
   useEffect(() => {
     setSettings(SettingsService.getSiteSettings());
+    
+    // التحقق من حالة تسجيل الدخول
+    const authenticated = CustomerAuthService.isCustomerAuthenticated();
+    setIsAuthenticated(authenticated);
+    
+    if (authenticated) {
+      setCurrentCustomer(CustomerAuthService.getCurrentCustomer());
+    }
   }, []);
 
   if (!settings) return null;
@@ -39,19 +52,51 @@ const CustomerSupport = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('تسجيل الدخول:', loginForm);
-    // سيتم ربطها بـ Supabase لاحقاً
+    setLoginError('');
+    
+    console.log('محاولة تسجيل الدخول:', loginForm);
+    
+    const success = CustomerAuthService.authenticateCustomer(loginForm.email, loginForm.password);
+    
+    if (success) {
+      setIsAuthenticated(true);
+      setCurrentCustomer(CustomerAuthService.getCurrentCustomer());
+      console.log('تم تسجيل الدخول بنجاح');
+    } else {
+      setLoginError('بيانات الدخول غير صحيحة');
+      console.log('فشل في تسجيل الدخول');
+    }
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+    setRegisterError('');
+    
     if (registerForm.password !== registerForm.confirmPassword) {
-      alert('كلمات المرور غير متطابقة');
+      setRegisterError('كلمات المرور غير متطابقة');
       return;
     }
-    console.log('إنشاء حساب:', registerForm);
-    setIsVerificationStep(true);
-    // سيتم ربطها بـ Supabase لاحقاً
+    
+    console.log('محاولة إنشاء حساب:', registerForm);
+    
+    const success = CustomerAuthService.registerCustomer(registerForm.email, registerForm.password);
+    
+    if (success) {
+      setIsAuthenticated(true);
+      setCurrentCustomer(CustomerAuthService.getCurrentCustomer());
+      console.log('تم إنشاء الحساب بنجاح');
+    } else {
+      setRegisterError('الإيميل مستخدم مسبقاً');
+      console.log('فشل في إنشاء الحساب');
+    }
+  };
+
+  const handleLogout = () => {
+    CustomerAuthService.logout();
+    setIsAuthenticated(false);
+    setCurrentCustomer(null);
+    setLoginForm({ email: '', password: '' });
+    setRegisterForm({ email: '', password: '', confirmPassword: '', verificationCode: '' });
   };
 
   const handleVerification = (e: React.FormEvent) => {
@@ -60,6 +105,113 @@ const CustomerSupport = () => {
     // سيتم ربطها بـ Supabase لاحقاً
   };
 
+  // إذا كان العميل مسجل دخول، عرض واجهة خدمة العملاء
+  if (isAuthenticated && currentCustomer) {
+    return (
+      <div className="min-h-screen relative">
+        <StarryBackground />
+        
+        <div className="relative z-10 pt-32 pb-20">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="text-center mb-12">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
+                مرحباً {currentCustomer.email}
+              </h1>
+              <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
+                نحن سعداء لخدمتك. يمكنك الآن الوصول إلى جميع خدمات الدعم المتاحة
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {/* تيليجرام */}
+                <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
+                      <MessageCircle className="w-6 h-6 text-blue-400" />
+                      تيليجرام
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-gray-300 mb-4">للدعم الفوري والاستفسارات العامة</p>
+                    <Button className="w-full glow-button">
+                      تواصل عبر تيليجرام
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* ديسكورد */}
+                <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
+                      <Users className="w-6 h-6 text-purple-400" />
+                      ديسكورد
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-gray-300 mb-4">انضم إلى مجتمعنا ودردش مع الفريق</p>
+                    <Button className="w-full glow-button">
+                      انضم إلى الديسكورد
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* واتساب */}
+                <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+                  <CardHeader className="text-center">
+                    <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
+                      <Phone className="w-6 h-6 text-green-400" />
+                      واتساب
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-gray-300 mb-4">للدعم الشخصي المباشر</p>
+                    <Button className="w-full glow-button">
+                      راسل عبر واتساب
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* معلومات إضافية */}
+              <Card className="bg-white/10 backdrop-blur-md border border-white/20 mb-6">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    ساعات العمل
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+                    <div>
+                      <p><strong>الأحد - الخميس:</strong> 9:00 ص - 11:00 م</p>
+                      <p><strong>الجمعة:</strong> 2:00 م - 11:00 م</p>
+                    </div>
+                    <div>
+                      <p className="text-green-400">💡 الدعم الفني متاح 24/7 عبر تيليجرام للحالات الطارئة</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* زر تسجيل الخروج */}
+              <div className="text-center">
+                <Button 
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  تسجيل الخروج
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // واجهة تسجيل الدخول/التسجيل
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
@@ -127,6 +279,11 @@ const CustomerSupport = () => {
 
                     <TabsContent value="login" className="space-y-4">
                       <form onSubmit={handleLogin} className="space-y-4">
+                        {loginError && (
+                          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-red-300 text-sm">
+                            {loginError}
+                          </div>
+                        )}
                         <div>
                           <Label htmlFor="loginEmail" className="text-white">البريد الإلكتروني</Label>
                           <div className="relative">
@@ -172,6 +329,11 @@ const CustomerSupport = () => {
 
                     <TabsContent value="register" className="space-y-4">
                       <form onSubmit={handleRegister} className="space-y-4">
+                        {registerError && (
+                          <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-red-300 text-sm">
+                            {registerError}
+                          </div>
+                        )}
                         <div>
                           <Label htmlFor="registerEmail" className="text-white">البريد الإلكتروني</Label>
                           <div className="relative">
