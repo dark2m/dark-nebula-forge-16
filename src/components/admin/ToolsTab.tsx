@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Eye, Save, Wrench } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Save, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -70,6 +70,13 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
       ...siteSettings,
       tools: updatedTools
     });
+  };
+
+  const toggleToolVisibility = (toolId: number) => {
+    const tool = tools.find(t => t.id === toolId);
+    if (tool) {
+      updateTool(toolId, { visible: !tool.visible });
+    }
   };
 
   const updatePageTexts = (field: string, value: string) => {
@@ -165,21 +172,47 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <span className="text-2xl">{tool.icon}</span>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="text-white font-semibold">{tool.title}</h3>
                           <p className="text-gray-300 text-sm">{tool.description}</p>
                         </div>
-                        <div className="flex items-center gap-2 ml-auto">
-                          <Switch
-                            checked={tool.visible}
-                            onCheckedChange={(checked) => updateTool(tool.id, { visible: checked })}
-                          />
-                          <span className="text-sm text-gray-300">
-                            {tool.visible ? 'مرئية' : 'مخفية'}
-                          </span>
+                        
+                        {/* أيقونة العين مع النقطة الملونة */}
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => toggleToolVisibility(tool.id)}
+                            className="relative p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                            title={tool.visible ? 'إخفاء الأداة' : 'إظهار الأداة'}
+                          >
+                            {tool.visible ? (
+                              <Eye className="w-5 h-5 text-green-400" />
+                            ) : (
+                              <EyeOff className="w-5 h-5 text-red-400" />
+                            )}
+                            <span 
+                              className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                                tool.visible ? 'bg-green-500' : 'bg-red-500'
+                              }`}
+                            />
+                          </button>
+                          
+                          {/* مفتاح التبديل المحسن */}
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={tool.visible}
+                              onCheckedChange={(checked) => updateTool(tool.id, { visible: checked })}
+                              className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-600"
+                            />
+                            <span className={`text-sm font-medium ${
+                              tool.visible ? 'text-green-400' : 'text-red-400'
+                            }`}>
+                              {tool.visible ? 'مرئية' : 'مخفية'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    
                     <div className="flex items-center gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
@@ -257,18 +290,19 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                                   <SelectTrigger className="bg-white/20 border-white/30 text-white">
                                     <SelectValue />
                                   </SelectTrigger>
-                                  <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
-                                    <SelectItem value="general">عام</SelectItem>
-                                    <SelectItem value="development">تطوير</SelectItem>
-                                    <SelectItem value="design">تصميم</SelectItem>
-                                    <SelectItem value="security">أمان</SelectItem>
+                                  <SelectContent className="bg-gray-800 backdrop-blur-sm border-white/30">
+                                    <SelectItem value="general" className="text-white hover:bg-white/20">عام</SelectItem>
+                                    <SelectItem value="development" className="text-white hover:bg-white/20">تطوير</SelectItem>
+                                    <SelectItem value="design" className="text-white hover:bg-white/20">تصميم</SelectItem>
+                                    <SelectItem value="security" className="text-white hover:bg-white/20">أمان</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2 rtl:space-x-reverse">
                                 <Switch
                                   checked={editingTool.visible}
                                   onCheckedChange={(checked) => setEditingTool({ ...editingTool, visible: checked })}
+                                  className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-600"
                                 />
                                 <Label className="text-white">عرض الأداة في الموقع</Label>
                               </div>
