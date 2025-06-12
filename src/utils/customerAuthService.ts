@@ -1,4 +1,8 @@
+
 import { CustomerUser, LoginAttempt } from '../types/customer';
+
+// Re-export types for easier importing
+export type { CustomerUser, LoginAttempt };
 
 class CustomerAuthService {
   private static STORAGE_KEY = 'customer_users';
