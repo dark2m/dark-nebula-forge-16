@@ -1,4 +1,3 @@
-
 interface MediaAttachment {
   type: 'image' | 'video';
   data: string;

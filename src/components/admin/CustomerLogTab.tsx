@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock, MessageCircle, Send, Reply, Paperclip, Image, Video, X, ExternalLink } from 'lucide-react';
 import CustomerAuthService, { type LoginAttempt } from '../../utils/customerAuthService';
@@ -304,6 +303,66 @@ const CustomerLogTab = () => {
     });
   };
 
+  // دالة لعرض المرفقات من العملاء
+  const renderCustomerAttachments = (attachments: { type: 'image' | 'video', data: string }[] | undefined) => {
+    if (!attachments || attachments.length === 0) return null;
+
+    return (
+      <div className="mt-3 space-y-2">
+        <p className="text-blue-400 text-sm font-medium">المرفقات:</p>
+        {attachments.map((attachment, index) => (
+          <div key={index} className="border border-blue-500/20 rounded-lg p-3 bg-blue-500/5">
+            {attachment.type === 'image' ? (
+              <div className="space-y-2">
+                <img 
+                  src={attachment.data} 
+                  alt={`مرفق ${index + 1}`}
+                  className="max-w-full h-auto rounded cursor-pointer hover:opacity-80 transition-opacity max-h-60"
+                  onClick={() => window.open(attachment.data, '_blank')}
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-300 text-sm flex items-center gap-1">
+                    <Image className="w-4 h-4" />
+                    صورة من العميل
+                  </span>
+                  <button
+                    onClick={() => window.open(attachment.data, '_blank')}
+                    className="text-blue-400 hover:text-blue-300"
+                    title="فتح في نافذة جديدة"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <video 
+                  src={attachment.data} 
+                  controls 
+                  className="max-w-full h-auto rounded max-h-60"
+                  preload="metadata"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-300 text-sm flex items-center gap-1">
+                    <Video className="w-4 h-4" />
+                    فيديو من العميل
+                  </span>
+                  <button
+                    onClick={() => window.open(attachment.data, '_blank')}
+                    className="text-blue-400 hover:text-blue-300"
+                    title="فتح في نافذة جديدة"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const onlineCustomers = customers.filter(c => c.isOnline && !c.isBlocked).length;
   const blockedCustomers = customers.filter(c => c.isBlocked).length;
   const failedAttempts = loginAttempts.filter(a => !a.success).length;
@@ -553,7 +612,7 @@ const CustomerLogTab = () => {
                 رسائل العملاء
               </CardTitle>
               <CardDescription className="text-gray-400">
-                جميع رسائل العملاء وردود الإدارة - يمكنك إرسال رسائل متعددة وملفات للعميل
+                جميع رسائل العملاء وردود الإدارة - يمكنك عرض الصور والفيديوهات التي يرسلها العملاء وإرسال ملفات للعميل
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -658,6 +717,10 @@ const CustomerLogTab = () => {
                                 <>
                                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                                     <p className="text-white">{message.message}</p>
+                                    
+                                    {/* عرض المرفقات من العميل */}
+                                    {renderCustomerAttachments(message.attachments)}
+                                    
                                     <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                                   </div>
                                   
