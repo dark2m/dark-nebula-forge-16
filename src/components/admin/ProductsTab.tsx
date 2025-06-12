@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, X } from 'lucide-react';
 import ProductFeaturesManager from '../ProductFeaturesManager';
 import MediaManager from '../MediaManager';
 import { useToast } from '@/hooks/use-toast';
@@ -84,6 +84,19 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
         description: "تم حفظ التغييرات بنجاح"
       });
     }
+  };
+
+  const removeBackgroundImage = (productId: number) => {
+    console.log('Removing background image for product:', productId);
+    handleProductChange(productId, 'backgroundImage', '');
+    
+    // حفظ التغيير فوراً
+    updateProduct(productId, { backgroundImage: '' });
+    
+    toast({
+      title: "تم حذف صورة الخلفية",
+      description: "تم حذف صورة الخلفية للمنتج بنجاح"
+    });
   };
 
   const getProductValue = (product: Product, field: string) => {
@@ -285,23 +298,45 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                       className="w-full h-10 rounded border border-white/20"
                     />
                   </div>
+                  
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">صورة الخلفية</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            handleProductChange(product.id, 'backgroundImage', event.target?.result as string);
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                      className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              handleProductChange(product.id, 'backgroundImage', event.target?.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="flex-1 bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                      />
+                      {getProductValue(product, 'backgroundImage') && (
+                        <button
+                          onClick={() => removeBackgroundImage(product.id)}
+                          className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded transition-colors flex items-center gap-1"
+                          title="إزالة صورة الخلفية"
+                        >
+                          <X className="w-4 h-4" />
+                          إزالة
+                        </button>
+                      )}
+                    </div>
+                    {getProductValue(product, 'backgroundImage') && (
+                      <div className="mt-2">
+                        <img
+                          src={getProductValue(product, 'backgroundImage')}
+                          alt="معاينة صورة الخلفية"
+                          className="w-full h-20 object-cover rounded border border-white/20"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
