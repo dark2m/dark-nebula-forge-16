@@ -44,9 +44,19 @@ const CustomerSupport = () => {
 
   if (!settings) return null;
 
-  const customerSupportTexts = settings.pageTexts?.customerSupport || {
-    pageTitle: 'خدمة العملاء',
-    pageDescription: 'سجل دخولك للوصول إلى خدمة العملاء المتخصصة'
+  // إنشاء كائن النصوص مع القيم الافتراضية
+  const customerSupportTexts = {
+    pageTitle: settings.pageTexts?.customerSupport?.pageTitle || 'خدمة العملاء',
+    pageDescription: settings.pageTexts?.customerSupport?.pageDescription || 'سجل دخولك للوصول إلى خدمة العملاء المتخصصة',
+    whatsappTitle: settings.pageTexts?.customerSupport?.whatsappTitle || 'واتساب',
+    whatsappDescription: settings.pageTexts?.customerSupport?.whatsappDescription || 'للدعم الشخصي المباشر',
+    whatsappButtonText: settings.pageTexts?.customerSupport?.whatsappButtonText || 'راسل عبر واتساب',
+    workingHoursTitle: settings.pageTexts?.customerSupport?.workingHoursTitle || 'ساعات العمل',
+    workingHours: {
+      weekdays: settings.pageTexts?.customerSupport?.workingHours?.weekdays || '9:00 ص - 11:00 م',
+      friday: settings.pageTexts?.customerSupport?.workingHours?.friday || '2:00 م - 11:00 م'
+    },
+    supportNote: settings.pageTexts?.customerSupport?.supportNote || '💡 الدعم الفني متاح 24/7 عبر واتساب للحالات الطارئة'
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -128,15 +138,18 @@ const CustomerSupport = () => {
                   <CardHeader className="text-center">
                     <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
                       <Phone className="w-6 h-6 text-green-400" />
-                      {customerSupportTexts.whatsappTitle || 'واتساب'}
+                      {customerSupportTexts.whatsappTitle}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
                     <p className="text-gray-300 mb-4">
-                      {customerSupportTexts.whatsappDescription || 'للدعم الشخصي المباشر'}
+                      {customerSupportTexts.whatsappDescription}
                     </p>
-                    <Button className="w-full glow-button">
-                      {customerSupportTexts.whatsappButtonText || 'راسل عبر واتساب'}
+                    <Button 
+                      className="w-full glow-button"
+                      onClick={() => window.open(`https://wa.me/${settings.contactInfo.whatsapp.replace(/\D/g, '')}`, '_blank')}
+                    >
+                      {customerSupportTexts.whatsappButtonText}
                     </Button>
                   </CardContent>
                 </Card>
@@ -147,18 +160,18 @@ const CustomerSupport = () => {
                 <CardHeader>
                   <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
                     <Clock className="w-5 h-5" />
-                    {customerSupportTexts.workingHoursTitle || 'ساعات العمل'}
+                    {customerSupportTexts.workingHoursTitle}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
                     <div>
-                      <p><strong>الأحد - الخميس:</strong> {customerSupportTexts.workingHours?.weekdays || '9:00 ص - 11:00 م'}</p>
-                      <p><strong>الجمعة:</strong> {customerSupportTexts.workingHours?.friday || '2:00 م - 11:00 م'}</p>
+                      <p><strong>الأحد - الخميس:</strong> {customerSupportTexts.workingHours.weekdays}</p>
+                      <p><strong>الجمعة:</strong> {customerSupportTexts.workingHours.friday}</p>
                     </div>
                     <div>
                       <p className="text-green-400">
-                        {customerSupportTexts.supportNote || '💡 الدعم الفني متاح 24/7 عبر واتساب للحالات الطارئة'}
+                        {customerSupportTexts.supportNote}
                       </p>
                     </div>
                   </div>

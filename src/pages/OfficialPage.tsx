@@ -19,10 +19,6 @@ const OfficialPage = () => {
   // Helper function to generate contact links
   const getContactLink = (type: string, value: string) => {
     switch (type) {
-      case 'telegram':
-        return value.startsWith('@') ? `https://t.me/${value.substring(1)}` : `https://t.me/${value}`;
-      case 'discord':
-        return value.startsWith('http') ? value : `https://discord.gg/${value}`;
       case 'whatsapp':
         const cleanNumber = value.replace(/\D/g, '');
         return `https://wa.me/${cleanNumber}`;
@@ -117,32 +113,8 @@ const OfficialPage = () => {
             <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
               {TranslationService.translate('official.contact.title')}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               
-              {/* Telegram */}
-              <button
-                onClick={() => handleContactClick('telegram', siteSettings.contactInfo.telegram)}
-                className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-blue-500/20 transition-colors cursor-pointer"
-              >
-                <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 mx-auto mb-4" />
-                <h3 className="text-base sm:text-lg font-bold text-white mb-2">
-                  {TranslationService.translate('contact.telegram')}
-                </h3>
-                <p className="text-blue-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.telegram}</p>
-              </button>
-
-              {/* Discord */}
-              <button
-                onClick={() => handleContactClick('discord', siteSettings.contactInfo.discord)}
-                className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-purple-500/20 transition-colors cursor-pointer"
-              >
-                <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-base sm:text-lg font-bold text-white mb-2">
-                  {TranslationService.translate('contact.discord')}
-                </h3>
-                <p className="text-purple-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.discord}</p>
-              </button>
-
               {/* WhatsApp */}
               <button
                 onClick={() => handleContactClick('whatsapp', siteSettings.contactInfo.whatsapp)}
