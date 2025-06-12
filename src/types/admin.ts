@@ -1,3 +1,4 @@
+
 // Admin system type definitions
 export interface Product {
   id: number;
@@ -94,6 +95,27 @@ export interface PageTexts {
   tools?: {
     pageTitle: string;
     pageSubtitle: string;
+  };
+  customerSupport?: {
+    pageTitle: string;
+    pageDescription: string;
+    telegramTitle: string;
+    telegramDescription: string;
+    telegramButtonText: string;
+    discordTitle: string;
+    discordDescription: string;
+    discordButtonText: string;
+    whatsappTitle: string;
+    whatsappDescription: string;
+    whatsappButtonText: string;
+    workingHoursTitle: string;
+    workingHours?: {
+      weekdays: string;
+      friday: string;
+    };
+    supportNote: string;
+    supportPolicyTitle: string;
+    supportPolicies?: string[];
   };
 }
 
