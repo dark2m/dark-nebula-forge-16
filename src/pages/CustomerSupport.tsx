@@ -14,7 +14,7 @@ const CustomerSupport = () => {
 
   if (!settings) return null;
 
-  // Provide proper default values instead of empty object
+  // Provide proper default values with ALL required properties
   const customerSupportTexts = settings.pageTexts?.customerSupport || {
     pageTitle: 'خدمة العملاء',
     pageDescription: 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة',
