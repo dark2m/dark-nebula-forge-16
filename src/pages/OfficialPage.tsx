@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, Mail, Phone, MapPin, Users, Star, Shield, ArrowRight } from 'lucide-react';
+import { MessageCircle, Mail, Phone, MapPin, Users, Star, Shield } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage from '../utils/adminStorage';
 import TranslationService from '../utils/translationService';
@@ -14,10 +15,6 @@ const OfficialPage = () => {
     const loadedSettings = AdminStorage.getSiteSettings();
     setSiteSettings(loadedSettings);
   }, []);
-
-  const handleBack = () => {
-    navigate(-1);
-  };
 
   // Helper function to generate contact links
   const getContactLink = (type: string, value: string) => {
@@ -55,17 +52,6 @@ const OfficialPage = () => {
       
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-4 sm:px-6">
-          {/* Back Button */}
-          <div className="mb-8">
-            <button
-              onClick={handleBack}
-              className="flex items-center space-x-2 rtl:space-x-reverse text-gray-300 hover:text-white transition-colors group"
-            >
-              <ArrowRight className="w-5 h-5 transform rotate-180 group-hover:translate-x-1 transition-transform" />
-              <span>العودة</span>
-            </button>
-          </div>
-
           {/* Hero Section */}
           <div className="text-center mb-16">
             <h1 className="text-3xl sm:text-5xl font-bold text-white mb-6 bg-gradient-to-r from-white via-blue-200 to-blue-400 bg-clip-text text-transparent">

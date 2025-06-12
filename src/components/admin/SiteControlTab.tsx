@@ -37,54 +37,53 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="general">عام</TabsTrigger>
-          <TabsTrigger value="appearance">المظهر</TabsTrigger>
-          <TabsTrigger value="layout">التخطيط</TabsTrigger>
-          <TabsTrigger value="navigation">التنقل</TabsTrigger>
-          <TabsTrigger value="background">الخلفية</TabsTrigger>
-          <TabsTrigger value="advanced">متقدم</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-white/10">
+          <TabsTrigger value="general" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">عام</TabsTrigger>
+          <TabsTrigger value="appearance" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">المظهر</TabsTrigger>
+          <TabsTrigger value="layout" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">التخطيط</TabsTrigger>
+          <TabsTrigger value="background" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">الخلفية</TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
         <TabsContent value="general" className="space-y-6">
-          <Card>
+          <Card className="bg-white/5 border-white/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Globe className="w-5 h-5" />
                 إعدادات الموقع العامة
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-400">
                 إعدادات أساسية للموقع
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="site-title">عنوان الموقع</Label>
+                  <Label htmlFor="site-title" className="text-white">عنوان الموقع</Label>
                   <Input
                     id="site-title"
-                    value={siteSettings.title}
+                    value={siteSettings.title || ''}
                     onChange={(e) => setSiteSettings({
                       ...siteSettings,
                       title: e.target.value
                     })}
                     placeholder="اسم الموقع"
+                    className="bg-white/10 border-white/20 text-white"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="title-size">حجم العنوان</Label>
+                  <Label htmlFor="title-size" className="text-white">حجم العنوان</Label>
                   <Select
-                    value={siteSettings.titleSize}
-                    onValueChange={(value: any) => setSiteSettings({
+                    value={siteSettings.titleSize || 'large'}
+                    onValueChange={(value) => setSiteSettings({
                       ...siteSettings,
-                      titleSize: value
+                      titleSize: value as any
                     })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-gray-800 border-white/20">
                       <SelectItem value="small">صغير</SelectItem>
                       <SelectItem value="medium">متوسط</SelectItem>
                       <SelectItem value="large">كبير</SelectItem>
@@ -95,32 +94,33 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
               </div>
               
               <div>
-                <Label htmlFor="site-description">وصف الموقع</Label>
+                <Label htmlFor="site-description" className="text-white">وصف الموقع</Label>
                 <Textarea
                   id="site-description"
-                  value={siteSettings.description}
+                  value={siteSettings.description || ''}
                   onChange={(e) => setSiteSettings({
                     ...siteSettings,
                     description: e.target.value
                   })}
                   placeholder="وصف مختصر للموقع"
                   rows={3}
+                  className="bg-white/10 border-white/20 text-white"
                 />
               </div>
 
               <div>
-                <Label htmlFor="global-text-size">حجم النص العام</Label>
+                <Label htmlFor="global-text-size" className="text-white">حجم النص العام</Label>
                 <Select
-                  value={siteSettings.globalTextSize}
-                  onValueChange={(value: any) => setSiteSettings({
+                  value={siteSettings.globalTextSize || 'medium'}
+                  onValueChange={(value) => setSiteSettings({
                     ...siteSettings,
-                    globalTextSize: value
+                    globalTextSize: value as any
                   })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gray-800 border-white/20">
                     <SelectItem value="small">صغير</SelectItem>
                     <SelectItem value="medium">متوسط</SelectItem>
                     <SelectItem value="large">كبير</SelectItem>
@@ -133,24 +133,24 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
 
         {/* Appearance Settings */}
         <TabsContent value="appearance" className="space-y-6">
-          <Card>
+          <Card className="bg-white/5 border-white/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Palette className="w-5 h-5" />
                 إعدادات المظهر
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-400">
                 تخصيص ألوان وشكل الموقع
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="primary-color">اللون الأساسي</Label>
+                  <Label htmlFor="primary-color" className="text-white">اللون الأساسي</Label>
                   <Input
                     id="primary-color"
                     type="color"
-                    value={siteSettings.colors.primary}
+                    value={siteSettings.colors?.primary || '#3b82f6'}
                     onChange={(e) => setSiteSettings({
                       ...siteSettings,
                       colors: {
@@ -158,14 +158,15 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                         primary: e.target.value
                       }
                     })}
+                    className="h-12"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="secondary-color">اللون الثانوي</Label>
+                  <Label htmlFor="secondary-color" className="text-white">اللون الثانوي</Label>
                   <Input
                     id="secondary-color"
                     type="color"
-                    value={siteSettings.colors.secondary}
+                    value={siteSettings.colors?.secondary || '#8b5cf6'}
                     onChange={(e) => setSiteSettings({
                       ...siteSettings,
                       colors: {
@@ -173,14 +174,15 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                         secondary: e.target.value
                       }
                     })}
+                    className="h-12"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="accent-color">لون التمييز</Label>
+                  <Label htmlFor="accent-color" className="text-white">لون التمييز</Label>
                   <Input
                     id="accent-color"
                     type="color"
-                    value={siteSettings.colors.accent}
+                    value={siteSettings.colors?.accent || '#06b6d4'}
                     onChange={(e) => setSiteSettings({
                       ...siteSettings,
                       colors: {
@@ -188,63 +190,15 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                         accent: e.target.value
                       }
                     })}
+                    className="h-12"
                   />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="border-radius">استدارة الحواف</Label>
-                  <Select
-                    value={siteSettings.design.borderRadius}
-                    onValueChange={(value: any) => setSiteSettings({
-                      ...siteSettings,
-                      design: {
-                        ...siteSettings.design,
-                        borderRadius: value
-                      }
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">بدون</SelectItem>
-                      <SelectItem value="small">صغير</SelectItem>
-                      <SelectItem value="medium">متوسط</SelectItem>
-                      <SelectItem value="large">كبير</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="shadows">الظلال</Label>
-                  <Select
-                    value={siteSettings.design.shadows}
-                    onValueChange={(value: any) => setSiteSettings({
-                      ...siteSettings,
-                      design: {
-                        ...siteSettings.design,
-                        shadows: value
-                      }
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">بدون</SelectItem>
-                      <SelectItem value="small">صغير</SelectItem>
-                      <SelectItem value="medium">متوسط</SelectItem>
-                      <SelectItem value="large">كبير</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
                 <Switch
                   id="animations"
-                  checked={siteSettings.design.animations}
+                  checked={siteSettings.design?.animations || false}
                   onCheckedChange={(checked) => setSiteSettings({
                     ...siteSettings,
                     design: {
@@ -253,7 +207,7 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                     }
                   })}
                 />
-                <Label htmlFor="animations">تفعيل الحركات والانتقالات</Label>
+                <Label htmlFor="animations" className="text-white">تفعيل الحركات والانتقالات</Label>
               </div>
             </CardContent>
           </Card>
@@ -261,57 +215,34 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
 
         {/* Layout Settings */}
         <TabsContent value="layout" className="space-y-6">
-          <Card>
+          <Card className="bg-white/5 border-white/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-white">
                 <Layout className="w-5 h-5" />
                 إعدادات التخطيط
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-400">
                 تحكم في تباعد العناصر وتخطيط الصفحة
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="spacing">تباعد العناصر</Label>
-                <Select
-                  value={siteSettings.design.spacing}
-                  onValueChange={(value: any) => setSiteSettings({
-                    ...siteSettings,
-                    design: {
-                      ...siteSettings.design,
-                      spacing: value
-                    }
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tight">ضيق</SelectItem>
-                    <SelectItem value="normal">عادي</SelectItem>
-                    <SelectItem value="loose">واسع</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="font-family">نوع الخط</Label>
+                  <Label htmlFor="font-family" className="text-white">نوع الخط</Label>
                   <Select
-                    value={siteSettings.typography.fontFamily}
-                    onValueChange={(value: any) => setSiteSettings({
+                    value={siteSettings.typography?.fontFamily || 'system'}
+                    onValueChange={(value) => setSiteSettings({
                       ...siteSettings,
                       typography: {
                         ...siteSettings.typography,
-                        fontFamily: value
+                        fontFamily: value as any
                       }
                     })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-gray-800 border-white/20">
                       <SelectItem value="system">النظام الافتراضي</SelectItem>
                       <SelectItem value="arabic">خط عربي</SelectItem>
                       <SelectItem value="modern">خط عصري</SelectItem>
@@ -319,21 +250,21 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="line-height">ارتفاع الأسطر</Label>
+                  <Label htmlFor="line-height" className="text-white">ارتفاع الأسطر</Label>
                   <Select
-                    value={siteSettings.typography.lineHeight}
-                    onValueChange={(value: any) => setSiteSettings({
+                    value={siteSettings.typography?.lineHeight || 'normal'}
+                    onValueChange={(value) => setSiteSettings({
                       ...siteSettings,
                       typography: {
                         ...siteSettings.typography,
-                        lineHeight: value
+                        lineHeight: value as any
                       }
                     })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-gray-800 border-white/20">
                       <SelectItem value="tight">ضيق</SelectItem>
                       <SelectItem value="normal">عادي</SelectItem>
                       <SelectItem value="relaxed">مريح</SelectItem>
@@ -345,65 +276,21 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
           </Card>
         </TabsContent>
 
-        {/* Navigation Settings */}
-        <TabsContent value="navigation" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>إعدادات شريط التنقل</CardTitle>
-              <CardDescription>
-                تخصيص شريط التنقل وعناصره
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {siteSettings.navigation.map((item, index) => (
-                <div key={item.id} className="flex items-center justify-between p-3 border border-white/20 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Switch
-                      checked={item.visible}
-                      onCheckedChange={(checked) => {
-                        const updatedNav = [...siteSettings.navigation];
-                        updatedNav[index].visible = checked;
-                        setSiteSettings({
-                          ...siteSettings,
-                          navigation: updatedNav
-                        });
-                      }}
-                    />
-                    <span className="text-white">{item.name}</span>
-                  </div>
-                  <Input
-                    value={item.name}
-                    onChange={(e) => {
-                      const updatedNav = [...siteSettings.navigation];
-                      updatedNav[index].name = e.target.value;
-                      setSiteSettings({
-                        ...siteSettings,
-                        navigation: updatedNav
-                      });
-                    }}
-                    className="w-48"
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
         {/* Background Settings */}
         <TabsContent value="background" className="space-y-6">
-          <Card>
+          <Card className="bg-white/5 border-white/20">
             <CardHeader>
-              <CardTitle>إعدادات الخلفية المتحركة</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-white">إعدادات الخلفية المتحركة</CardTitle>
+              <CardDescription className="text-gray-400">
                 تخصيص النجوم والشهب في الخلفية
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>عدد النجوم: {siteSettings.backgroundSettings.starCount}</Label>
+                  <Label className="text-white">عدد النجوم: {siteSettings.backgroundSettings?.starCount || 80}</Label>
                   <Slider
-                    value={[siteSettings.backgroundSettings.starCount || 80]}
+                    value={[siteSettings.backgroundSettings?.starCount || 80]}
                     onValueChange={([value]) => setSiteSettings({
                       ...siteSettings,
                       backgroundSettings: {
@@ -414,12 +301,13 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                     max={200}
                     min={10}
                     step={10}
+                    className="mt-2"
                   />
                 </div>
                 <div>
-                  <Label>عدد الشهب: {siteSettings.backgroundSettings.meteorCount}</Label>
+                  <Label className="text-white">عدد الشهب: {siteSettings.backgroundSettings?.meteorCount || 10}</Label>
                   <Slider
-                    value={[siteSettings.backgroundSettings.meteorCount || 10]}
+                    value={[siteSettings.backgroundSettings?.meteorCount || 10]}
                     onValueChange={([value]) => setSiteSettings({
                       ...siteSettings,
                       backgroundSettings: {
@@ -430,179 +318,53 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                     max={50}
                     min={0}
                     step={5}
+                    className="mt-2"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>شفافية النجوم: {Math.round((siteSettings.backgroundSettings.starOpacity || 0.8) * 100)}%</Label>
-                  <Slider
-                    value={[(siteSettings.backgroundSettings.starOpacity || 0.8) * 100]}
-                    onValueChange={([value]) => setSiteSettings({
-                      ...siteSettings,
-                      backgroundSettings: {
-                        ...siteSettings.backgroundSettings,
-                        starOpacity: value / 100
-                      }
-                    })}
-                    max={100}
-                    min={10}
-                    step={10}
-                  />
-                </div>
-                <div>
-                  <Label>شفافية الشهب: {Math.round((siteSettings.backgroundSettings.meteorOpacity || 0.7) * 100)}%</Label>
-                  <Slider
-                    value={[(siteSettings.backgroundSettings.meteorOpacity || 0.7) * 100]}
-                    onValueChange={([value]) => setSiteSettings({
-                      ...siteSettings,
-                      backgroundSettings: {
-                        ...siteSettings.backgroundSettings,
-                        meteorOpacity: value / 100
-                      }
-                    })}
-                    max={100}
-                    min={10}
-                    step={10}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>حجم النجوم</Label>
+                  <Label className="text-white">سرعة الحركة</Label>
                   <Select
-                    value={siteSettings.backgroundSettings.starSize}
-                    onValueChange={(value: any) => setSiteSettings({
+                    value={siteSettings.backgroundSettings?.animationSpeed || 'normal'}
+                    onValueChange={(value) => setSiteSettings({
                       ...siteSettings,
                       backgroundSettings: {
                         ...siteSettings.backgroundSettings,
-                        starSize: value
+                        animationSpeed: value as any
                       }
                     })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">صغير</SelectItem>
-                      <SelectItem value="medium">متوسط</SelectItem>
-                      <SelectItem value="large">كبير</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>حجم الشهب</Label>
-                  <Select
-                    value={siteSettings.backgroundSettings.meteorSize}
-                    onValueChange={(value: any) => setSiteSettings({
-                      ...siteSettings,
-                      backgroundSettings: {
-                        ...siteSettings.backgroundSettings,
-                        meteorSize: value
-                      }
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">صغير</SelectItem>
-                      <SelectItem value="medium">متوسط</SelectItem>
-                      <SelectItem value="large">كبير</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>سرعة الحركة</Label>
-                  <Select
-                    value={siteSettings.backgroundSettings.animationSpeed}
-                    onValueChange={(value: any) => setSiteSettings({
-                      ...siteSettings,
-                      backgroundSettings: {
-                        ...siteSettings.backgroundSettings,
-                        animationSpeed: value
-                      }
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-gray-800 border-white/20">
                       <SelectItem value="slow">بطيء</SelectItem>
                       <SelectItem value="normal">عادي</SelectItem>
                       <SelectItem value="fast">سريع</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Advanced Settings */}
-        <TabsContent value="advanced" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                إعدادات متقدمة
-              </CardTitle>
-              <CardDescription>
-                إعدادات تقنية ومتقدمة للموقع
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                <h4 className="text-yellow-400 font-semibold mb-2">تحذير</h4>
-                <p className="text-gray-300 text-sm">
-                  تغيير هذه الإعدادات قد يؤثر على أداء الموقع. تأكد من معرفة ما تفعله.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>وزن خط العناوين</Label>
+                  <Label className="text-white">حجم النجوم</Label>
                   <Select
-                    value={siteSettings.typography.headingWeight}
-                    onValueChange={(value: any) => setSiteSettings({
+                    value={siteSettings.backgroundSettings?.starSize || 'medium'}
+                    onValueChange={(value) => setSiteSettings({
                       ...siteSettings,
-                      typography: {
-                        ...siteSettings.typography,
-                        headingWeight: value
+                      backgroundSettings: {
+                        ...siteSettings.backgroundSettings,
+                        starSize: value as any
                       }
                     })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">عادي</SelectItem>
-                      <SelectItem value="bold">سميك</SelectItem>
-                      <SelectItem value="black">سميك جداً</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>وزن النص العادي</Label>
-                  <Select
-                    value={siteSettings.typography.bodyWeight}
-                    onValueChange={(value: any) => setSiteSettings({
-                      ...siteSettings,
-                      typography: {
-                        ...siteSettings.typography,
-                        bodyWeight: value
-                      }
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="normal">عادي</SelectItem>
+                    <SelectContent className="bg-gray-800 border-white/20">
+                      <SelectItem value="small">صغير</SelectItem>
                       <SelectItem value="medium">متوسط</SelectItem>
-                      <SelectItem value="semibold">نصف سميك</SelectItem>
+                      <SelectItem value="large">كبير</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
