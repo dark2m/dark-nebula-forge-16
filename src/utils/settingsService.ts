@@ -8,14 +8,35 @@ class SettingsService {
     const stored = localStorage.getItem(this.SETTINGS_KEY);
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const settings = JSON.parse(stored);
+        console.log('SettingsService: Loaded settings from storage:', settings);
+        return settings;
       } catch (error) {
         console.error('Error parsing settings:', error);
         return this.getDefaultSettings();
       }
     }
     
+    console.log('SettingsService: No settings found, using defaults');
     return this.getDefaultSettings();
+  }
+
+  static saveSiteSettings(settings: SiteSettings): void {
+    try {
+      console.log('SettingsService: Saving settings:', settings);
+      localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
+      
+      // إطلاق حدث لتحديث جميع المكونات
+      const event = new CustomEvent('settingsUpdated', {
+        detail: { settings }
+      });
+      window.dispatchEvent(event);
+      
+      console.log('SettingsService: Settings saved and event dispatched');
+    } catch (error) {
+      console.error('SettingsService: Error saving settings:', error);
+      throw error;
+    }
   }
 
   private static getDefaultSettings(): SiteSettings {
@@ -43,10 +64,10 @@ class SettingsService {
         meteorColors: ['#4ecdc4', '#45b7d1', '#ffeaa7', '#fd79a8', '#a8e6cf', '#81ecec']
       },
       navigation: [
+        { id: 'official', name: 'الصفحة الرئيسية', path: '/official', icon: 'Users', visible: true },
         { id: 'pubg', name: 'هكر ببجي موبايل', path: '/pubg-hacks', icon: 'Shield', visible: true },
         { id: 'web', name: 'برمجة مواقع', path: '/web-development', icon: 'Code', visible: true },
         { id: 'discord', name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: 'Bot', visible: true },
-        { id: 'official', name: 'الصفحة الرئيسية', path: '/official', icon: 'Users', visible: true },
       ],
       contactInfo: {
         telegram: '@DarkTeam_Support',
@@ -57,7 +78,7 @@ class SettingsService {
         address: 'المملكة العربية السعودية'
       },
       homePage: {
-        heroTitle: 'مرحباً بك في DARK',
+        heroTitle: 'DARK',
         heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
         featuresTitle: 'لماذا تختار DARK؟',
         features: [
@@ -80,7 +101,7 @@ class SettingsService {
       },
       pageTexts: {
         home: {
-          heroTitle: 'مرحباً بك في DARK',
+          heroTitle: 'DARK',
           heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
           featuresTitle: 'لماذا تختار DARK؟',
           features: [
@@ -139,24 +160,10 @@ class SettingsService {
         }
       }
     };
-    
+
+    // حفظ الإعدادات الافتراضية
     this.saveSiteSettings(defaultSettings);
     return defaultSettings;
-  }
-
-  static saveSiteSettings(settings: SiteSettings): void {
-    try {
-      localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
-      console.log('Settings saved successfully');
-      
-      // إشعار جميع النوافذ بالتحديث
-      window.dispatchEvent(new CustomEvent('settingsUpdated', { 
-        detail: { settings } 
-      }));
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      throw new Error('تم تجاوز حد التخزين المسموح');
-    }
   }
 }
 

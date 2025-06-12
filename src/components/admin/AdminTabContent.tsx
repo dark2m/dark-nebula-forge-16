@@ -1,18 +1,13 @@
 
 import React from 'react';
 import ProductsTab from './ProductsTab';
-import ContactTab from './ContactTab';
-import NavigationTab from './NavigationTab';
-import BackgroundTab from './BackgroundTab';
-import AccessDenied from './AccessDenied';
-import OverviewTab from './OverviewTab';
-import PasswordsTab from './PasswordsTab';
-import SettingsTab from './SettingsTab';
-import UsersTab from './UsersTab';
-import TypographyTab from './TypographyTab';
-import DesignTab from './DesignTab';
-import TextsTab from './TextsTab';
 import SiteControlTab from './SiteControlTab';
+import TextsTab from './TextsTab';
+import NavigationTab from './NavigationTab';
+import ContactTab from './ContactTab';
+import DesignTab from './DesignTab';
+import LivePreviewTab from './LivePreviewTab';
+import BackupTab from './BackupTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -24,7 +19,7 @@ interface AdminTabContentProps {
   addProduct: () => void;
   updateProduct: (id: number, updates: Partial<Product>) => void;
   deleteProduct: (id: number) => void;
-  canAccess: (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
+  canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
 }
 
 const AdminTabContent: React.FC<AdminTabContentProps> = ({
@@ -38,83 +33,137 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
   deleteProduct,
   canAccess
 }) => {
-  switch (activeTab) {
-    case 'overview':
-      return canAccess('مشرف') ? <OverviewTab products={products} /> : <AccessDenied />;
-    
-    case 'products':
-      return canAccess('مشرف') ? (
-        <ProductsTab 
-          products={products}
-          addProduct={addProduct}
-          updateProduct={updateProduct}
-          deleteProduct={deleteProduct}
-        />
-      ) : <AccessDenied />;
-    
-    case 'site-control':
-      return canAccess('مدير عام') ? (
-        <SiteControlTab 
-          siteSettings={siteSettings}
-          setSiteSettings={setSiteSettings}
-          saveSiteSettings={saveSiteSettings}
-        />
-      ) : <AccessDenied />;
-    
-    case 'background':
-      return canAccess('مبرمج') ? (
-        <BackgroundTab 
-          siteSettings={siteSettings}
-          setSiteSettings={setSiteSettings}
-          saveSiteSettings={saveSiteSettings}
-        />
-      ) : <AccessDenied />;
-    
-    case 'contact':
-      return canAccess('مبرمج') ? (
-        <ContactTab 
-          siteSettings={siteSettings}
-          setSiteSettings={setSiteSettings}
-          saveSiteSettings={saveSiteSettings}
-        />
-      ) : <AccessDenied />;
-    
-    case 'navigation':
-      return canAccess('مبرمج') ? (
-        <NavigationTab 
-          siteSettings={siteSettings}
-          setSiteSettings={setSiteSettings}
-          saveSiteSettings={saveSiteSettings}
-        />
-      ) : <AccessDenied />;
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-3xl font-bold text-white">نظرة عامة</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="admin-card rounded-xl p-6">
+                <h3 className="text-lg font-bold text-blue-400 mb-2">إجمالي المنتجات</h3>
+                <p className="text-3xl font-bold text-white">{products.length}</p>
+              </div>
+              
+              <div className="admin-card rounded-xl p-6">
+                <h3 className="text-lg font-bold text-green-400 mb-2">منتجات ببجي</h3>
+                <p className="text-3xl font-bold text-white">
+                  {products.filter(p => p.category === 'pubg').length}
+                </p>
+              </div>
+              
+              <div className="admin-card rounded-xl p-6">
+                <h3 className="text-lg font-bold text-purple-400 mb-2">خدمات الويب</h3>
+                <p className="text-3xl font-bold text-white">
+                  {products.filter(p => p.category === 'web').length}
+                </p>
+              </div>
+              
+              <div className="admin-card rounded-xl p-6">
+                <h3 className="text-lg font-bold text-cyan-400 mb-2">بوتات ديسكورد</h3>
+                <p className="text-3xl font-bold text-white">
+                  {products.filter(p => p.category === 'discord').length}
+                </p>
+              </div>
+            </div>
+            
+            <div className="admin-card rounded-xl p-6">
+              <h3 className="text-xl font-bold text-white mb-4">إحصائيات الموقع</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-blue-400 font-semibold mb-2">عنوان الموقع</h4>
+                  <p className="text-white">{siteSettings.title}</p>
+                </div>
+                <div>
+                  <h4 className="text-green-400 font-semibold mb-2">عدد عناصر التنقل</h4>
+                  <p className="text-white">{siteSettings.navigation?.length || 0}</p>
+                </div>
+                <div>
+                  <h4 className="text-purple-400 font-semibold mb-2">عدد المميزات</h4>
+                  <p className="text-white">{siteSettings.pageTexts?.home?.features?.length || 0}</p>
+                </div>
+                <div>
+                  <h4 className="text-cyan-400 font-semibold mb-2">اللون الأساسي</h4>
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <div 
+                      className="w-6 h-6 rounded"
+                      style={{ backgroundColor: siteSettings.colors?.primary }}
+                    />
+                    <span className="text-white">{siteSettings.colors?.primary}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
 
-    case 'passwords':
-      return canAccess('مدير عام') ? <PasswordsTab /> : <AccessDenied />;
+      case 'products':
+        return (
+          <ProductsTab
+            products={products}
+            addProduct={addProduct}
+            updateProduct={updateProduct}
+            deleteProduct={deleteProduct}
+            canAccess={canAccess}
+          />
+        );
 
-    case 'design':
-      return canAccess('مبرمج') ? <DesignTab /> : <AccessDenied />;
+      case 'site-control':
+        return (
+          <SiteControlTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
 
-    case 'typography':
-      return canAccess('مبرمج') ? <TypographyTab /> : <AccessDenied />;
+      case 'texts':
+        return (
+          <TextsTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
 
-    case 'users':
-      return canAccess('مدير عام') ? <UsersTab /> : <AccessDenied />;
+      case 'navigation':
+        return (
+          <NavigationTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
 
-    case 'settings':
-      return canAccess('مبرمج') ? <SettingsTab /> : <AccessDenied />;
+      case 'contact':
+        return (
+          <ContactTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
 
-    case 'texts':
-      return canAccess('مدير عام') ? (
-        <TextsTab 
-          siteSettings={siteSettings}
-          setSiteSettings={setSiteSettings}
-          saveSiteSettings={saveSiteSettings}
-        />
-      ) : <AccessDenied />;
-    
-    default:
-      return canAccess('مشرف') ? <OverviewTab products={products} /> : <AccessDenied />;
-  }
+      case 'design':
+        return <DesignTab />;
+
+      case 'preview':
+        return <LivePreviewTab siteSettings={siteSettings} />;
+
+      case 'backup':
+        return (
+          <BackupTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+          />
+        );
+
+      default:
+        return <div className="text-white">تبويب غير موجود</div>;
+    }
+  };
+
+  return <div>{renderTabContent()}</div>;
 };
 
 export default AdminTabContent;

@@ -14,6 +14,19 @@ const Home = () => {
   useEffect(() => {
     const loadedSettings = AdminStorage.getSiteSettings();
     setSiteSettings(loadedSettings);
+    console.log('Home: Loaded settings:', loadedSettings);
+
+    // الاستماع لتحديثات الإعدادات
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('Home: Settings updated via event:', event.detail.settings);
+      setSiteSettings(event.detail.settings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
   }, []);
 
   const services = [
@@ -52,7 +65,7 @@ const Home = () => {
       <div className="relative z-10 pt-32 pb-20">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-blue-400 bg-clip-text text-transparent">
-            DARK
+            {getTextContent(homeTexts.heroTitle)}
           </h1>
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
             {getTextContent(homeTexts.heroSubtitle)}
