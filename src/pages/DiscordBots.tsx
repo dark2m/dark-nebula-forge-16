@@ -58,17 +58,7 @@ const DiscordBots = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {products.map((product) => (
               <div key={product.id} className="group">
-                <div 
-                  className="relative overflow-hidden rounded-xl border border-white/20 hover:border-purple-500/50 transition-all duration-300 transform hover:scale-105"
-                  style={{
-                    backgroundColor: product.backgroundColor || '#1a1a2e',
-                    backgroundImage: product.backgroundImage ? `url(${product.backgroundImage})` : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                >
-                  <div className="absolute inset-0 bg-black/40" />
-                  
+                <div className="relative overflow-hidden rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:border-purple-500/50 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
                   <div className="relative p-4 sm:p-6">
                     <h3 className={`font-bold text-white mb-3 ${
                       product.titleSize === 'small' ? 'text-base sm:text-lg' :
@@ -143,7 +133,7 @@ const DiscordBots = () => {
               لماذا تختار DARK؟
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+              <div className="text-center p-6 bg-blue-500/10 backdrop-blur-md border border-blue-500/30 rounded-xl">
                 <div className="text-4xl mb-3">⚡</div>
                 <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
                   سرعة التسليم
@@ -152,7 +142,7 @@ const DiscordBots = () => {
                   احصل على منتجاتك فوراً مع نظام التسليم الآلي
                 </p>
               </div>
-              <div className="text-center p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
+              <div className="text-center p-6 bg-green-500/10 backdrop-blur-md border border-green-500/30 rounded-xl">
                 <div className="text-4xl mb-3">🛡️</div>
                 <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
                   الأمان والحماية
@@ -161,7 +151,7 @@ const DiscordBots = () => {
                   جميع منتجاتنا آمنة ومحمية بأحدث التقنيات
                 </p>
               </div>
-              <div className="text-center p-6 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+              <div className="text-center p-6 bg-purple-500/10 backdrop-blur-md border border-purple-500/30 rounded-xl">
                 <div className="text-4xl mb-3">💎</div>
                 <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
                   جودة مميزة
