@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, User, UserCheck, Upload, X, Image as ImageIcon, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -149,10 +150,26 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
     if (!newMessage.trim() && attachments.length === 0) return;
 
     setIsLoading(true);
+    
+    // إذا لم يكن هناك نص ولكن توجد مرفقات، استخدم نص افتراضي
+    let messageText = newMessage.trim();
+    if (!messageText && attachments.length > 0) {
+      const imageCount = attachments.filter(att => att.type === 'image').length;
+      const videoCount = attachments.filter(att => att.type === 'video').length;
+      
+      if (imageCount > 0 && videoCount > 0) {
+        messageText = `تم إرسال ${imageCount} صورة و ${videoCount} فيديو`;
+      } else if (imageCount > 0) {
+        messageText = imageCount === 1 ? 'تم إرسال صورة' : `تم إرسال ${imageCount} صور`;
+      } else if (videoCount > 0) {
+        messageText = videoCount === 1 ? 'تم إرسال فيديو' : `تم إرسال ${videoCount} فيديوهات`;
+      }
+    }
+    
     const success = CustomerChatService.sendCustomerMessage(
       customerId.toString(), 
       customerEmail, 
-      newMessage.trim(), 
+      messageText, 
       attachments
     );
     
@@ -172,6 +189,24 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
       });
     }
     setIsLoading(false);
+  };
+
+  const renderMessageText = (message: string, attachments?: { type: 'image' | 'video', data: string }[]) => {
+    // إذا كانت الرسالة فارغة أو تحتوي على مسافات فقط ولكن توجد مرفقات
+    if ((!message || message.trim() === '') && attachments && attachments.length > 0) {
+      const imageCount = attachments.filter(att => att.type === 'image').length;
+      const videoCount = attachments.filter(att => att.type === 'video').length;
+      
+      if (imageCount > 0 && videoCount > 0) {
+        return `تم إرسال ${imageCount} صورة و ${videoCount} فيديو`;
+      } else if (imageCount > 0) {
+        return imageCount === 1 ? 'تم إرسال صورة' : `تم إرسال ${imageCount} صور`;
+      } else if (videoCount > 0) {
+        return videoCount === 1 ? 'تم إرسال فيديو' : `تم إرسال ${videoCount} فيديوهات`;
+      }
+    }
+    
+    return message || 'رسالة';
   };
 
   const renderAttachments = (attachments: { type: 'image' | 'video', data: string }[] | undefined) => {
@@ -239,7 +274,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
                           <UserCheck className="w-4 h-4 text-green-400 mt-1 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-green-400 text-sm font-medium mb-1">فريق الدعم</p>
-                            <p className="text-white break-words">{message.message}</p>
+                            <p className="text-white break-words">{renderMessageText(message.message, message.attachments)}</p>
                             {renderAttachments(message.attachments)}
                             <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                           </div>
@@ -253,7 +288,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
                           <div className="flex items-start gap-2">
                             <User className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <p className="text-white break-words">{message.message}</p>
+                              <p className="text-white break-words">{renderMessageText(message.message, message.attachments)}</p>
                               {renderAttachments(message.attachments)}
                               <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                             </div>

@@ -138,11 +138,26 @@ class CustomerChatService {
       const messages = this.getChatMessages();
       const sessions = this.getChatSessions();
       
+      // إذا لم يكن هناك نص ولكن توجد مرفقات، استخدم نص افتراضي
+      let messageText = message;
+      if ((!messageText || messageText.trim() === '') && attachments && attachments.length > 0) {
+        const imageCount = attachments.filter(att => att.type === 'image').length;
+        const videoCount = attachments.filter(att => att.type === 'video').length;
+        
+        if (imageCount > 0 && videoCount > 0) {
+          messageText = `تم إرسال ${imageCount} صورة و ${videoCount} فيديو`;
+        } else if (imageCount > 0) {
+          messageText = imageCount === 1 ? 'تم إرسال صورة' : `تم إرسال ${imageCount} صور`;
+        } else if (videoCount > 0) {
+          messageText = videoCount === 1 ? 'تم إرسال فيديو' : `تم إرسال ${videoCount} فيديوهات`;
+        }
+      }
+      
       const newMessage: ChatMessage = {
         id: Date.now(),
         customerId,
         customerEmail,
-        message,
+        message: messageText,
         timestamp: new Date().toLocaleString('ar-SA'),
         isFromCustomer: true,
         isRead: false,
@@ -185,10 +200,25 @@ class CustomerChatService {
       const sessions = this.getChatSessions();
       const adminMessages = this.getAdminMessages();
       
+      // إذا لم يكن هناك نص ولكن توجد مرفقات، استخدم نص افتراضي
+      let messageText = message;
+      if ((!messageText || messageText.trim() === '') && attachments && attachments.length > 0) {
+        const imageCount = attachments.filter(att => att.type === 'image').length;
+        const videoCount = attachments.filter(att => att.type === 'video').length;
+        
+        if (imageCount > 0 && videoCount > 0) {
+          messageText = `تم إرسال ${imageCount} صورة و ${videoCount} فيديو من فريق الدعم`;
+        } else if (imageCount > 0) {
+          messageText = imageCount === 1 ? 'تم إرسال صورة من فريق الدعم' : `تم إرسال ${imageCount} صور من فريق الدعم`;
+        } else if (videoCount > 0) {
+          messageText = videoCount === 1 ? 'تم إرسال فيديو من فريق الدعم' : `تم إرسال ${videoCount} فيديوهات من فريق الدعم`;
+        }
+      }
+      
       const newAdminMessage: AdminMessage = {
         id: Date.now(),
         customerId,
-        message,
+        message: messageText,
         timestamp: new Date().toLocaleString('ar-SA'),
         isFromAdmin: true,
         attachments: attachments || [],
