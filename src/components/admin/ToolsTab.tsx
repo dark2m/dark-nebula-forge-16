@@ -166,49 +166,48 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
           ) : (
             <div className="grid gap-4">
               {tools.map((tool) => (
-                <div key={tool.id} className="bg-white/10 p-4 rounded-lg border border-white/20">
+                <div key={tool.id} className="bg-white/10 p-6 rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300">
                   <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-2xl">{tool.icon}</span>
-                        <div className="flex-1">
-                          <h3 className="text-white font-semibold">{tool.title}</h3>
-                          <p className="text-gray-300 text-sm">{tool.description}</p>
-                        </div>
-                        
-                        {/* أيقونة العين فقط مع النقطة الملونة */}
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => toggleToolVisibility(tool.id)}
-                            className="relative p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-                            title={tool.visible ? 'إخفاء الأداة' : 'إظهار الأداة'}
-                          >
-                            {tool.visible ? (
-                              <Eye className="w-5 h-5 text-green-400" />
-                            ) : (
-                              <EyeOff className="w-5 h-5 text-red-400" />
-                            )}
-                            <span 
-                              className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
-                                tool.visible ? 'bg-green-500' : 'bg-red-500'
-                              }`}
-                            />
-                          </button>
-                        </div>
+                    <div className="flex-1 flex items-center gap-4">
+                      <span className="text-3xl">{tool.icon}</span>
+                      <div className="flex-1">
+                        <h3 className="text-white font-bold text-lg">{tool.title}</h3>
+                        <p className="text-gray-300">{tool.description}</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                      {/* أيقونة العين المحسنة */}
+                      <div className="relative">
+                        <button
+                          onClick={() => toggleToolVisibility(tool.id)}
+                          className={`
+                            relative p-3 rounded-full transition-all duration-300 hover:scale-110
+                            ${tool.visible 
+                              ? 'bg-green-500/20 hover:bg-green-500/30 border-2 border-green-500/50' 
+                              : 'bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/50'
+                            }
+                          `}
+                          title={tool.visible ? 'إخفاء الأداة' : 'إظهار الأداة'}
+                        >
+                          {tool.visible ? (
+                            <Eye className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <EyeOff className="w-5 h-5 text-red-400" />
+                          )}
+                        </button>
+                      </div>
+
+                      {/* زر التعديل المحسن */}
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <button
                             onClick={() => setEditingTool(tool)}
-                            className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                            className="p-3 rounded-full bg-blue-500/20 hover:bg-blue-500/30 border-2 border-blue-500/50 transition-all duration-300 hover:scale-110"
+                            title="تعديل الأداة"
                           >
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                            <Edit className="w-5 h-5 text-blue-400" />
+                          </button>
                         </DialogTrigger>
                         <DialogContent className="bg-black/90 backdrop-blur-sm border-white/30 max-w-2xl">
                           <DialogHeader>
@@ -283,14 +282,6 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                                   </SelectContent>
                                 </Select>
                               </div>
-                              <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                                <Switch
-                                  checked={editingTool.visible}
-                                  onCheckedChange={(checked) => setEditingTool({ ...editingTool, visible: checked })}
-                                  className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-600"
-                                />
-                                <Label className="text-white">عرض الأداة في الموقع</Label>
-                              </div>
                               <div className="flex gap-2 pt-4">
                                 <Button
                                   onClick={() => {
@@ -306,14 +297,15 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                           )}
                         </DialogContent>
                       </Dialog>
-                      <Button
-                        size="sm"
-                        variant="destructive"
+
+                      {/* زر الحذف المحسن */}
+                      <button
                         onClick={() => deleteTool(tool.id)}
-                        className="bg-red-600 hover:bg-red-700"
+                        className="p-3 rounded-full bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/50 transition-all duration-300 hover:scale-110"
+                        title="حذف الأداة"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                        <Trash2 className="w-5 h-5 text-red-400" />
+                      </button>
                     </div>
                   </div>
                 </div>
