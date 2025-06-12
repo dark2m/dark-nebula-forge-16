@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,26 +15,32 @@ const CustomerLogTab = () => {
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
   const [loginAttempts, setLoginAttempts] = useState<LoginAttempt[]>([]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
-  const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
-  const [adminMessage, setAdminMessage] = useState<{[key: string]: string}>({});
-  const [adminReplies, setAdminReplies] = useState<{[key: number]: string}>({});
-  const [selectedFiles, setSelectedFiles] = useState<{[key: string]: File[]}>({});
-  const [mediaAttachments, setMediaAttachments] = useState<{[key: string]: { type: 'image' | 'video', data: string }[]}>({});
-  const fileInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerUser | null>(null);
+  const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [replyMessage, setReplyMessage] = useState('');
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('customers');
+  const [showCustomerDetails, setShowCustomerDetails] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [currentMessages, setCurrentMessages] = useState<(ChatMessage | AdminMessage)[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showChatMessages, setShowChatMessages] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     loadCustomers();
     loadLoginAttempts();
     loadChatSessions();
-    
-    // تحديث البيانات كل 30 ثانية
-    const interval = setInterval(() => {
-      updateOnlineStatus();
-      loadChatSessions();
-    }, 30000);
-    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [currentMessages]);
 
   const loadCustomers = () => {
     const allCustomers = CustomerAuthService.getCustomers();
@@ -51,1037 +57,700 @@ const CustomerLogTab = () => {
   };
 
   const loadLoginAttempts = () => {
-    const attempts = CustomerAuthService.getLoginAttempts();
-    setLoginAttempts(attempts.reverse()); // عرض الأحدث أولاً
+    setLoginAttempts(CustomerAuthService.getLoginAttempts());
   };
 
   const loadChatSessions = () => {
-    const sessions = CustomerChatService.getChatSessions();
-    setChatSessions(sessions.sort((a, b) => 
-      new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
-    ));
+    setChatSessions(CustomerChatService.getChatSessions());
   };
 
-  const updateOnlineStatus = () => {
-    // محاكاة تحديث حالة الاتصال
-    const currentCustomer = CustomerAuthService.getCurrentCustomer();
-    if (currentCustomer) {
-      localStorage.setItem(`online_${currentCustomer.id}`, 'true');
-      localStorage.setItem(`lastSeen_${currentCustomer.id}`, new Date().toLocaleString('ar-SA'));
-    }
+  const handleBlockCustomer = (customerId: number) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    const isCurrentlyBlocked = localStorage.getItem(`blocked_${customerId}`) === 'true';
+    const newBlockedStatus = !isCurrentlyBlocked;
+
+    localStorage.setItem(`blocked_${customerId}`, newBlockedStatus.toString());
     loadCustomers();
-  };
 
-  const togglePasswordVisibility = (customerId: number) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [customerId]: !prev[customerId]
-    }));
-  };
-
-  const blockCustomer = (customerId: number) => {
-    // منع حظر الحسابات الافتراضية
-    if (CustomerAuthService.isDefaultCustomer(customerId)) {
-      toast({
-        title: "غير مسموح",
-        description: "لا يمكن حظر الحسابات الافتراضية المحمية",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    localStorage.setItem(`blocked_${customerId}`, 'true');
-    
-    // تسجيل خروج العميل إذا كان متصلاً حالياً
-    CustomerAuthService.checkAndLogoutDeletedCustomer();
-    
-    loadCustomers();
     toast({
-      title: "تم حظر العميل",
-      description: "تم حظر العميل وتسجيل خروجه تلقائياً - لن يتمكن من تسجيل الدخول مرة أخرى"
+      title: newBlockedStatus ? "تم حظر العميل" : "تم إلغاء حظر العميل",
+      description: newBlockedStatus
+        ? `تم حظر ${customer.email} بنجاح.`
+        : `تم إلغاء حظر ${customer.email} بنجاح.`,
     });
   };
 
-  const unblockCustomer = (customerId: number) => {
-    localStorage.removeItem(`blocked_${customerId}`);
-    loadCustomers();
-    toast({
-      title: "تم إلغاء حظر العميل",
-      description: "تم إلغاء حظر العميل بنجاح - يمكنه الآن تسجيل الدخول"
-    });
-  };
+  const handleLogoutCustomer = (customerId: number) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
 
-  const forceLogout = (customerId: number) => {
-    // منع تسجيل خروج الحسابات الافتراضية إجبارياً
-    if (CustomerAuthService.isDefaultCustomer(customerId)) {
-      toast({
-        title: "غير مسموح",
-        description: "لا يمكن تسجيل خروج الحسابات الافتراضية إجبارياً",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // إزالة الرمز المميز للعميل
-    const currentCustomer = CustomerAuthService.getCurrentCustomer();
-    if (currentCustomer && currentCustomer.id === customerId) {
-      CustomerAuthService.logout();
-    }
-    
-    localStorage.setItem(`online_${customerId}`, 'false');
+    CustomerAuthService.logout();
+    localStorage.removeItem(`online_${customerId}`);
     localStorage.setItem(`lastSeen_${customerId}`, new Date().toLocaleString('ar-SA'));
     loadCustomers();
-    
+
     toast({
       title: "تم تسجيل خروج العميل",
-      description: "تم تسجيل خروج العميل بنجاح"
+      description: `تم تسجيل خروج ${customer.email} بنجاح.`,
     });
   };
 
-  const deleteCustomer = (customerId: number) => {
-    // منع حذف الحسابات الافتراضية
+  const handleDeleteCustomer = (customerId: number) => {
+    const customerToDelete = customers.find(c => c.id === customerId);
+    if (!customerToDelete) return;
+
+    // منع حذف العميل الافتراضي
     if (CustomerAuthService.isDefaultCustomer(customerId)) {
       toast({
         title: "غير مسموح",
-        description: "لا يمكن حذف الحسابات الافتراضية المحمية",
+        description: "لا يمكن حذف هذا العميل",
         variant: "destructive"
       });
       return;
     }
+
+    const confirmDelete = window.confirm(`هل أنت متأكد أنك تريد حذف ${customerToDelete.email}؟`);
+    if (!confirmDelete) return;
 
     const allCustomers = CustomerAuthService.getCustomers();
     const updatedCustomers = allCustomers.filter(c => c.id !== customerId);
     CustomerAuthService.saveCustomers(updatedCustomers);
-    
-    // تسجيل خروج العميل تلقائياً إذا كان متصلاً حالياً
-    CustomerAuthService.checkAndLogoutDeletedCustomer();
-    
-    // تنظيف البيانات الإضافية
-    localStorage.removeItem(`blocked_${customerId}`);
-    localStorage.removeItem(`online_${customerId}`);
-    localStorage.removeItem(`lastSeen_${customerId}`);
-    
     loadCustomers();
+
     toast({
       title: "تم حذف العميل",
-      description: "تم حذف العميل نهائياً وتسجيل خروجه تلقائياً"
+      description: `تم حذف ${customerToDelete.email} بنجاح.`,
     });
   };
 
-  const handleFileSelect = async (customerId: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    const validFiles: File[] = [];
-    const mediaFiles: { type: 'image' | 'video', data: string }[] = [];
-    
-    for (const file of files) {
-      const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
-      const isValidSize = file.size <= 50 * 1024 * 1024; // 50MB
-      
-      if (!isValidSize) {
+  const filteredCustomers = customers.filter(customer =>
+    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCustomerClick = (customer: CustomerUser) => {
+    setSelectedCustomer(customer);
+    setShowCustomerDetails(true);
+  };
+
+  const handleSessionClick = async (session: ChatSession) => {
+    setSelectedSession(session);
+    setShowChatMessages(true);
+    setIsLoadingMessages(true);
+
+    try {
+      const messages = CustomerChatService.getCustomerMessages(session.customerId);
+      setCurrentMessages(messages);
+      CustomerChatService.markMessagesAsRead(session.customerId);
+      loadChatSessions();
+    } catch (error) {
+      console.error("Error loading messages:", error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل الرسائل",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedSession) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء تحديد محادثة لإرسال الرسالة",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!newMessage.trim() && attachments.length === 0) {
+      toast({
+        title: "خطأ",
+        description: "الرجاء إدخال رسالة أو إرفاق ملف",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const mediaAttachments = attachments.map(file => ({
+        type: file.type.startsWith('image') ? 'image' : 'video',
+        data: URL.createObjectURL(file)
+      }));
+
+      const success = CustomerChatService.sendAdminMessage(selectedSession.customerId, newMessage, mediaAttachments);
+      if (success) {
+        setNewMessage('');
+        setAttachments([]);
+        const messages = CustomerChatService.getCustomerMessages(selectedSession.customerId);
+        setCurrentMessages(messages);
+        loadChatSessions();
         toast({
-          title: "حجم الملف كبير جداً",
-          description: "يجب أن يكون حجم الملف أقل من 50 ميجابايت",
+          title: "تم الإرسال",
+          description: "تم إرسال الرسالة بنجاح"
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: "فشل في إرسال الرسالة",
           variant: "destructive"
         });
-        continue;
       }
-      
-      if (isImage || isVideo) {
-        try {
-          let processedData: string;
-          
-          if (isImage) {
-            processedData = await compressImage(file, 0.7);
-            mediaFiles.push({ type: 'image', data: processedData });
-          } else if (isVideo) {
-            processedData = await compressVideo(file, 0.6);
-            mediaFiles.push({ type: 'video', data: processedData });
-          }
-        } catch (error) {
-          console.error('Error processing media file:', error);
-          validFiles.push(file);
-        }
-      } else {
-        validFiles.push(file);
-      }
-    }
-
-    if (validFiles.length > 0) {
-      setSelectedFiles(prev => ({
-        ...prev,
-        [customerId]: [...(prev[customerId] || []), ...validFiles]
-      }));
-    }
-    
-    if (mediaFiles.length > 0) {
-      setMediaAttachments(prev => ({
-        ...prev,
-        [customerId]: [...(prev[customerId] || []), ...mediaFiles]
-      }));
-    }
-  };
-
-  const compressImage = (file: File, quality: number): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new window.Image();
-
-      img.onload = () => {
-        const maxWidth = 800;
-        const maxHeight = 600;
-        let { width, height } = img;
-
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
-          width *= ratio;
-          height *= ratio;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        if (ctx) {
-          ctx.drawImage(img, 0, 0, width, height);
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(compressedDataUrl);
-        } else {
-          reject(new Error('Failed to get canvas context'));
-        }
-      };
-
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
-  const compressVideo = (file: File, quality: number): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = () => reject(new Error('Failed to read video'));
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const removeFile = (customerId: string, index: number) => {
-    setSelectedFiles(prev => ({
-      ...prev,
-      [customerId]: (prev[customerId] || []).filter((_, i) => i !== index)
-    }));
-  };
-
-  const removeMediaAttachment = (customerId: string, index: number) => {
-    setMediaAttachments(prev => ({
-      ...prev,
-      [customerId]: (prev[customerId] || []).filter((_, i) => i !== index)
-    }));
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const handleSendAdminMessage = (customerId: string) => {
-    const message = adminMessage[customerId];
-    const files = selectedFiles[customerId] || [];
-    const media = mediaAttachments[customerId] || [];
-    
-    if (!message?.trim() && files.length === 0 && media.length === 0) return;
-
-    const fileAttachments = files.map(file => ({
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      url: URL.createObjectURL(file)
-    }));
-
-    const success = CustomerChatService.sendAdminMessage(
-      customerId, 
-      message?.trim() || '', 
-      media, 
-      fileAttachments
-    );
-    
-    if (success) {
-      setAdminMessage(prev => ({
-        ...prev,
-        [customerId]: ''
-      }));
-      setSelectedFiles(prev => ({
-        ...prev,
-        [customerId]: []
-      }));
-      setMediaAttachments(prev => ({
-        ...prev,
-        [customerId]: []
-      }));
-      loadChatSessions();
+    } catch (error) {
+      console.error("Error sending message:", error);
       toast({
-        title: "تم إرسال الرسالة",
-        description: "تم إرسال رسالتك للعميل بنجاح"
-      });
-    } else {
-      toast({
-        title: "خطأ في الإرسال",
+        title: "خطأ",
         description: "حدث خطأ أثناء إرسال الرسالة",
         variant: "destructive"
       });
     }
   };
 
-  const handleAdminReply = (messageId: number, customerId: string) => {
-    const reply = adminReplies[messageId];
-    if (!reply?.trim()) return;
-
-    const success = CustomerChatService.sendAdminReply(customerId, messageId, reply.trim());
-    if (success) {
-      setAdminReplies(prev => ({
-        ...prev,
-        [messageId]: ''
-      }));
-      loadChatSessions();
+  const handleReply = async () => {
+    if (!replyingTo || !replyMessage.trim()) {
       toast({
-        title: "تم إرسال الرد",
-        description: "تم إرسال ردك للعميل بنجاح"
+        title: "خطأ",
+        description: "الرجاء تحديد رسالة والرد عليها",
+        variant: "destructive"
       });
-    } else {
+      return;
+    }
+
+    if (!selectedSession) {
       toast({
-        title: "خطأ في الإرسال",
+        title: "خطأ",
+        description: "الرجاء تحديد محادثة لإرسال الرد",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const success = CustomerChatService.sendAdminReply(selectedSession.customerId, replyingTo, replyMessage);
+      if (success) {
+        setReplyMessage('');
+        setReplyingTo(null);
+        const messages = CustomerChatService.getCustomerMessages(selectedSession.customerId);
+        setCurrentMessages(messages);
+        loadChatSessions();
+        toast({
+          title: "تم الإرسال",
+          description: "تم إرسال الرد بنجاح"
+        });
+      } else {
+        toast({
+          title: "خطأ",
+          description: "فشل في إرسال الرد",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error sending reply:", error);
+      toast({
+        title: "خطأ",
         description: "حدث خطأ أثناء إرسال الرد",
         variant: "destructive"
       });
     }
   };
 
-  const getStatusBadge = (customer: CustomerUser) => {
-    if (CustomerAuthService.isDefaultCustomer(customer.id)) {
-      return <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs flex items-center gap-1">
-        <Lock className="w-3 h-3" />
-        محمي
-      </span>;
-    }
-    if (customer.isBlocked) {
-      return <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs">محظور</span>;
-    }
-    if (customer.isOnline) {
-      return <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">متصل</span>;
-    }
-    return <span className="bg-gray-500/20 text-gray-400 px-2 py-1 rounded text-xs">غير متصل</span>;
-  };
+  const handleCloseSession = () => {
+    if (!selectedSession) return;
 
-  const clearLoginAttempts = () => {
-    CustomerAuthService.clearLoginAttempts();
-    setLoginAttempts([]);
+    CustomerChatService.closeSession(selectedSession.customerId);
+    loadChatSessions();
+    setSelectedSession(null);
+    setCurrentMessages([]);
+    setShowChatMessages(false);
+
     toast({
-      title: "تم مسح سجل المحاولات",
-      description: "تم مسح جميع محاولات تسجيل الدخول"
+      title: "تم إغلاق المحادثة",
+      description: "تم إغلاق المحادثة بنجاح"
     });
   };
 
-  // دالة لعرض المرفقات من العملاء
-  const renderCustomerAttachments = (attachments: { type: 'image' | 'video', data: string }[] | undefined) => {
-    if (!attachments || attachments.length === 0) return null;
+  const handleDeleteSession = () => {
+    if (!selectedSession) return;
 
-    return (
-      <div className="mt-3 space-y-2">
-        <p className="text-blue-400 text-sm font-medium">المرفقات:</p>
-        {attachments.map((attachment, index) => (
-          <div key={index} className="border border-blue-500/20 rounded-lg p-3 bg-blue-500/5">
-            {attachment.type === 'image' ? (
-              <div className="space-y-2">
-                <img 
-                  src={attachment.data} 
-                  alt={`مرفق ${index + 1}`}
-                  className="max-w-full h-auto rounded cursor-pointer hover:opacity-80 transition-opacity max-h-60"
-                  onClick={() => window.open(attachment.data, '_blank')}
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-300 text-sm flex items-center gap-1">
-                    <Image className="w-4 h-4" />
-                    صورة من العميل
-                  </span>
-                  <button
-                    onClick={() => window.open(attachment.data, '_blank')}
-                    className="text-blue-400 hover:text-blue-300"
-                    title="فتح في نافذة جديدة"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <video 
-                  src={attachment.data} 
-                  controls 
-                  className="max-w-full h-auto rounded max-h-60"
-                  preload="metadata"
-                />
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-300 text-sm flex items-center gap-1">
-                    <Video className="w-4 h-4" />
-                    فيديو من العميل
-                  </span>
-                  <button
-                    onClick={() => window.open(attachment.data, '_blank')}
-                    className="text-blue-400 hover:text-blue-300"
-                    title="فتح في نافذة جديدة"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
+    const confirmDelete = window.confirm("هل أنت متأكد أنك تريد حذف هذه المحادثة؟");
+    if (!confirmDelete) return;
+
+    CustomerChatService.deleteCustomerSession(selectedSession.customerId);
+    loadChatSessions();
+    setSelectedSession(null);
+    setCurrentMessages([]);
+    setShowChatMessages(false);
+
+    toast({
+      title: "تم حذف المحادثة",
+      description: "تم حذف المحادثة بنجاح"
+    });
   };
 
-  // دالة لعرض المرفقات من الإدارة
-  const renderAdminAttachments = (attachments: { type: 'image' | 'video', data: string }[] | undefined, files: any[] | undefined) => {
-    const hasAttachments = (attachments && attachments.length > 0) || (files && files.length > 0);
-    if (!hasAttachments) return null;
-
-    return (
-      <div className="mt-3 space-y-2">
-        {/* عرض المرفقات الوسائطية */}
-        {attachments && attachments.length > 0 && (
-          <>
-            <p className="text-green-400 text-sm font-medium">الصور والفيديوهات:</p>
-            {attachments.map((attachment, index) => (
-              <div key={index} className="border border-green-500/20 rounded-lg p-3 bg-green-500/5">
-                {attachment.type === 'image' ? (
-                  <div className="space-y-2">
-                    <img 
-                      src={attachment.data} 
-                      alt={`مرفق ${index + 1}`}
-                      className="max-w-full h-auto rounded cursor-pointer hover:opacity-80 transition-opacity max-h-60"
-                      onClick={() => window.open(attachment.data, '_blank')}
-                    />
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-300 text-sm flex items-center gap-1">
-                        <Image className="w-4 h-4" />
-                        صورة من فريق الدعم
-                      </span>
-                      <button
-                        onClick={() => window.open(attachment.data, '_blank')}
-                        className="text-green-400 hover:text-green-300"
-                        title="فتح في نافذة جديدة"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <video 
-                      src={attachment.data} 
-                      controls 
-                      className="max-w-full h-auto rounded max-h-60"
-                      preload="metadata"
-                    />
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-300 text-sm flex items-center gap-1">
-                        <Video className="w-4 h-4" />
-                        فيديو من فريق الدعم
-                      </span>
-                      <button
-                        onClick={() => window.open(attachment.data, '_blank')}
-                        className="text-green-400 hover:text-green-300"
-                        title="فتح في نافذة جديدة"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </>
-        )}
-        
-        {/* عرض الملفات الأخرى */}
-        {files && files.length > 0 && (
-          <>
-            <p className="text-green-400 text-sm font-medium">الملفات:</p>
-            {files.map((file, index) => (
-              <div key={index} className="border border-green-500/20 rounded-lg p-2">
-                {file.type.startsWith('image/') ? (
-                  <div className="space-y-2">
-                    <img 
-                      src={file.url} 
-                      alt={file.name}
-                      className="max-w-full h-auto rounded cursor-pointer hover:opacity-80 transition-opacity max-h-60"
-                      onClick={() => window.open(file.url, '_blank')}
-                    />
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-300">{file.name}</span>
-                      <button
-                        onClick={() => window.open(file.url, '_blank')}
-                        className="text-green-400 hover:text-green-300"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ) : file.type.startsWith('video/') ? (
-                  <div className="space-y-2">
-                    <video 
-                      src={file.url} 
-                      controls 
-                      className="max-w-full h-auto rounded max-h-60"
-                      preload="metadata"
-                    />
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-300">{file.name}</span>
-                      <button
-                        onClick={() => window.open(file.url, '_blank')}
-                        className="text-green-400 hover:text-green-300"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <Paperclip className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-green-300">{file.name}</span>
-                    <span className="text-xs text-green-400">({formatFileSize(file.size)})</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </>
-        )}
-      </div>
-    );
+  const handleAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setAttachments(files);
+    }
   };
 
-  const onlineCustomers = customers.filter(c => c.isOnline && !c.isBlocked).length;
-  const blockedCustomers = customers.filter(c => c.isBlocked).length;
-  const failedAttempts = loginAttempts.filter(a => !a.success).length;
-  const totalUnreadMessages = CustomerChatService.getTotalUnreadCount();
+  const removeAttachment = (index: number) => {
+    setAttachments(prevAttachments => prevAttachments.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-white">سجل العملاء</h2>
-        <Button 
-          onClick={() => {
-            loadCustomers();
-            loadLoginAttempts();
-            loadChatSessions();
-          }}
-          className="glow-button"
-        >
-          تحديث البيانات
-        </Button>
-      </div>
-
-      {/* إحصائيات سريعة */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
-        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <Users className="w-5 h-5 text-blue-400" />
-              <div>
-                <p className="text-gray-400 text-sm">إجمالي العملاء</p>
-                <p className="text-white text-xl font-bold">{customers.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <UserCheck className="w-5 h-5 text-green-400" />
-              <div>
-                <p className="text-gray-400 text-sm">متصل الآن</p>
-                <p className="text-white text-xl font-bold">{onlineCustomers}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <Ban className="w-5 h-5 text-red-400" />
-              <div>
-                <p className="text-gray-400 text-sm">محظور</p>
-                <p className="text-white text-xl font-bold">{blockedCustomers}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <Shield className="w-5 h-5 text-purple-400" />
-              <div>
-                <p className="text-gray-400 text-sm">نشط</p>
-                <p className="text-white text-xl font-bold">{customers.length - blockedCustomers}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <AlertTriangle className="w-5 h-5 text-orange-400" />
-              <div>
-                <p className="text-gray-400 text-sm">محاولات فاشلة</p>
-                <p className="text-white text-xl font-bold">{failedAttempts}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <MessageCircle className="w-5 h-5 text-cyan-400" />
-              <div>
-                <p className="text-gray-400 text-sm">رسائل جديدة</p>
-                <p className="text-white text-xl font-bold">{totalUnreadMessages}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* التبويبات */}
-      <Tabs defaultValue="customers" className="space-y-4">
+      <h2 className="text-3xl font-bold text-white">سجل العملاء</h2>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-white/10">
-          <TabsTrigger value="customers" className="text-white data-[state=active]:bg-blue-500/20">
-            العملاء المسجلون
-          </TabsTrigger>
-          <TabsTrigger value="chat" className="text-white data-[state=active]:bg-blue-500/20 flex items-center gap-2">
-            <MessageCircle className="w-4 h-4" />
-            رسائل العملاء
-            {totalUnreadMessages > 0 && (
-              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                {totalUnreadMessages}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="attempts" className="text-white data-[state=active]:bg-blue-500/20">
-            محاولات تسجيل الدخول
-          </TabsTrigger>
+          <TabsTrigger value="customers">العملاء ({customers.length})</TabsTrigger>
+          <TabsTrigger value="attempts">محاولات الدخول ({loginAttempts.length})</TabsTrigger>
+          <TabsTrigger value="chat">المحادثات ({chatSessions.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="customers">
-          {/* جدول العملاء */}
-          <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                قائمة العملاء
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                إدارة جميع العملاء المسجلين في النظام (الحسابات المحمية لا يمكن حذفها أو حظرها)
-              </CardDescription>
+        <TabsContent value="customers" className="space-y-4">
+          <Card className="admin-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-white">قائمة العملاء</CardTitle>
+              <Input
+                type="search"
+                placeholder="ابحث عن عميل..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-md"
+              />
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-white/10">
-                      <TableHead className="text-gray-300">المعرف</TableHead>
-                      <TableHead className="text-gray-300">البريد الإلكتروني</TableHead>
-                      <TableHead className="text-gray-300">كلمة المرور</TableHead>
-                      <TableHead className="text-gray-300">تاريخ التسجيل</TableHead>
-                      <TableHead className="text-gray-300">الحالة</TableHead>
-                      <TableHead className="text-gray-300">آخر ظهور</TableHead>
-                      <TableHead className="text-gray-300">الإجراءات</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {customers.map((customer) => (
-                      <TableRow key={customer.id} className="border-white/10">
-                        <TableCell className="text-white">#{customer.id}</TableCell>
-                        <TableCell className="text-white">{customer.email}</TableCell>
-                        <TableCell className="text-white">
-                          <div className="flex items-center gap-2">
-                            <span>
-                              {showPasswords[customer.id] ? customer.password : '••••••••'}
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-white/10">
+                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
+                      <th className="text-right text-gray-300 p-2">تاريخ التسجيل</th>
+                      <th className="text-right text-gray-300 p-2">آخر ظهور</th>
+                      <th className="text-right text-gray-300 p-2">الحالة</th>
+                      <th className="text-right text-gray-300 p-2">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCustomers.map((customer) => (
+                      <tr key={customer.id} className="border-white/10 hover:bg-white/5 cursor-pointer" onClick={() => handleCustomerClick(customer)}>
+                        <td className="text-white p-2">{customer.email}</td>
+                        <td className="text-gray-300 p-2">{customer.createdAt}</td>
+                        <td className="text-gray-300 p-2">{customer.lastSeen}</td>
+                        <td className="p-2">
+                          {customer.isOnline ? (
+                            <span className="text-green-400 flex items-center gap-1">
+                              <UserCheck className="w-4 h-4" />
+                              متصل
                             </span>
+                          ) : (
+                            <span className="text-gray-400 flex items-center gap-1">
+                              <UserX className="w-4 h-4" />
+                              غير متصل
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-2">
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
                             <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => togglePasswordVisibility(customer.id)}
-                              className="text-gray-400 hover:text-white p-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBlockCustomer(customer.id);
+                              }}
+                              variant="outline"
+                              size="icon"
+                              className="hover:bg-red-500/10 text-red-400"
                             >
-                              <Eye className="w-3 h-3" />
+                              {customer.isBlocked ? (
+                                <UserCheck className="w-4 h-4" />
+                              ) : (
+                                <Ban className="w-4 h-4" />
+                              )}
+                            </Button>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLogoutCustomer(customer.id);
+                              }}
+                              variant="outline"
+                              size="icon"
+                              className="hover:bg-blue-500/10 text-blue-400"
+                            >
+                              <LogOut className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCustomer(customer.id);
+                              }}
+                              variant="destructive"
+                              size="icon"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-gray-300">
-                          {new Date(customer.createdAt).toLocaleDateString('ar-SA')}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(customer)}
-                        </TableCell>
-                        <TableCell className="text-gray-300 text-sm">
-                          {customer.lastSeen}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            {CustomerAuthService.isDefaultCustomer(customer.id) ? (
-                              <span className="text-blue-400 text-xs px-2">حساب محمي</span>
-                            ) : (
-                              <>
-                                {customer.isBlocked ? (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => unblockCustomer(customer.id)}
-                                    className="text-green-400 hover:text-green-300 p-1"
-                                    title="إلغاء الحظر (تمكين تسجيل الدخول)"
-                                  >
-                                    <UserCheck className="w-3 h-3" />
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => blockCustomer(customer.id)}
-                                    className="text-red-400 hover:text-red-300 p-1"
-                                    title="حظر العميل (منع تسجيل الدخول نهائياً)"
-                                  >
-                                    <Ban className="w-3 h-3" />
-                                  </Button>
-                                )}
-                                
-                                {customer.isOnline && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() => forceLogout(customer.id)}
-                                    className="text-orange-400 hover:text-orange-300 p-1"
-                                    title="تسجيل خروج إجباري"
-                                  >
-                                    <LogOut className="w-3 h-3" />
-                                  </Button>
-                                )}
-                                
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => deleteCustomer(customer.id)}
-                                  className="text-red-400 hover:text-red-300 p-1"
-                                  title="حذف العميل نهائياً"
-                                >
-                                  <UserX className="w-3 h-3" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
-              
-              {customers.length === 0 && (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-400">لا يوجد عملاء مسجلين حتى الآن</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="chat">
-          {/* جدول رسائل العملاء */}
-          <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                رسائل العملاء
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                جميع رسائل العملاء وردود الإدارة - يمكنك عرض الصور والفيديوهات التي يرسلها العملاء وإرسال ملفات للعميل
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[600px]">
-                {chatSessions.length === 0 ? (
+                  </tbody>
+                </table>
+                {filteredCustomers.length === 0 && (
                   <div className="text-center py-8">
-                    <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-400">لا توجد رسائل من العملاء</p>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {chatSessions.map((session) => (
-                      <div key={session.customerId} className="border border-white/20 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="text-white font-medium">{session.customerEmail}</h3>
-                            <p className="text-gray-400 text-sm">آخر نشاط: {session.lastActivity}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                              session.status === 'waiting' ? 'bg-orange-500/20 text-orange-400' :
-                              session.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                              'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {session.status === 'waiting' ? 'في انتظار الرد' :
-                               session.status === 'active' ? 'نشط' : 'مغلق'}
-                            </span>
-                            {session.unreadCount > 0 && (
-                              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                                {session.unreadCount}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-3 mb-4">
-                          {session.messages.map((message) => (
-                            <div key={message.id} className="space-y-2">
-                              {'isFromAdmin' in message ? (
-                                // رسالة من الإدارة
-                                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mr-4">
-                                  <p className="text-green-400 text-sm font-medium mb-1">رسالة من الإدارة:</p>
-                                  {message.message && <p className="text-white mb-2">{message.message}</p>}
-                                  
-                                  {/* عرض المرفقات من الإدارة */}
-                                  {renderAdminAttachments(message.attachments, message.files)}
-                                  
-                                  <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
-                                </div>
-                              ) : (
-                                // رسالة العميل
-                                <>
-                                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                                    <p className="text-white">{message.message}</p>
-                                    
-                                    {/* عرض المرفقات من العميل */}
-                                    {renderCustomerAttachments(message.attachments)}
-                                    
-                                    <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
-                                  </div>
-                                  
-                                  {/* رد الإدارة إن وجد */}
-                                  {message.adminReply && (
-                                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mr-4">
-                                      <p className="text-green-400 text-sm font-medium mb-1">رد الإدارة:</p>
-                                      <p className="text-white">{message.adminReply}</p>
-                                      <p className="text-gray-400 text-xs mt-1">{message.adminReplyTimestamp}</p>
-                                    </div>
-                                  )}
-                                  
-                                  {/* نموذج الرد على الرسالة */}
-                                  {!message.adminReply && (
-                                    <div className="mr-4 flex gap-2">
-                                      <Textarea
-                                        placeholder="اكتب ردك على هذه الرسالة..."
-                                        value={adminReplies[message.id] || ''}
-                                        onChange={(e) => setAdminReplies(prev => ({
-                                          ...prev,
-                                          [message.id]: e.target.value
-                                        }))}
-                                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 flex-1 min-h-[60px]"
-                                      />
-                                      <Button
-                                        onClick={() => handleAdminReply(message.id, session.customerId)}
-                                        disabled={!adminReplies[message.id]?.trim()}
-                                        className="glow-button"
-                                        title="رد على الرسالة"
-                                      >
-                                        <Reply className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* منطقة الملفات والوسائط المحددة */}
-                        {((selectedFiles[session.customerId] && selectedFiles[session.customerId].length > 0) || 
-                          (mediaAttachments[session.customerId] && mediaAttachments[session.customerId].length > 0)) && (
-                          <div className="mb-4 p-3 bg-white/10 rounded-lg border-t border-white/20">
-                            <h4 className="text-sm font-medium text-white mb-2">الملفات المحددة:</h4>
-                            
-                            {/* عرض الوسائط */}
-                            {mediaAttachments[session.customerId]?.map((media, index) => (
-                              <div key={`media-${index}`} className="flex items-center justify-between bg-black/20 rounded p-2 mb-2">
-                                <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                                  {media.type === 'image' ? (
-                                    <>
-                                      <Image className="w-4 h-4 text-green-400" />
-                                      <span className="text-sm text-white">صورة</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Video className="w-4 h-4 text-blue-400" />
-                                      <span className="text-sm text-white">فيديو</span>
-                                    </>
-                                  )}
-                                </div>
-                                <button
-                                  onClick={() => removeMediaAttachment(session.customerId, index)}
-                                  className="text-red-400 hover:text-red-300"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                            
-                            {/* عرض الملفات العادية */}
-                            {selectedFiles[session.customerId]?.map((file, index) => (
-                              <div key={`file-${index}`} className="flex items-center justify-between bg-black/20 rounded p-2 mb-2">
-                                <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                                  <Paperclip className="w-4 h-4 text-gray-400" />
-                                  <span className="text-sm text-white">{file.name}</span>
-                                  <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
-                                </div>
-                                <button
-                                  onClick={() => removeFile(session.customerId, index)}
-                                  className="text-red-400 hover:text-red-300"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* نموذج إرسال رسالة جديدة للعميل */}
-                        <div className="border-t border-white/20 pt-4">
-                          <div className="space-y-3">
-                            <Textarea
-                              placeholder="إرسال رسالة جديدة للعميل..."
-                              value={adminMessage[session.customerId] || ''}
-                              onChange={(e) => setAdminMessage(prev => ({
-                                ...prev,
-                                [session.customerId]: e.target.value
-                              }))}
-                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[80px]"
-                            />
-                            <div className="flex gap-2">
-                              <input
-                                ref={(el) => fileInputRefs.current[session.customerId] = el}
-                                type="file"
-                                multiple
-                                accept="image/*,video/*,*/*"
-                                onChange={(e) => handleFileSelect(session.customerId, e)}
-                                className="hidden"
-                              />
-                              <Button
-                                onClick={() => fileInputRefs.current[session.customerId]?.click()}
-                                variant="outline"
-                                className="flex items-center gap-2"
-                                title="إرفاق صور أو فيديوهات أو ملفات"
-                              >
-                                <Paperclip className="w-4 h-4" />
-                                إرفاق ملف
-                              </Button>
-                              <Button
-                                onClick={() => handleSendAdminMessage(session.customerId)}
-                                disabled={!adminMessage[session.customerId]?.trim() && 
-                                         (!selectedFiles[session.customerId] || selectedFiles[session.customerId].length === 0) &&
-                                         (!mediaAttachments[session.customerId] || mediaAttachments[session.customerId].length === 0)}
-                                className="glow-button flex items-center gap-2"
-                                title="إرسال رسالة جديدة"
-                              >
-                                <Send className="w-4 h-4" />
-                                إرسال
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">لا يوجد عملاء</p>
                   </div>
                 )}
-              </ScrollArea>
+              </div>
             </CardContent>
           </Card>
+
+          {showCustomerDetails && selectedCustomer && (
+            <Card className="admin-card">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-white">تفاصيل العميل</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setShowCustomerDetails(false)}>
+                  <X className="w-4 h-4 mr-2" />
+                  إغلاق
+                </Button>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-gray-400 mb-2">البريد الإلكتروني</h4>
+                    <p className="text-white">{selectedCustomer.email}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-gray-400 mb-2">تاريخ التسجيل</h4>
+                    <p className="text-white">{selectedCustomer.createdAt}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-gray-400 mb-2">آخر ظهور</h4>
+                    <p className="text-white">{selectedCustomer.lastSeen}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-gray-400 mb-2">الحالة</h4>
+                    <p className="text-white">
+                      {selectedCustomer.isOnline ? 'متصل' : 'غير متصل'}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-x-2 rtl:space-x-reverse">
+                  <Button variant="outline" onClick={() => handleBlockCustomer(selectedCustomer.id)}>
+                    {selectedCustomer.isBlocked ? 'إلغاء الحظر' : 'حظر'}
+                  </Button>
+                  <Button variant="outline" onClick={() => handleLogoutCustomer(selectedCustomer.id)}>
+                    تسجيل الخروج
+                  </Button>
+                  <Button variant="destructive" onClick={() => handleDeleteCustomer(selectedCustomer.id)}>
+                    حذف العميل
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
-        <TabsContent value="attempts">
-          {/* جدول محاولات تسجيل الدخول */}
-          <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
-                محاولات تسجيل الدخول
-              </CardTitle>
-              <CardDescription className="text-gray-400 flex items-center justify-between">
-                <span>جميع محاولات تسجيل الدخول الناجحة والفاشلة</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={clearLoginAttempts}
-                  className="text-red-400 hover:text-red-300"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  مسح السجل
-                </Button>
-              </CardDescription>
+        <TabsContent value="chat" className="space-y-4">
+          <Card className="admin-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-white">قائمة المحادثات</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-white/10">
-                      <TableHead className="text-gray-300">الوقت</TableHead>
-                      <TableHead className="text-gray-300">البريد الإلكتروني</TableHead>
-                      <TableHead className="text-gray-300">النتيجة</TableHead>
-                      <TableHead className="text-gray-300">عنوان IP</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-white/10">
+                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
+                      <th className="text-right text-gray-300 p-2">آخر نشاط</th>
+                      <th className="text-right text-gray-300 p-2">الحالة</th>
+                      <th className="text-right text-gray-300 p-2">رسائل غير مقروءة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {chatSessions.map((session) => (
+                      <tr
+                        key={session.customerId}
+                        className="border-white/10 hover:bg-white/5 cursor-pointer"
+                        onClick={() => handleSessionClick(session)}
+                      >
+                        <td className="text-white p-2">{session.customerEmail}</td>
+                        <td className="text-gray-300 p-2">{session.lastActivity}</td>
+                        <td className="p-2">
+                          {session.status === 'active' ? (
+                            <Badge variant="default">نشط</Badge>
+                          ) : session.status === 'waiting' ? (
+                            <Badge variant="secondary">في الانتظار</Badge>
+                          ) : (
+                            <Badge variant="destructive">مغلق</Badge>
+                          )}
+                        </td>
+                        <td className="text-center p-2">
+                          {session.unreadCount > 0 && (
+                            <Badge className="bg-blue-500">{session.unreadCount}</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {chatSessions.length === 0 && (
+                  <div className="text-center py-8">
+                    <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">لا توجد محادثات</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {showChatMessages && selectedSession && (
+            <Card className="admin-card">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-white">
+                  المحادثة مع {selectedSession.customerEmail}
+                </CardTitle>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <Button variant="outline" size="sm" onClick={handleCloseSession}>
+                    إغلاق المحادثة
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={handleDeleteSession}>
+                    حذف المحادثة
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setShowChatMessages(false)}>
+                    <X className="w-4 h-4 mr-2" />
+                    إغلاق
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="h-[600px] flex flex-col justify-between">
+                <div className="overflow-y-auto h-full">
+                  <ScrollArea className="h-[500px] rounded-md pr-2">
+                    <div className="space-y-4">
+                      {isLoadingMessages ? (
+                        <div className="text-center text-gray-400">
+                          جاري تحميل الرسائل...
+                        </div>
+                      ) : (
+                        currentMessages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex flex-col ${message.sender === 'support' ? 'items-start' : 'items-end'
+                              }`}
+                          >
+                            <div
+                              className={`rounded-xl p-3 max-w-md break-words ${message.sender === 'support'
+                                ? 'bg-blue-500/20 text-white'
+                                : 'bg-gray-800 text-gray-300'
+                                }`}
+                            >
+                              {message.message}
+                              {message.attachments && message.attachments.length > 0 && (
+                                <div className="mt-2 flex space-x-2 rtl:space-x-reverse">
+                                  {message.attachments.map((attachment, index) => (
+                                    <div key={index}>
+                                      {attachment.type === 'image' ? (
+                                        <a href={attachment.data} target="_blank" rel="noopener noreferrer">
+                                          <Image
+                                            src={attachment.data}
+                                            alt={`Attachment ${index + 1}`}
+                                            className="w-32 h-32 object-cover rounded-md"
+                                          />
+                                        </a>
+                                      ) : (
+                                        <video src={attachment.data} className="w-32 h-32 rounded-md" controls />
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {message.files && message.files.length > 0 && (
+                                <div className="mt-2 space-y-2">
+                                  {message.files.map((file, index) => (
+                                    <div key={index} className="flex items-center justify-between p-2 bg-gray-700 rounded-md">
+                                      <a href={file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-400 hover:text-blue-300">
+                                        <Paperclip className="w-4 h-4" />
+                                        {file.name}
+                                      </a>
+                                      <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-300">
+                                        <ExternalLink className="w-4 h-4" />
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-400 mt-1">
+                                {message.timestamp}
+                              </div>
+                            </div>
+                            {message.isFromCustomer && !message.adminReply && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                onClick={() => setReplyingTo(message.id)}
+                                className="text-blue-400 hover:text-blue-300"
+                              >
+                                <Reply className="w-4 h-4 mr-2" />
+                                رد
+                              </Button>
+                            )}
+                            {message.adminReply && (
+                              <div className="mt-2 rounded-xl p-3 max-w-md break-words bg-green-500/20 text-white">
+                                {message.adminReply}
+                                <div className="text-xs text-gray-400 mt-1">
+                                  تم الرد في {message.adminReplyTimestamp}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  </ScrollArea>
+                </div>
+
+                {replyingTo ? (
+                  <div className="mt-4">
+                    <Textarea
+                      placeholder="اكتب ردك هنا..."
+                      value={replyMessage}
+                      onChange={(e) => setReplyMessage(e.target.value)}
+                      className="bg-white/10 text-white border border-white/20 rounded-md focus:outline-none focus:border-blue-400"
+                    />
+                    <div className="flex justify-end mt-2 space-x-2 rtl:space-x-reverse">
+                      <Button variant="ghost" onClick={() => setReplyingTo(null)}>
+                        إلغاء
+                      </Button>
+                      <Button onClick={handleReply}>إرسال الرد</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                      <Input
+                        type="text"
+                        placeholder="اكتب رسالتك هنا..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        className="flex-grow bg-white/10 text-white border border-white/20 rounded-md focus:outline-none focus:border-blue-400"
+                      />
+                      <input
+                        type="file"
+                        id="attachment-input"
+                        multiple
+                        onChange={handleAttachmentChange}
+                        className="hidden"
+                      />
+                      <label htmlFor="attachment-input">
+                        <Button variant="secondary" size="icon">
+                          <Paperclip className="w-4 h-4" />
+                        </Button>
+                      </label>
+                      <Button onClick={handleSendMessage}>
+                        <Send className="w-4 h-4 mr-2" />
+                        إرسال
+                      </Button>
+                    </div>
+                    {attachments.length > 0 && (
+                      <div className="flex items-center mt-2 space-x-2 rtl:space-x-reverse">
+                        {attachments.map((file, index) => (
+                          <div key={index} className="flex items-center bg-gray-700 rounded-md px-2 py-1">
+                            <span className="text-gray-300 text-sm">{file.name}</span>
+                            <Button variant="ghost" size="icon" onClick={() => removeAttachment(index)}>
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="attempts" className="space-y-4">
+          <Card className="admin-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-white">محاولات تسجيل الدخول</CardTitle>
+                <CardDescription className="text-gray-400">
+                  جميع محاولات تسجيل الدخول الناجحة والفاشلة
+                </CardDescription>
+              </div>
+              <Button
+                onClick={() => {
+                  CustomerAuthService.clearLoginAttempts();
+                  loadLoginAttempts();
+                  toast({
+                    title: "تم المسح",
+                    description: "تم مسح جميع سجلات محاولات الدخول"
+                  });
+                }}
+                variant="destructive"
+                size="sm"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                مسح السجلات
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-white/10">
+                      <th className="text-right text-gray-300 p-2">الوقت</th>
+                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
+                      <th className="text-right text-gray-300 p-2">كلمة المرور</th>
+                      <th className="text-right text-gray-300 p-2">النتيجة</th>
+                      <th className="text-right text-gray-300 p-2">عنوان IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {loginAttempts.map((attempt) => (
-                      <TableRow key={attempt.id} className="border-white/10">
-                        <TableCell className="text-gray-300 text-sm">
+                      <tr key={attempt.id} className="border-white/10">
+                        <td className="text-gray-300 p-2">
                           {attempt.timestamp}
-                        </TableCell>
-                        <TableCell className="text-white">
+                        </td>
+                        <td className="text-white p-2">
                           {attempt.email}
-                        </TableCell>
-                        <TableCell>
+                        </td>
+                        <td className="text-gray-300 p-2">
+                          {attempt.password}
+                        </td>
+                        <td className="p-2">
                           {attempt.success ? (
-                            <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs">
+                            <span className="text-green-400 flex items-center gap-1">
+                              <UserCheck className="w-4 h-4" />
                               نجح
                             </span>
                           ) : (
-                            <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs">
+                            <span className="text-red-400 flex items-center gap-1">
+                              <UserX className="w-4 h-4" />
                               فشل
                             </span>
                           )}
-                        </TableCell>
-                        <TableCell className="text-gray-400 text-sm">
+                        </td>
+                        <td className="text-gray-400 p-2">
                           {attempt.ipAddress || 'غير معروف'}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
+                  </tbody>
+                </table>
+                {loginAttempts.length === 0 && (
+                  <div className="text-center py-8">
+                    <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">لا توجد محاولات دخول</p>
+                  </div>
+                )}
               </div>
-              
-              {loginAttempts.length === 0 && (
-                <div className="text-center py-8">
-                  <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-400">لا توجد محاولات تسجيل دخول</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>

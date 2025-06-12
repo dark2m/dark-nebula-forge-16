@@ -1,4 +1,3 @@
-
 import CustomerChatService from './customerChatService';
 
 interface Customer {
@@ -11,6 +10,7 @@ interface Customer {
 interface LoginAttempt {
   id: string;
   email: string;
+  password: string;
   timestamp: string;
   success: boolean;
   ipAddress?: string;
@@ -82,12 +82,13 @@ class CustomerAuthService {
     }
   }
 
-  static addLoginAttempt(email: string, success: boolean): void {
+  static addLoginAttempt(email: string, password: string, success: boolean): void {
     try {
       const attempts = this.getLoginAttempts();
       const newAttempt: LoginAttempt = {
         id: Date.now().toString(),
         email,
+        password,
         timestamp: new Date().toLocaleString('ar-SA'),
         success,
         ipAddress: 'Unknown'
@@ -135,7 +136,7 @@ class CustomerAuthService {
       
       // التحقق من عدم وجود العميل مسبقاً
       if (customers.some(customer => customer.email === email)) {
-        this.addLoginAttempt(email, false);
+        this.addLoginAttempt(email, password, false);
         return false;
       }
       
@@ -151,7 +152,7 @@ class CustomerAuthService {
       
       // تسجيل دخول تلقائي بعد التسجيل
       this.setCurrentCustomer(newCustomer);
-      this.addLoginAttempt(email, true);
+      this.addLoginAttempt(email, password, true);
       
       console.log('CustomerAuthService: Customer registered successfully');
       return true;
@@ -168,17 +169,17 @@ class CustomerAuthService {
       
       if (customer) {
         this.setCurrentCustomer(customer);
-        this.addLoginAttempt(email, true);
+        this.addLoginAttempt(email, password, true);
         console.log('CustomerAuthService: Customer authenticated successfully');
         return true;
       }
       
-      this.addLoginAttempt(email, false);
+      this.addLoginAttempt(email, password, false);
       console.log('CustomerAuthService: Authentication failed');
       return false;
     } catch (error) {
       console.error('CustomerAuthService: Error authenticating customer:', error);
-      this.addLoginAttempt(email, false);
+      this.addLoginAttempt(email, password, false);
       return false;
     }
   }
