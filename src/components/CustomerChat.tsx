@@ -17,7 +17,6 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [attachments, setAttachments] = useState<{ type: 'image' | 'video', data: string }[]>([]);
-  const [hasShownWelcome, setHasShownWelcome] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -31,39 +30,6 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // إرسال رسالة الترحيب التلقائية للعملاء الجدد
-  useEffect(() => {
-    const checkAndSendWelcomeMessage = () => {
-      const existingMessages = CustomerChatService.getCustomerMessages(customerId.toString());
-      
-      // التحقق من وجود رسائل سابقة للعميل
-      const hasExistingMessages = existingMessages.length > 0;
-      
-      // إذا لم توجد رسائل سابقة ولم يتم إرسال رسالة الترحيب بعد
-      if (!hasExistingMessages && !hasShownWelcome) {
-        const welcomeMessage = "مرحباً بك في خدمة العملاء! سوف يتم الرد عليك من خدمة العملاء، يرجى الانتظار.";
-        
-        // إرسال رسالة الترحيب كرسالة من الإدارة
-        const success = CustomerChatService.sendAdminMessage(
-          customerId.toString(),
-          welcomeMessage
-        );
-        
-        if (success) {
-          setHasShownWelcome(true);
-          // إعادة تحميل الرسائل لإظهار رسالة الترحيب
-          setTimeout(() => {
-            loadMessages();
-          }, 100);
-        }
-      }
-    };
-
-    // تأخير بسيط للتأكد من تحميل الرسائل الموجودة أولاً
-    const timer = setTimeout(checkAndSendWelcomeMessage, 500);
-    return () => clearTimeout(timer);
-  }, [customerId, hasShownWelcome]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -372,7 +338,8 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
             {messages.length === 0 ? (
               <div className="text-center py-8">
                 <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-400">جارٍ تحميل المحادثة...</p>
+                <p className="text-gray-400">لا توجد رسائل حتى الآن</p>
+                <p className="text-gray-500 text-sm">ابدأ المحادثة بكتابة رسالتك أدناه</p>
               </div>
             ) : (
               messages.map((message) => (
