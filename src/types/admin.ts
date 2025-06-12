@@ -98,9 +98,6 @@ export interface PageTexts {
   customerSupport?: {
     pageTitle: string;
     pageDescription: string;
-    whatsappTitle: string;
-    whatsappDescription: string;
-    whatsappButtonText: string;
     workingHoursTitle: string;
     workingHours?: {
       weekdays: string;
