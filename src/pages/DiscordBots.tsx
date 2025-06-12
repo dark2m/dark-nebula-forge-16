@@ -40,47 +40,11 @@ const DiscordBots = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
-              {TranslationService.translate('discord.page.title')}
+              DARK
             </h1>
             <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
               {TranslationService.translate('discord.page.subtitle')}
             </p>
-          </div>
-
-          {/* Why Choose DARK Section */}
-          <div className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
-              لماذا تختار DARK؟
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                <div className="text-4xl mb-3">⚡</div>
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
-                  {TranslationService.translate('why.choose.delivery.title')}
-                </h3>
-                <p className="text-gray-300 text-sm sm:text-base">
-                  {TranslationService.translate('why.choose.delivery.desc')}
-                </p>
-              </div>
-              <div className="text-center p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
-                <div className="text-4xl mb-3">🛡️</div>
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
-                  {TranslationService.translate('why.choose.safety.title')}
-                </h3>
-                <p className="text-gray-300 text-sm sm:text-base">
-                  {TranslationService.translate('why.choose.safety.desc')}
-                </p>
-              </div>
-              <div className="text-center p-6 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-                <div className="text-4xl mb-3">💎</div>
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
-                  {TranslationService.translate('why.choose.quality.title')}
-                </h3>
-                <p className="text-gray-300 text-sm sm:text-base">
-                  {TranslationService.translate('why.choose.quality.desc')}
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Features Section */}
@@ -172,6 +136,42 @@ const DiscordBots = () => {
               </p>
             </div>
           )}
+
+          {/* Why Choose DARK Section - Moved to bottom */}
+          <div className="mt-16">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
+              لماذا تختار DARK؟
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                <div className="text-4xl mb-3">⚡</div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                  سرعة التسليم
+                </h3>
+                <p className="text-gray-300 text-sm sm:text-base">
+                  احصل على منتجاتك فوراً مع نظام التسليم الآلي
+                </p>
+              </div>
+              <div className="text-center p-6 bg-green-500/10 border border-green-500/30 rounded-xl">
+                <div className="text-4xl mb-3">🛡️</div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                  الأمان والحماية
+                </h3>
+                <p className="text-gray-300 text-sm sm:text-base">
+                  جميع منتجاتنا آمنة ومحمية بأحدث التقنيات
+                </p>
+              </div>
+              <div className="text-center p-6 bg-purple-500/10 border border-purple-500/30 rounded-xl">
+                <div className="text-4xl mb-3">💎</div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
+                  جودة مميزة
+                </h3>
+                <p className="text-gray-300 text-sm sm:text-base">
+                  أعلى معايير الجودة في جميع منتجاتنا وخدماتنا
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
