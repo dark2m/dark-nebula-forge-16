@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock, MessageCircle, Send, Reply, Paperclip, Image, Video, X, ExternalLink } from 'lucide-react';
 import CustomerAuthService, { type LoginAttempt, type CustomerUser } from '../../utils/customerAuthService';
-import CustomerChatService, { type ChatMessage, type ChatSession, type AdminMessage } from '../../utils/customerChatService';
+import CustomerChatService, { type ChatMessage, type ChatSession, type AdminMessage, type MediaAttachment } from '../../utils/customerChatService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,6 @@ const CustomerLogTab = () => {
 
   const loadCustomers = () => {
     const allCustomers = CustomerAuthService.getCustomers();
-    // إضافة معلومات إضافية للعملاء
     const enrichedCustomers: CustomerUser[] = allCustomers.map(customer => ({
       ...customer,
       createdAt: customer.registrationDate,
@@ -101,7 +100,6 @@ const CustomerLogTab = () => {
     const customerToDelete = customers.find(c => c.id === customerId);
     if (!customerToDelete) return;
 
-    // منع حذف العميل الافتراضي
     if (CustomerAuthService.isDefaultCustomer(customerId)) {
       toast({
         title: "غير مسموح",
@@ -176,8 +174,8 @@ const CustomerLogTab = () => {
     }
 
     try {
-      const mediaAttachments = attachments.map(file => ({
-        type: file.type.startsWith('image') ? 'image' : 'video',
+      const mediaAttachments: MediaAttachment[] = attachments.map(file => ({
+        type: file.type.startsWith('image') ? 'image' as const : 'video' as const,
         data: URL.createObjectURL(file)
       }));
 
@@ -555,7 +553,7 @@ const CustomerLogTab = () => {
                                     <div key={index}>
                                       {attachment.type === 'image' ? (
                                         <a href={attachment.data} target="_blank" rel="noopener noreferrer">
-                                          <Image
+                                          <img
                                             src={attachment.data}
                                             alt={`Attachment ${index + 1}`}
                                             className="w-32 h-32 object-cover rounded-md"
@@ -587,7 +585,7 @@ const CustomerLogTab = () => {
                                 {message.timestamp}
                               </div>
                             </div>
-                            {message.isFromCustomer && !message.adminReply && (
+                            {'isFromCustomer' in message && message.isFromCustomer && !('adminReply' in message && message.adminReply) && (
                               <Button
                                 variant="link"
                                 size="sm"
@@ -598,11 +596,11 @@ const CustomerLogTab = () => {
                                 رد
                               </Button>
                             )}
-                            {message.adminReply && (
+                            {'adminReply' in message && message.adminReply && (
                               <div className="mt-2 rounded-xl p-3 max-w-md break-words bg-green-500/20 text-white">
                                 {message.adminReply}
                                 <div className="text-xs text-gray-400 mt-1">
-                                  تم الرد في {message.adminReplyTimestamp}
+                                  تم الرد في {'adminReplyTimestamp' in message ? message.adminReplyTimestamp : ''}
                                 </div>
                               </div>
                             )}
