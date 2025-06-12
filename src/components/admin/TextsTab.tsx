@@ -1,9 +1,12 @@
 
 import React, { useState } from 'react';
-import { Save, FileText, Globe, MessageSquare, Download, Upload } from 'lucide-react';
 import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
-import TextEditor from './TextEditor';
+import TextsTabHeader from './texts/TextsTabHeader';
+import TextsTabSearch from './texts/TextsTabSearch';
+import TextsTabSections from './texts/TextsTabSections';
+import TextsTabContent from './texts/TextsTabContent';
+import TextsTabStats from './texts/TextsTabStats';
 
 interface TextsTabProps {
   siteSettings: SiteSettings;
@@ -82,340 +85,37 @@ const TextsTab: React.FC<TextsTabProps> = ({
     reader.readAsText(file);
   };
 
-  const sections = [
-    { id: 'home', name: 'الصفحة الرئيسية', icon: Globe },
-    { id: 'official', name: 'الصفحة الرسمية', icon: FileText },
-    { id: 'pubgHacks', name: 'هكر ببجي موبايل', icon: MessageSquare },
-    { id: 'webDevelopment', name: 'برمجة مواقع', icon: MessageSquare },
-    { id: 'discordBots', name: 'برمجة بوتات ديسكورد', icon: MessageSquare },
-    { id: 'cart', name: 'السلة', icon: MessageSquare },
-    { id: 'navigation', name: 'التنقل', icon: MessageSquare }
-  ];
-
-  const filteredSections = sections.filter(section =>
-    section.name.includes(searchTerm)
-  );
-
-  // Helper function to safely get page section data
-  const getPageSection = (sectionId: string) => {
-    return siteSettings.pageTexts[sectionId as keyof typeof siteSettings.pageTexts];
-  };
-
-  // Helper function to check if a section has specific properties
-  const hasProperty = (sectionId: string, property: string) => {
-    const section = getPageSection(sectionId);
-    return section && property in section;
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-white">إدارة النصوص</h2>
-        <div className="flex gap-3">
-          {/* أدوات الاستيراد والتصدير */}
-          <input
-            type="file"
-            accept=".json"
-            onChange={importTexts}
-            className="hidden"
-            id="import-texts"
-          />
-          <label
-            htmlFor="import-texts"
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg cursor-pointer transition-colors"
-          >
-            <Upload className="w-4 h-4" />
-            استيراد
-          </label>
-          
-          <button
-            onClick={exportTexts}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            تصدير
-          </button>
-          
-          <button
-            onClick={handleSave}
-            className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
-          >
-            <Save className="w-4 h-4" />
-            <span>حفظ التغييرات</span>
-          </button>
-        </div>
-      </div>
+      <TextsTabHeader 
+        onSave={handleSave}
+        onExport={exportTexts}
+        onImport={importTexts}
+      />
 
-      {/* شريط البحث */}
-      <div className="admin-card rounded-xl p-4">
-        <input
-          type="text"
-          placeholder="البحث في الأقسام..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-gray-800 text-white border border-white/20 rounded px-4 py-2 focus:outline-none focus:border-blue-400"
+      <TextsTabSearch 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
+
+      <div className="admin-card rounded-xl p-6">
+        <TextsTabSections 
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          searchTerm={searchTerm}
+        />
+
+        <TextsTabContent 
+          activeSection={activeSection}
+          siteSettings={siteSettings}
+          updatePageTexts={updatePageTexts}
         />
       </div>
 
-      {/* تبويبات الأقسام */}
-      <div className="admin-card rounded-xl p-6">
-        <div className="flex flex-wrap gap-2 mb-6">
-          {filteredSections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  activeSection === section.id
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {section.name}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* محتوى القسم النشط */}
-        <div className="space-y-6">
-          {/* الصفحة الرئيسية */}
-          {activeSection === 'home' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">نصوص الصفحة الرئيسية</h3>
-              
-              <TextEditor
-                label="عنوان البطل"
-                value={siteSettings.pageTexts.home.heroTitle}
-                onChange={(value) => updatePageTexts('home', 'heroTitle', value)}
-                placeholder="أدخل عنوان البطل هنا..."
-              />
-              
-              <TextEditor
-                label="نص تحت العنوان"
-                value={siteSettings.pageTexts.home.heroSubtitle}
-                onChange={(value) => updatePageTexts('home', 'heroSubtitle', value)}
-                placeholder="أدخل النص التوضيحي هنا..."
-              />
-              
-              <TextEditor
-                label="عنوان المميزات"
-                value={siteSettings.pageTexts.home.featuresTitle}
-                onChange={(value) => updatePageTexts('home', 'featuresTitle', value)}
-                placeholder="أدخل عنوان قسم المميزات..."
-              />
-            </div>
-          )}
-
-          {/* الصفحة الرسمية */}
-          {activeSection === 'official' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">نصوص الصفحة الرسمية</h3>
-              
-              <TextEditor
-                label="عنوان الصفحة"
-                value={siteSettings.pageTexts.official.pageTitle}
-                onChange={(value) => updatePageTexts('official', 'pageTitle', value)}
-              />
-              
-              <TextEditor
-                label="وصف الصفحة"
-                value={siteSettings.pageTexts.official.pageSubtitle}
-                onChange={(value) => updatePageTexts('official', 'pageSubtitle', value)}
-              />
-              
-              <TextEditor
-                label="عنوان من نحن"
-                value={siteSettings.pageTexts.official.aboutTitle}
-                onChange={(value) => updatePageTexts('official', 'aboutTitle', value)}
-              />
-              
-              {siteSettings.pageTexts.official.aboutContent.map((content, index) => (
-                <TextEditor
-                  key={index}
-                  label={`محتوى من نحن - الفقرة ${index + 1}`}
-                  value={content}
-                  onChange={(value) => {
-                    const newContent = [...siteSettings.pageTexts.official.aboutContent];
-                    newContent[index] = value;
-                    updatePageTexts('official', 'aboutContent', newContent);
-                  }}
-                />
-              ))}
-              
-              <TextEditor
-                label="عنوان التواصل"
-                value={siteSettings.pageTexts.official.contactTitle}
-                onChange={(value) => updatePageTexts('official', 'contactTitle', value)}
-              />
-            </div>
-          )}
-
-          {/* أقسام الخدمات - pubgHacks, webDevelopment, discordBots */}
-          {(activeSection === 'pubgHacks' || activeSection === 'webDevelopment' || activeSection === 'discordBots') && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">
-                نصوص {sections.find(s => s.id === activeSection)?.name}
-              </h3>
-              
-              {hasProperty(activeSection, 'pageTitle') && (
-                <TextEditor
-                  label="عنوان الصفحة"
-                  value={(getPageSection(activeSection) as any).pageTitle}
-                  onChange={(value) => updatePageTexts(activeSection, 'pageTitle', value)}
-                />
-              )}
-              
-              {hasProperty(activeSection, 'pageSubtitle') && (
-                <TextEditor
-                  label="وصف الصفحة"
-                  value={(getPageSection(activeSection) as any).pageSubtitle}
-                  onChange={(value) => updatePageTexts(activeSection, 'pageSubtitle', value)}
-                />
-              )}
-
-              {/* إضافة المزيد من الحقول المخصصة لكل قسم */}
-              {activeSection === 'pubgHacks' && (
-                <>
-                  {hasProperty(activeSection, 'safetyTitle') && (
-                    <TextEditor
-                      label="عنوان الأمان"
-                      value={siteSettings.pageTexts.pubgHacks.safetyTitle}
-                      onChange={(value) => updatePageTexts('pubgHacks', 'safetyTitle', value)}
-                    />
-                  )}
-                  {hasProperty(activeSection, 'safetyDescription') && (
-                    <TextEditor
-                      label="وصف الأمان"
-                      value={siteSettings.pageTexts.pubgHacks.safetyDescription}
-                      onChange={(value) => updatePageTexts('pubgHacks', 'safetyDescription', value)}
-                    />
-                  )}
-                </>
-              )}
-
-              {activeSection === 'webDevelopment' && hasProperty(activeSection, 'servicesTitle') && (
-                <TextEditor
-                  label="عنوان الخدمات"
-                  value={siteSettings.pageTexts.webDevelopment.servicesTitle}
-                  onChange={(value) => updatePageTexts('webDevelopment', 'servicesTitle', value)}
-                />
-              )}
-
-              {activeSection === 'discordBots' && hasProperty(activeSection, 'featuresTitle') && (
-                <TextEditor
-                  label="عنوان المميزات"
-                  value={siteSettings.pageTexts.discordBots.featuresTitle}
-                  onChange={(value) => updatePageTexts('discordBots', 'featuresTitle', value)}
-                />
-              )}
-            </div>
-          )}
-
-          {/* قسم السلة */}
-          {activeSection === 'cart' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">نصوص السلة</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <TextEditor
-                  label="عنوان السلة"
-                  value={siteSettings.pageTexts.cart.cartTitle}
-                  onChange={(value) => updatePageTexts('cart', 'cartTitle', value)}
-                />
-                
-                <TextEditor
-                  label="رسالة السلة الفارغة"
-                  value={siteSettings.pageTexts.cart.emptyCartMessage}
-                  onChange={(value) => updatePageTexts('cart', 'emptyCartMessage', value)}
-                />
-                
-                <TextEditor
-                  label="زر الشراء"
-                  value={siteSettings.pageTexts.cart.purchaseButton}
-                  onChange={(value) => updatePageTexts('cart', 'purchaseButton', value)}
-                />
-                
-                <TextEditor
-                  label="زر إضافة للسلة"
-                  value={siteSettings.pageTexts.cart.addToCartButton}
-                  onChange={(value) => updatePageTexts('cart', 'addToCartButton', value)}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* قسم التنقل */}
-          {activeSection === 'navigation' && (
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold text-white">نصوص التنقل</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <TextEditor
-                  label="عنوان الرئيسية"
-                  value={siteSettings.pageTexts.navigation.homeTitle}
-                  onChange={(value) => updatePageTexts('navigation', 'homeTitle', value)}
-                />
-                
-                <TextEditor
-                  label="عنوان ببجي"
-                  value={siteSettings.pageTexts.navigation.pubgTitle}
-                  onChange={(value) => updatePageTexts('navigation', 'pubgTitle', value)}
-                />
-                
-                <TextEditor
-                  label="عنوان البرمجة"
-                  value={siteSettings.pageTexts.navigation.webTitle}
-                  onChange={(value) => updatePageTexts('navigation', 'webTitle', value)}
-                />
-                
-                <TextEditor
-                  label="عنوان الديسكورد"
-                  value={siteSettings.pageTexts.navigation.discordTitle}
-                  onChange={(value) => updatePageTexts('navigation', 'discordTitle', value)}
-                />
-                
-                <TextEditor
-                  label="عنوان الصفحة الرسمية"
-                  value={siteSettings.pageTexts.navigation.officialTitle}
-                  onChange={(value) => updatePageTexts('navigation', 'officialTitle', value)}
-                />
-                
-                <TextEditor
-                  label="عنوان الإدارة"
-                  value={siteSettings.pageTexts.navigation.adminTitle}
-                  onChange={(value) => updatePageTexts('navigation', 'adminTitle', value)}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* أدوات إضافية */}
-      <div className="admin-card rounded-xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4">أدوات إضافية</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <h4 className="text-blue-400 font-semibold mb-2">📊 إحصائيات النصوص</h4>
-            <p className="text-gray-300 text-sm">
-              عدد النصوص: {Object.keys(siteSettings.pageTexts).length} قسم
-            </p>
-          </div>
-          
-          <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
-            <h4 className="text-green-400 font-semibold mb-2">🔄 نسخ احتياطي</h4>
-            <button
-              onClick={exportTexts}
-              className="text-sm text-green-400 hover:text-green-300"
-            >
-              إنشاء نسخة احتياطية
-            </button>
-          </div>
-        </div>
-      </div>
+      <TextsTabStats 
+        siteSettings={siteSettings}
+        onExport={exportTexts}
+      />
     </div>
   );
 };
