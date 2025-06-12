@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Eye, Monitor, Smartphone, Tablet, Refresh } from 'lucide-react';
+import { Eye, Monitor, Smartphone, Tablet, RefreshCw } from 'lucide-react';
 import { SiteSettings } from '../../types/admin';
 
 interface LivePreviewTabProps {
@@ -35,7 +35,7 @@ const LivePreviewTab: React.FC<LivePreviewTabProps> = ({ siteSettings }) => {
             onClick={refreshPreview}
             className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
           >
-            <Refresh className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4" />
             <span>تحديث</span>
           </button>
           

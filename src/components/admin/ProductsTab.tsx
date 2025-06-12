@@ -11,6 +11,7 @@ interface ProductsTabProps {
   addProduct: () => void;
   updateProduct: (id: number, updates: Partial<Product>) => void;
   deleteProduct: (id: number) => void;
+  canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
 }
 
 const ProductsTab: React.FC<ProductsTabProps> = ({ 
