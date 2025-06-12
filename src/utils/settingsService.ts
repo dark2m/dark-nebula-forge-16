@@ -268,7 +268,7 @@ class SettingsService {
         },
         customerSupport: {
           pageTitle: 'خدمة العملاء',
-          pageDescription: 'سجل دخولك للوصول إلى خدمة العملاء المتخصصة',
+          pageDescription: 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة',
           whatsappTitle: 'واتساب',
           whatsappDescription: 'للدعم الشخصي المباشر',
           whatsappButtonText: 'راسل عبر واتساب',

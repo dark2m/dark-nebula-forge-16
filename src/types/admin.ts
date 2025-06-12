@@ -1,4 +1,3 @@
-
 // Admin system type definitions
 export interface Product {
   id: number;
@@ -99,12 +98,6 @@ export interface PageTexts {
   customerSupport?: {
     pageTitle: string;
     pageDescription: string;
-    telegramTitle: string;
-    telegramDescription: string;
-    telegramButtonText: string;
-    discordTitle: string;
-    discordDescription: string;
-    discordButtonText: string;
     whatsappTitle: string;
     whatsappDescription: string;
     whatsappButtonText: string;
@@ -114,8 +107,6 @@ export interface PageTexts {
       friday: string;
     };
     supportNote: string;
-    supportPolicyTitle: string;
-    supportPolicies?: string[];
   };
 }
 
@@ -150,8 +141,6 @@ export interface SiteSettings {
     visible: boolean;
   }>;
   contactInfo: {
-    telegram: string;
-    discord: string;
     whatsapp: string;
     email: string;
     phone: string;
