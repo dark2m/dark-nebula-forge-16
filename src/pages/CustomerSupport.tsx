@@ -14,7 +14,33 @@ const CustomerSupport = () => {
 
   if (!settings) return null;
 
-  const customerSupportTexts = settings.pageTexts?.customerSupport || {};
+  // Provide proper default values instead of empty object
+  const customerSupportTexts = settings.pageTexts?.customerSupport || {
+    pageTitle: 'خدمة العملاء',
+    pageDescription: 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة',
+    telegramTitle: 'تيليجرام',
+    telegramDescription: 'للدعم الفوري والاستفسارات العامة',
+    telegramButtonText: 'تواصل عبر تيليجرام',
+    discordTitle: 'ديسكورد',
+    discordDescription: 'انضم إلى مجتمعنا ودردش مع الفريق',
+    discordButtonText: 'انضم إلى الديسكورد',
+    whatsappTitle: 'واتساب',
+    whatsappDescription: 'للدعم الشخصي المباشر',
+    whatsappButtonText: 'راسل عبر واتساب',
+    workingHoursTitle: 'ساعات العمل',
+    workingHours: {
+      weekdays: '9:00 ص - 11:00 م',
+      friday: '2:00 م - 11:00 م'
+    },
+    supportNote: '💡 الدعم الفني متاح 24/7 عبر تيليجرام للحالات الطارئة',
+    supportPolicyTitle: 'سياسة الدعم',
+    supportPolicies: [
+      'استجابة فورية للاستفسارات العامة',
+      'دعم فني متخصص لجميع المنتجات',
+      'ضمان الجودة وحل المشاكل',
+      'متابعة مستمرة لرضا العملاء'
+    ]
+  };
 
   return (
     <div className="min-h-screen relative">
@@ -24,10 +50,10 @@ const CustomerSupport = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="text-center mb-12">
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
-              {customerSupportTexts.pageTitle || 'خدمة العملاء'}
+              {customerSupportTexts.pageTitle}
             </h1>
             <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
-              {customerSupportTexts.pageDescription || 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة'}
+              {customerSupportTexts.pageDescription}
             </p>
           </div>
 
@@ -36,10 +62,10 @@ const CustomerSupport = () => {
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 transition-all duration-300">
               <MessageCircle className="w-12 h-12 text-blue-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">
-                {customerSupportTexts.telegramTitle || 'تيليجرام'}
+                {customerSupportTexts.telegramTitle}
               </h3>
               <p className="text-gray-300 mb-4">
-                {customerSupportTexts.telegramDescription || 'للدعم الفوري والاستفسارات العامة'}
+                {customerSupportTexts.telegramDescription}
               </p>
               <a 
                 href={`https://t.me/${settings.contactInfo?.telegram?.replace('@', '') || 'DarkTeam_Support'}`}
@@ -47,30 +73,30 @@ const CustomerSupport = () => {
                 rel="noopener noreferrer"
                 className="glow-button inline-block"
               >
-                {customerSupportTexts.telegramButtonText || 'تواصل عبر تيليجرام'}
+                {customerSupportTexts.telegramButtonText}
               </a>
             </div>
 
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 transition-all duration-300">
               <Users className="w-12 h-12 text-purple-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">
-                {customerSupportTexts.discordTitle || 'ديسكورد'}
+                {customerSupportTexts.discordTitle}
               </h3>
               <p className="text-gray-300 mb-4">
-                {customerSupportTexts.discordDescription || 'انضم إلى مجتمعنا ودردش مع الفريق'}
+                {customerSupportTexts.discordDescription}
               </p>
               <button className="glow-button">
-                {customerSupportTexts.discordButtonText || 'انضم إلى الديسكورد'}
+                {customerSupportTexts.discordButtonText}
               </button>
             </div>
 
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 text-center hover:bg-white/20 transition-all duration-300">
               <Phone className="w-12 h-12 text-green-400 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-white mb-2">
-                {customerSupportTexts.whatsappTitle || 'واتساب'}
+                {customerSupportTexts.whatsappTitle}
               </h3>
               <p className="text-gray-300 mb-4">
-                {customerSupportTexts.whatsappDescription || 'للدعم الشخصي المباشر'}
+                {customerSupportTexts.whatsappDescription}
               </p>
               <a 
                 href={`https://wa.me/${settings.contactInfo?.whatsapp?.replace(/\D/g, '') || '966XXXXXXXX'}`}
@@ -78,7 +104,7 @@ const CustomerSupport = () => {
                 rel="noopener noreferrer"
                 className="glow-button inline-block"
               >
-                {customerSupportTexts.whatsappButtonText || 'راسل عبر واتساب'}
+                {customerSupportTexts.whatsappButtonText}
               </a>
             </div>
           </div>
@@ -88,24 +114,24 @@ const CustomerSupport = () => {
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
               <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                 <Clock className="w-6 h-6 ml-2" />
-                {customerSupportTexts.workingHoursTitle || 'ساعات العمل'}
+                {customerSupportTexts.workingHoursTitle}
               </h2>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300">السبت - الخميس</span>
                   <span className="text-white font-medium">
-                    {customerSupportTexts.workingHours?.weekdays || '9:00 ص - 11:00 م'}
+                    {customerSupportTexts.workingHours.weekdays}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300">الجمعة</span>
                   <span className="text-white font-medium">
-                    {customerSupportTexts.workingHours?.friday || '2:00 م - 11:00 م'}
+                    {customerSupportTexts.workingHours.friday}
                   </span>
                 </div>
                 <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                   <p className="text-blue-200 text-sm">
-                    {customerSupportTexts.supportNote || '💡 الدعم الفني متاح 24/7 عبر تيليجرام للحالات الطارئة'}
+                    {customerSupportTexts.supportNote}
                   </p>
                 </div>
               </div>
@@ -114,15 +140,10 @@ const CustomerSupport = () => {
             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6">
               <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                 <Shield className="w-6 h-6 ml-2" />
-                {customerSupportTexts.supportPolicyTitle || 'سياسة الدعم'}
+                {customerSupportTexts.supportPolicyTitle}
               </h2>
               <div className="space-y-4">
-                {(customerSupportTexts.supportPolicies || [
-                  'استجابة فورية للاستفسارات العامة',
-                  'دعم فني متخصص لجميع المنتجات',
-                  'ضمان الجودة وحل المشاكل',
-                  'متابعة مستمرة لرضا العملاء'
-                ]).map((policy, index) => (
+                {customerSupportTexts.supportPolicies.map((policy, index) => (
                   <div key={index} className="flex items-start space-x-3 rtl:space-x-reverse">
                     <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
                     <p className="text-gray-300">{policy}</p>
