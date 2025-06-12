@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock, MessageCircle, Send, Reply } from 'lucide-react';
 import CustomerAuthService, { type LoginAttempt } from '../../utils/customerAuthService';
-import CustomerChatService, { type ChatMessage, type ChatSession } from '../../utils/customerChatService';
+import CustomerChatService, { type ChatMessage, type ChatSession, type AdminMessage } from '../../utils/customerChatService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +28,7 @@ const CustomerLogTab = () => {
   const [loginAttempts, setLoginAttempts] = useState<LoginAttempt[]>([]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
+  const [adminMessage, setAdminMessage] = useState<{[key: number]: string}>({});
   const [adminReplies, setAdminReplies] = useState<{[key: number]: string}>({});
   const { toast } = useToast();
 
@@ -173,6 +173,30 @@ const CustomerLogTab = () => {
       title: "تم حذف العميل",
       description: "تم حذف العميل نهائياً وتسجيل خروجه تلقائياً"
     });
+  };
+
+  const handleSendAdminMessage = (customerId: number) => {
+    const message = adminMessage[customerId];
+    if (!message?.trim()) return;
+
+    const success = CustomerChatService.sendAdminMessage(customerId, message.trim());
+    if (success) {
+      setAdminMessage(prev => ({
+        ...prev,
+        [customerId]: ''
+      }));
+      loadChatSessions();
+      toast({
+        title: "تم إرسال الرسالة",
+        description: "تم إرسال رسالتك للعميل بنجاح"
+      });
+    } else {
+      toast({
+        title: "خطأ في الإرسال",
+        description: "حدث خطأ أثناء إرسال الرسالة",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAdminReply = (messageId: number, customerId: number) => {
@@ -473,7 +497,7 @@ const CustomerLogTab = () => {
                 رسائل العملاء
               </CardTitle>
               <CardDescription className="text-gray-400">
-                جميع رسائل العملاء وردود الإدارة - الرسائل مرتبة حسب آخر نشاط
+                جميع رسائل العملاء وردود الإدارة - يمكنك إرسال رسائل متعددة للعميل
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -509,45 +533,82 @@ const CustomerLogTab = () => {
                           </div>
                         </div>
                         
-                        <div className="space-y-3">
+                        <div className="space-y-3 mb-4">
                           {session.messages.map((message) => (
                             <div key={message.id} className="space-y-2">
-                              {/* رسالة العميل */}
-                              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                                <p className="text-white">{message.message}</p>
-                                <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
-                              </div>
-                              
-                              {/* رد الإدارة إن وجد */}
-                              {message.adminReply ? (
+                              {'isFromAdmin' in message ? (
+                                // رسالة من الإدارة
                                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mr-4">
-                                  <p className="text-green-400 text-sm font-medium mb-1">رد الإدارة:</p>
-                                  <p className="text-white">{message.adminReply}</p>
-                                  <p className="text-gray-400 text-xs mt-1">{message.adminReplyTimestamp}</p>
+                                  <p className="text-green-400 text-sm font-medium mb-1">رسالة من الإدارة:</p>
+                                  <p className="text-white">{message.message}</p>
+                                  <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                                 </div>
                               ) : (
-                                /* نموذج الرد */
-                                <div className="mr-4 flex gap-2">
-                                  <Textarea
-                                    placeholder="اكتب ردك هنا..."
-                                    value={adminReplies[message.id] || ''}
-                                    onChange={(e) => setAdminReplies(prev => ({
-                                      ...prev,
-                                      [message.id]: e.target.value
-                                    }))}
-                                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 flex-1 min-h-[80px]"
-                                  />
-                                  <Button
-                                    onClick={() => handleAdminReply(message.id, session.customerId)}
-                                    disabled={!adminReplies[message.id]?.trim()}
-                                    className="glow-button"
-                                  >
-                                    <Send className="w-4 h-4" />
-                                  </Button>
-                                </div>
+                                // رسالة العميل
+                                <>
+                                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                                    <p className="text-white">{message.message}</p>
+                                    <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
+                                  </div>
+                                  
+                                  {/* رد الإدارة إن وجد */}
+                                  {message.adminReply && (
+                                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mr-4">
+                                      <p className="text-green-400 text-sm font-medium mb-1">رد الإدارة:</p>
+                                      <p className="text-white">{message.adminReply}</p>
+                                      <p className="text-gray-400 text-xs mt-1">{message.adminReplyTimestamp}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {/* نموذج الرد على الرسالة */}
+                                  {!message.adminReply && (
+                                    <div className="mr-4 flex gap-2">
+                                      <Textarea
+                                        placeholder="اكتب ردك على هذه الرسالة..."
+                                        value={adminReplies[message.id] || ''}
+                                        onChange={(e) => setAdminReplies(prev => ({
+                                          ...prev,
+                                          [message.id]: e.target.value
+                                        }))}
+                                        className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 flex-1 min-h-[60px]"
+                                      />
+                                      <Button
+                                        onClick={() => handleAdminReply(message.id, session.customerId)}
+                                        disabled={!adminReplies[message.id]?.trim()}
+                                        className="glow-button"
+                                        title="رد على الرسالة"
+                                      >
+                                        <Reply className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                           ))}
+                        </div>
+
+                        {/* نموذج إرسال رسالة جديدة للعميل */}
+                        <div className="border-t border-white/20 pt-4">
+                          <div className="flex gap-2">
+                            <Textarea
+                              placeholder="إرسال رسالة جديدة للعميل..."
+                              value={adminMessage[session.customerId] || ''}
+                              onChange={(e) => setAdminMessage(prev => ({
+                                ...prev,
+                                [session.customerId]: e.target.value
+                              }))}
+                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 flex-1 min-h-[80px]"
+                            />
+                            <Button
+                              onClick={() => handleSendAdminMessage(session.customerId)}
+                              disabled={!adminMessage[session.customerId]?.trim()}
+                              className="glow-button"
+                              title="إرسال رسالة جديدة"
+                            >
+                              <Send className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}

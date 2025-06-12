@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import CustomerChatService, { type ChatMessage } from '../utils/customerChatService';
+import CustomerChatService, { type ChatMessage, type AdminMessage } from '../utils/customerChatService';
 import { useToast } from '@/hooks/use-toast';
 
 interface CustomerChatProps {
@@ -14,7 +14,7 @@ interface CustomerChatProps {
 }
 
 const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<(ChatMessage | AdminMessage)[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -22,8 +22,8 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
 
   useEffect(() => {
     loadMessages();
-    // تحديث الرسائل كل 10 ثوان للحصول على ردود الإدارة
-    const interval = setInterval(loadMessages, 10000);
+    // تحديث الرسائل كل 5 ثوان للحصول على ردود الإدارة
+    const interval = setInterval(loadMessages, 5000);
     return () => clearInterval(interval);
   }, [customerId]);
 
@@ -90,33 +90,52 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
             ) : (
               messages.map((message) => (
                 <div key={message.id} className="space-y-2">
-                  {/* رسالة العميل */}
-                  <div className="flex justify-end">
-                    <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3 max-w-[80%]">
-                      <div className="flex items-start gap-2">
-                        <User className="w-4 h-4 text-blue-400 mt-1" />
-                        <div className="flex-1">
-                          <p className="text-white">{message.message}</p>
-                          <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* رد الإدارة */}
-                  {message.adminReply && (
+                  {/* التحقق من نوع الرسالة */}
+                  {'isFromAdmin' in message ? (
+                    // رسالة من الإدارة
                     <div className="flex justify-start">
                       <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3 max-w-[80%]">
                         <div className="flex items-start gap-2">
                           <UserCheck className="w-4 h-4 text-green-400 mt-1" />
                           <div className="flex-1">
                             <p className="text-green-400 text-sm font-medium mb-1">فريق الدعم</p>
-                            <p className="text-white">{message.adminReply}</p>
-                            <p className="text-gray-400 text-xs mt-1">{message.adminReplyTimestamp}</p>
+                            <p className="text-white">{message.message}</p>
+                            <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                           </div>
                         </div>
                       </div>
                     </div>
+                  ) : (
+                    // رسالة من العميل
+                    <>
+                      <div className="flex justify-end">
+                        <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3 max-w-[80%]">
+                          <div className="flex items-start gap-2">
+                            <User className="w-4 h-4 text-blue-400 mt-1" />
+                            <div className="flex-1">
+                              <p className="text-white">{message.message}</p>
+                              <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* رد الإدارة على الرسالة */}
+                      {message.adminReply && (
+                        <div className="flex justify-start">
+                          <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3 max-w-[80%]">
+                            <div className="flex items-start gap-2">
+                              <UserCheck className="w-4 h-4 text-green-400 mt-1" />
+                              <div className="flex-1">
+                                <p className="text-green-400 text-sm font-medium mb-1">فريق الدعم</p>
+                                <p className="text-white">{message.adminReply}</p>
+                                <p className="text-gray-400 text-xs mt-1">{message.adminReplyTimestamp}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               ))

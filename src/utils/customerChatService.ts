@@ -11,10 +11,18 @@ interface ChatMessage {
   adminReplyTimestamp?: string;
 }
 
+interface AdminMessage {
+  id: number;
+  customerId: number;
+  message: string;
+  timestamp: string;
+  isFromAdmin: true;
+}
+
 interface ChatSession {
   customerId: number;
   customerEmail: string;
-  messages: ChatMessage[];
+  messages: (ChatMessage | AdminMessage)[];
   lastActivity: string;
   status: 'active' | 'closed' | 'waiting';
   unreadCount: number;
@@ -23,6 +31,7 @@ interface ChatSession {
 class CustomerChatService {
   private static CHAT_MESSAGES_KEY = 'chat_messages';
   private static CHAT_SESSIONS_KEY = 'chat_sessions';
+  private static ADMIN_MESSAGES_KEY = 'admin_messages';
 
   static getChatMessages(): ChatMessage[] {
     try {
@@ -34,11 +43,29 @@ class CustomerChatService {
     }
   }
 
+  static getAdminMessages(): AdminMessage[] {
+    try {
+      const stored = localStorage.getItem(this.ADMIN_MESSAGES_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('CustomerChatService: Error loading admin messages:', error);
+      return [];
+    }
+  }
+
   static saveChatMessages(messages: ChatMessage[]): void {
     try {
       localStorage.setItem(this.CHAT_MESSAGES_KEY, JSON.stringify(messages));
     } catch (error) {
       console.error('CustomerChatService: Error saving chat messages:', error);
+    }
+  }
+
+  static saveAdminMessages(messages: AdminMessage[]): void {
+    try {
+      localStorage.setItem(this.ADMIN_MESSAGES_KEY, JSON.stringify(messages));
+    } catch (error) {
+      console.error('CustomerChatService: Error saving admin messages:', error);
     }
   }
 
@@ -106,6 +133,39 @@ class CustomerChatService {
     }
   }
 
+  static sendAdminMessage(customerId: number, message: string): boolean {
+    try {
+      const sessions = this.getChatSessions();
+      const adminMessages = this.getAdminMessages();
+      
+      const newAdminMessage: AdminMessage = {
+        id: Date.now(),
+        customerId,
+        message,
+        timestamp: new Date().toLocaleString('ar-SA'),
+        isFromAdmin: true
+      };
+
+      adminMessages.push(newAdminMessage);
+      this.saveAdminMessages(adminMessages);
+
+      // تحديث الجلسة
+      const session = sessions.find(s => s.customerId === customerId);
+      if (session) {
+        session.messages.push(newAdminMessage);
+        session.lastActivity = newAdminMessage.timestamp;
+        session.status = 'active';
+        this.saveChatSessions(sessions);
+      }
+
+      console.log('CustomerChatService: Admin message sent successfully');
+      return true;
+    } catch (error) {
+      console.error('CustomerChatService: Error sending admin message:', error);
+      return false;
+    }
+  }
+
   static sendAdminReply(customerId: number, messageId: number, reply: string): boolean {
     try {
       const messages = this.getChatMessages();
@@ -124,9 +184,10 @@ class CustomerChatService {
       if (session) {
         const sessionMessageIndex = session.messages.findIndex(m => m.id === messageId);
         if (sessionMessageIndex !== -1) {
-          session.messages[sessionMessageIndex].adminReply = reply;
-          session.messages[sessionMessageIndex].adminReplyTimestamp = new Date().toLocaleString('ar-SA');
-          session.messages[sessionMessageIndex].isRead = true;
+          const sessionMessage = session.messages[sessionMessageIndex] as ChatMessage;
+          sessionMessage.adminReply = reply;
+          sessionMessage.adminReplyTimestamp = new Date().toLocaleString('ar-SA');
+          sessionMessage.isRead = true;
         }
         session.lastActivity = new Date().toLocaleString('ar-SA');
         session.status = 'active';
@@ -141,9 +202,17 @@ class CustomerChatService {
     }
   }
 
-  static getCustomerMessages(customerId: number): ChatMessage[] {
-    const messages = this.getChatMessages();
-    return messages.filter(m => m.customerId === customerId);
+  static getCustomerMessages(customerId: number): (ChatMessage | AdminMessage)[] {
+    const customerMessages = this.getChatMessages().filter(m => m.customerId === customerId);
+    const adminMessages = this.getAdminMessages().filter(m => m.customerId === customerId);
+    
+    // دمج الرسائل وترتيبها حسب الوقت
+    const allMessages = [...customerMessages, ...adminMessages];
+    return allMessages.sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime();
+      const timeB = new Date(b.timestamp).getTime();
+      return timeA - timeB;
+    });
   }
 
   static markMessagesAsRead(customerId: number): void {
@@ -171,4 +240,4 @@ class CustomerChatService {
 }
 
 export default CustomerChatService;
-export type { ChatMessage, ChatSession };
+export type { ChatMessage, ChatSession, AdminMessage };
