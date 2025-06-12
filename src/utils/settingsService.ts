@@ -1,3 +1,4 @@
+
 import { SiteSettings } from '../types/admin';
 
 class SettingsService {
@@ -9,6 +10,12 @@ class SettingsService {
       try {
         const settings = JSON.parse(stored);
         console.log('SettingsService: Loaded settings from storage:', settings);
+        
+        // التأكد من وجود navigation array
+        if (!settings.navigation) {
+          settings.navigation = this.getDefaultSettings().navigation;
+        }
+        
         return settings;
       } catch (error) {
         console.error('Error parsing settings:', error);
@@ -22,20 +29,77 @@ class SettingsService {
 
   static saveSiteSettings(settings: SiteSettings): void {
     try {
-      console.log('SettingsService: Saving settings:', settings);
-      localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(settings));
+      console.log('SettingsService: Saving settings with persistence check:', settings);
       
-      // إطلاق حدث لتحديث جميع المكونات
+      // التأكد من أن navigation موجود ومُهيكل بشكل صحيح
+      const settingsToSave = {
+        ...settings,
+        navigation: settings.navigation || []
+      };
+      
+      // حفظ مع تأكيد إضافي
+      const jsonString = JSON.stringify(settingsToSave, null, 2);
+      localStorage.setItem(this.SETTINGS_KEY, jsonString);
+      
+      // التحقق من الحفظ
+      const verification = localStorage.getItem(this.SETTINGS_KEY);
+      if (!verification) {
+        throw new Error('Failed to save to localStorage');
+      }
+      
+      // إطلاق حدث التحديث
       const event = new CustomEvent('settingsUpdated', {
-        detail: { settings }
+        detail: { settings: settingsToSave }
       });
       window.dispatchEvent(event);
       
-      console.log('SettingsService: Settings saved and event dispatched');
+      console.log('SettingsService: Settings saved successfully and verified');
+      console.log('SettingsService: Navigation items count:', settingsToSave.navigation?.length || 0);
+      
     } catch (error) {
       console.error('SettingsService: Error saving settings:', error);
       throw error;
     }
+  }
+
+  // دالة للتحقق من سلامة البيانات
+  static validateSettings(settings: SiteSettings): boolean {
+    try {
+      // التحقق من الحقول الأساسية
+      if (!settings.title || !settings.navigation) {
+        return false;
+      }
+      
+      // التحقق من سلامة navigation array
+      if (!Array.isArray(settings.navigation)) {
+        return false;
+      }
+      
+      // التحقق من كل عنصر في navigation
+      for (const item of settings.navigation) {
+        if (!item.name || !item.path || !item.icon) {
+          return false;
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Settings validation error:', error);
+      return false;
+    }
+  }
+
+  // دالة لإصلاح البيانات التالفة
+  static repairSettings(settings: SiteSettings): SiteSettings {
+    const defaults = this.getDefaultSettings();
+    
+    return {
+      ...defaults,
+      ...settings,
+      navigation: Array.isArray(settings.navigation) ? settings.navigation : defaults.navigation,
+      colors: settings.colors || defaults.colors,
+      backgroundSettings: settings.backgroundSettings || defaults.backgroundSettings
+    };
   }
 
   private static getDefaultSettings(): SiteSettings {
@@ -68,6 +132,7 @@ class SettingsService {
         { id: 'web', name: 'برمجة مواقع', path: '/web-development', icon: 'Code', visible: true },
         { id: 'discord', name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: 'Bot', visible: true },
         { id: 'tools', name: 'الأدوات', path: '/tool', icon: 'Wrench', visible: true },
+        { id: 'customer-support', name: 'خدمة العملاء', path: '/sport', icon: 'MessageCircle', visible: true }
       ],
       contactInfo: {
         telegram: '@DarkTeam_Support',
@@ -233,8 +298,6 @@ class SettingsService {
       }
     };
 
-    // حفظ الإعدادات الافتراضية
-    this.saveSiteSettings(defaultSettings);
     return defaultSettings;
   }
 }

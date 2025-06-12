@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import SettingsService from '../../utils/settingsService';
 import type { SiteSettings } from '../../types/admin';
 
 interface TaskbarControlProps {
@@ -41,6 +43,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
     visible: true,
     position: 0
   });
+  const { toast } = useToast();
 
   const taskbarItems: TaskbarItem[] = siteSettings.navigation?.map((item, index) => ({
     id: item.id || `item-${index}`,
@@ -62,7 +65,9 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
     { value: 'Bot', label: 'البوت' },
     { value: 'Wrench', label: 'الأدوات' },
     { value: 'Tools', label: 'أدوات' },
-    { value: 'Support', label: '📞 دعم العملاء' }
+    { value: 'Support', label: 'دعم العملاء' },
+    { value: 'MessageCircle', label: 'خدمة العملاء' },
+    { value: 'HeadphonesIcon', label: 'الدعم الفني' }
   ];
 
   // قائمة المسارات المتوفرة في التطبيق
@@ -92,6 +97,40 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
     };
   };
 
+  // دالة حفظ محسنة لضمان الثبات
+  const saveSettingsWithPersistence = (newSettings: SiteSettings) => {
+    try {
+      console.log('TaskbarControl: Saving settings with persistence:', newSettings);
+      
+      // تحديث الحالة المحلية
+      setSiteSettings(newSettings);
+      
+      // حفظ في localStorage مباشرة
+      SettingsService.saveSiteSettings(newSettings);
+      
+      // إطلاق حدث التحديث
+      const event = new CustomEvent('settingsUpdated', {
+        detail: { settings: newSettings }
+      });
+      window.dispatchEvent(event);
+      
+      console.log('TaskbarControl: Settings saved successfully');
+      
+      toast({
+        title: "تم الحفظ",
+        description: "تم حفظ التغييرات في شريط المهام بنجاح",
+      });
+      
+    } catch (error) {
+      console.error('TaskbarControl: Error saving settings:', error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ الإعدادات",
+        variant: "destructive"
+      });
+    }
+  };
+
   const toggleItemVisibility = (itemId: string) => {
     console.log('Toggling visibility for item:', itemId);
     
@@ -111,37 +150,45 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       navigation: updatedNavigation
     };
 
-    setSiteSettings(newSettings);
-    
-    // حفظ فوري وإطلاق حدث للتحديث
-    setTimeout(() => {
-      saveSiteSettings();
-      window.dispatchEvent(new CustomEvent('settingsUpdated', {
-        detail: { settings: newSettings }
-      }));
-    }, 100);
+    saveSettingsWithPersistence(newSettings);
   };
 
   const addNewItem = () => {
-    if (!newItem.name || !newItem.path) return;
-
-    // التحقق من صحة المسار قبل الإضافة
-    if (!validateRoute(newItem.path)) {
-      alert('تحذير: المسار المحدد غير موجود في التطبيق. هذا قد يسبب خطأ 404.');
+    if (!newItem.name || !newItem.path) {
+      toast({
+        title: "خطأ في البيانات",
+        description: "يرجى ملء جميع الحقول المطلوبة",
+        variant: "destructive"
+      });
       return;
     }
 
-    console.log('Adding new item:', newItem);
+    // التحقق من صحة المسار قبل الإضافة
+    if (!validateRoute(newItem.path)) {
+      toast({
+        title: "تحذير",
+        description: "المسار المحدد غير موجود في التطبيق. هذا قد يسبب خطأ 404.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // إنشاء ID فريد للعنصر الجديد
+    const uniqueId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log('Adding new item:', { ...newItem, id: uniqueId });
+
+    const newNavItem = {
+      id: uniqueId,
+      name: newItem.name,
+      icon: newItem.icon,
+      path: newItem.path,
+      visible: true // دائماً مرئي عند الإضافة
+    };
 
     const updatedNavigation = [
       ...(siteSettings.navigation || []),
-      {
-        id: newItem.id || `item-${Date.now()}`,
-        name: newItem.name,
-        icon: newItem.icon,
-        path: newItem.path,
-        visible: newItem.visible
-      }
+      newNavItem
     ];
 
     const newSettings = {
@@ -149,8 +196,10 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       navigation: updatedNavigation
     };
 
-    setSiteSettings(newSettings);
+    // حفظ فوري مع ضمان الثبات
+    saveSettingsWithPersistence(newSettings);
 
+    // إعادة تعيين النموذج
     setNewItem({
       id: '',
       name: '',
@@ -160,13 +209,10 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       position: 0
     });
 
-    // حفظ فوري وإطلاق حدث للتحديث
-    setTimeout(() => {
-      saveSiteSettings();
-      window.dispatchEvent(new CustomEvent('settingsUpdated', {
-        detail: { settings: newSettings }
-      }));
-    }, 100);
+    toast({
+      title: "تم الإضافة",
+      description: `تم إضافة "${newItem.name}" إلى شريط المهام بنجاح`,
+    });
   };
 
   const deleteItem = (itemId: string) => {
@@ -182,15 +228,12 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       navigation: updatedNavigation
     };
 
-    setSiteSettings(newSettings);
-
-    // حفظ فوري وإطلاق حدث للتحديث
-    setTimeout(() => {
-      saveSiteSettings();
-      window.dispatchEvent(new CustomEvent('settingsUpdated', {
-        detail: { settings: newSettings }
-      }));
-    }, 100);
+    saveSettingsWithPersistence(newSettings);
+    
+    toast({
+      title: "تم الحذف",
+      description: "تم حذف العنصر من شريط المهام",
+    });
   };
 
   const updateItem = (updates: Partial<TaskbarItem>) => {
@@ -198,7 +241,11 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
 
     // التحقق من صحة المسار عند التحديث
     if (updates.path && !validateRoute(updates.path)) {
-      alert('تحذير: المسار المحدد غير موجود في التطبيق. هذا قد يسبب خطأ 404.');
+      toast({
+        title: "تحذير",
+        description: "المسار المحدد غير موجود في التطبيق. هذا قد يسبب خطأ 404.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -216,18 +263,15 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
       navigation: updatedNavigation
     };
 
-    setSiteSettings(newSettings);
+    saveSettingsWithPersistence(newSettings);
 
     setEditingItem(null);
     setIsEditDialogOpen(false);
-
-    // حفظ فوري وإطلاق حدث للتحديث
-    setTimeout(() => {
-      saveSiteSettings();
-      window.dispatchEvent(new CustomEvent('settingsUpdated', {
-        detail: { settings: newSettings }
-      }));
-    }, 100);
+    
+    toast({
+      title: "تم التحديث",
+      description: "تم تحديث العنصر بنجاح",
+    });
   };
 
   return (
@@ -247,14 +291,14 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           </div>
         </CardTitle>
         <CardDescription className="text-gray-400">
-          إدارة عناصر شريط المهام وإعدادات الرؤية مع التحقق من صحة المسارات
+          إدارة عناصر شريط المهام وإعدادات الرؤية مع ضمان الثبات والاستمرارية
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         
         {/* قائمة العناصر الحالية */}
         <div className="space-y-3">
-          <h3 className="text-white font-semibold">العناصر الحالية</h3>
+          <h3 className="text-white font-semibold">العناصر الحالية ({taskbarItems.length})</h3>
           {taskbarItems.length === 0 ? (
             <p className="text-gray-400 text-center py-4">لا توجد عناصر في شريط المهام</p>
           ) : (
@@ -334,21 +378,22 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           <div className="space-y-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
             <h3 className="text-white font-semibold flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              إضافة عنصر جديد
+              إضافة عنصر جديد (مع ضمان الثبات)
             </h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-white">اسم العنصر</Label>
+                <Label className="text-white">اسم العنصر *</Label>
                 <Input
                   value={newItem.name}
                   onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="اسم العنصر"
                   className="bg-white/10 border-white/20 text-white"
+                  required
                 />
               </div>
               <div>
-                <Label className="text-white">المسار</Label>
+                <Label className="text-white">المسار *</Label>
                 <Select
                   value={newItem.path}
                   onValueChange={(value) => setNewItem(prev => ({ ...prev, path: value }))}
@@ -392,7 +437,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
               className="glow-button w-full"
             >
               <Plus className="w-4 h-4 mr-2" />
-              إضافة العنصر
+              إضافة العنصر (دائم)
             </Button>
           </div>
         )}
@@ -414,11 +459,14 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           </div>
         </div>
 
-        {/* زر الحفظ */}
+        {/* زر الحفظ العام */}
         <div className="flex justify-end pt-4 border-t border-white/20">
-          <Button onClick={saveSiteSettings} className="glow-button">
+          <Button 
+            onClick={() => saveSettingsWithPersistence(siteSettings)} 
+            className="glow-button"
+          >
             <Save className="w-4 h-4 mr-2" />
-            حفظ جميع التغييرات
+            حفظ جميع التغييرات نهائياً
           </Button>
         </div>
       </CardContent>
@@ -429,7 +477,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
           <DialogHeader>
             <DialogTitle className="text-white">تعديل العنصر</DialogTitle>
             <DialogDescription className="text-gray-400">
-              تعديل خصائص عنصر شريط المهام مع التحقق من صحة المسار
+              تعديل خصائص عنصر شريط المهام مع ضمان الثبات
             </DialogDescription>
           </DialogHeader>
           {editingItem && (
@@ -488,7 +536,7 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
                 onClick={() => updateItem(editingItem)}
                 className="glow-button w-full"
               >
-                حفظ التغييرات
+                حفظ التغييرات بشكل دائم
               </Button>
             </div>
           )}
