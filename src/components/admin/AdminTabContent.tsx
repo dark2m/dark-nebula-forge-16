@@ -8,6 +8,7 @@ import ContactTab from './ContactTab';
 import DesignTab from './DesignTab';
 import LivePreviewTab from './LivePreviewTab';
 import BackupTab from './BackupTab';
+import OverviewTab from './OverviewTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -37,64 +38,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
     switch (activeTab) {
       case 'overview':
         return (
-          <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-white">نظرة عامة</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="admin-card rounded-xl p-6">
-                <h3 className="text-lg font-bold text-blue-400 mb-2">إجمالي المنتجات</h3>
-                <p className="text-3xl font-bold text-white">{products.length}</p>
-              </div>
-              
-              <div className="admin-card rounded-xl p-6">
-                <h3 className="text-lg font-bold text-green-400 mb-2">منتجات ببجي</h3>
-                <p className="text-3xl font-bold text-white">
-                  {products.filter(p => p.category === 'pubg').length}
-                </p>
-              </div>
-              
-              <div className="admin-card rounded-xl p-6">
-                <h3 className="text-lg font-bold text-purple-400 mb-2">خدمات الويب</h3>
-                <p className="text-3xl font-bold text-white">
-                  {products.filter(p => p.category === 'web').length}
-                </p>
-              </div>
-              
-              <div className="admin-card rounded-xl p-6">
-                <h3 className="text-lg font-bold text-cyan-400 mb-2">بوتات ديسكورد</h3>
-                <p className="text-3xl font-bold text-white">
-                  {products.filter(p => p.category === 'discord').length}
-                </p>
-              </div>
-            </div>
-            
-            <div className="admin-card rounded-xl p-6">
-              <h3 className="text-xl font-bold text-white mb-4">إحصائيات الموقع</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-blue-400 font-semibold mb-2">عنوان الموقع</h4>
-                  <p className="text-white">{siteSettings.title}</p>
-                </div>
-                <div>
-                  <h4 className="text-green-400 font-semibold mb-2">عدد عناصر التنقل</h4>
-                  <p className="text-white">{siteSettings.navigation?.length || 0}</p>
-                </div>
-                <div>
-                  <h4 className="text-purple-400 font-semibold mb-2">عدد المميزات</h4>
-                  <p className="text-white">{siteSettings.pageTexts?.home?.features?.length || 0}</p>
-                </div>
-                <div>
-                  <h4 className="text-cyan-400 font-semibold mb-2">اللون الأساسي</h4>
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <div 
-                      className="w-6 h-6 rounded"
-                      style={{ backgroundColor: siteSettings.colors?.primary }}
-                    />
-                    <span className="text-white">{siteSettings.colors?.primary}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <OverviewTab products={products} />
         );
 
       case 'products':
