@@ -68,6 +68,7 @@ class SettingsService {
         { id: 'pubg', name: 'هكر ببجي موبايل', path: '/pubg-hacks', icon: 'Shield', visible: true },
         { id: 'web', name: 'برمجة مواقع', path: '/web-development', icon: 'Code', visible: true },
         { id: 'discord', name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: 'Bot', visible: true },
+        { id: 'tools', name: 'الأدوات', path: '/tool', icon: 'Wrench', visible: true },
       ],
       contactInfo: {
         telegram: '@DarkTeam_Support',

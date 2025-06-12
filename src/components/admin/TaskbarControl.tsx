@@ -58,7 +58,9 @@ const TaskbarControl: React.FC<TaskbarControlProps> = ({
     { value: 'Menu', label: 'القائمة' },
     { value: 'Shield', label: 'الحماية' },
     { value: 'Code', label: 'البرمجة' },
-    { value: 'Bot', label: 'البوت' }
+    { value: 'Bot', label: 'البوت' },
+    { value: 'Wrench', label: 'الأدوات' },
+    { value: 'Tools', label: 'أدوات' }
   ];
 
   const toggleItemVisibility = (itemId: string) => {

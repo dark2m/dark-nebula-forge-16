@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Code, Bot, User, Users, Home, Menu, X } from 'lucide-react';
+import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench } from 'lucide-react';
 import { useIsMobile } from '../hooks/use-mobile';
 import AdminStorage from '../utils/adminStorage';
 import { getTextContent } from '../utils/textUtils';
@@ -42,7 +42,9 @@ const Navigation = () => {
       'Bot': Bot,
       'User': User,
       'Home': Home,
-      'Menu': Home
+      'Menu': Home,
+      'Wrench': Wrench,
+      'Tools': Wrench
     };
 
     return siteSettings.navigation
