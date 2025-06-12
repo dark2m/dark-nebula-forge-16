@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users } from 'lucide-react';
 import AdminStorage from '../utils/adminStorage';
 import TranslationService from '../utils/translationService';
+import { getTextContent } from '../utils/textUtils';
 
 const Navigation = () => {
   const location = useLocation();
@@ -17,22 +18,22 @@ const Navigation = () => {
   
   const navItems = [
     { 
-      name: navTexts.pubgTitle, 
+      name: getTextContent(navTexts.pubgTitle), 
       path: '/pubg-hacks', 
       icon: Shield 
     },
     { 
-      name: navTexts.webTitle, 
+      name: getTextContent(navTexts.webTitle), 
       path: '/web-development', 
       icon: Code 
     },
     { 
-      name: navTexts.discordTitle, 
+      name: getTextContent(navTexts.discordTitle), 
       path: '/discord-bots', 
       icon: Bot 
     },
     { 
-      name: navTexts.officialTitle, 
+      name: getTextContent(navTexts.officialTitle), 
       path: '/official', 
       icon: Users 
     },
@@ -75,7 +76,7 @@ const Navigation = () => {
               className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
             >
               <User className="w-4 h-4" />
-              <span>{navTexts.adminTitle}</span>
+              <span>{getTextContent(navTexts.adminTitle)}</span>
             </Link>
           </div>
         </div>

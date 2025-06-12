@@ -25,6 +25,14 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
     return section && property in section;
   };
 
+  // Helper function to get text content from either string or TextData object
+  const getTextValue = (value: any): string => {
+    if (typeof value === 'object' && value !== null && 'content' in value) {
+      return value.content;
+    }
+    return typeof value === 'string' ? value : '';
+  };
+
   const renderHomeSection = () => (
     <div className="space-y-6">
       <h3 className="text-xl font-bold text-white">نصوص الصفحة الرئيسية</h3>
@@ -89,7 +97,8 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
           value={content}
           onChange={(value) => {
             const newContent = [...siteSettings.pageTexts.official.aboutContent];
-            newContent[index] = typeof value === 'string' ? value : value.content;
+            // Always store as string for array items to maintain consistency
+            newContent[index] = getTextValue(value);
             updatePageTexts('official', 'aboutContent', newContent);
           }}
           allowStyleSaving={false}
@@ -191,7 +200,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
           label="عنوان السلة"
           value={siteSettings.pageTexts.cart.cartTitle}
           onChange={(value) => updatePageTexts('cart', 'cartTitle', value)}
-          allowStyleSaving={true}
+          allowStyleSaving={false}
         />
         
         <TextEditor
