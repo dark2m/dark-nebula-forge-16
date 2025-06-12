@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { Clock, Shield, User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
+import { Clock, Shield, User, Lock, Eye, EyeOff, Mail, ArrowLeft } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import CustomerChat from '../components/CustomerChat';
 import SettingsService from '../utils/settingsService';
@@ -17,6 +18,7 @@ const CustomerSupport = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<any>(null);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -27,9 +29,13 @@ const CustomerSupport = () => {
     confirmPassword: '',
     verificationCode: ''
   });
+  const [forgotPasswordForm, setForgotPasswordForm] = useState({
+    email: ''
+  });
   const [isVerificationStep, setIsVerificationStep] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [registerError, setRegisterError] = useState('');
+  const [forgotPasswordMessage, setForgotPasswordMessage] = useState('');
 
   useEffect(() => {
     setSettings(SettingsService.getSiteSettings());
@@ -63,6 +69,11 @@ const CustomerSupport = () => {
     
     console.log('محاولة تسجيل الدخول:', loginForm);
     
+    if (!loginForm.email || !loginForm.password) {
+      setLoginError('يرجى إدخال البريد الإلكتروني وكلمة المرور');
+      return;
+    }
+    
     const success = CustomerAuthService.authenticateCustomer(loginForm.email, loginForm.password);
     
     if (success) {
@@ -70,7 +81,7 @@ const CustomerSupport = () => {
       setCurrentCustomer(CustomerAuthService.getCurrentCustomer());
       console.log('تم تسجيل الدخول بنجاح');
     } else {
-      setLoginError('بيانات الدخول غير صحيحة');
+      setLoginError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
       console.log('فشل في تسجيل الدخول');
     }
   };
@@ -79,8 +90,18 @@ const CustomerSupport = () => {
     e.preventDefault();
     setRegisterError('');
     
+    if (!registerForm.email || !registerForm.password || !registerForm.confirmPassword) {
+      setRegisterError('يرجى ملء جميع الحقول المطلوبة');
+      return;
+    }
+    
     if (registerForm.password !== registerForm.confirmPassword) {
       setRegisterError('كلمات المرور غير متطابقة');
+      return;
+    }
+    
+    if (registerForm.password.length < 6) {
+      setRegisterError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       return;
     }
     
@@ -89,12 +110,36 @@ const CustomerSupport = () => {
     const success = CustomerAuthService.registerCustomer(registerForm.email, registerForm.password);
     
     if (success) {
-      setIsAuthenticated(true);
-      setCurrentCustomer(CustomerAuthService.getCurrentCustomer());
-      console.log('تم إنشاء الحساب بنجاح');
+      // تسجيل الدخول تلقائياً بعد إنشاء الحساب
+      const loginSuccess = CustomerAuthService.authenticateCustomer(registerForm.email, registerForm.password);
+      if (loginSuccess) {
+        setIsAuthenticated(true);
+        setCurrentCustomer(CustomerAuthService.getCurrentCustomer());
+        console.log('تم إنشاء الحساب وتسجيل الدخول بنجاح');
+      }
     } else {
-      setRegisterError('الإيميل مستخدم مسبقاً');
-      console.log('فشل في إنشاء الحساب');
+      setRegisterError('الإيميل مستخدم مسبقاً. يرجى استخدام إيميل آخر أو تسجيل الدخول إذا كان لديك حساب');
+      console.log('فشل في إنشاء الحساب - الإيميل مستخدم مسبقاً');
+    }
+  };
+
+  const handleForgotPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!forgotPasswordForm.email) {
+      setForgotPasswordMessage('يرجى إدخال البريد الإلكتروني');
+      return;
+    }
+    
+    // البحث عن المستخدم
+    const customers = CustomerAuthService.getCustomers();
+    const customer = customers.find(c => c.email === forgotPasswordForm.email);
+    
+    if (customer) {
+      setForgotPasswordMessage('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. (هذه الميزة قيد التطوير - يرجى التواصل مع الدعم الفني)');
+      console.log('طلب إعادة تعيين كلمة المرور للمستخدم:', customer.email);
+    } else {
+      setForgotPasswordMessage('لا يوجد حساب مرتبط بهذا البريد الإلكتروني');
     }
   };
 
@@ -104,6 +149,8 @@ const CustomerSupport = () => {
     setCurrentCustomer(null);
     setLoginForm({ email: '', password: '' });
     setRegisterForm({ email: '', password: '', confirmPassword: '', verificationCode: '' });
+    setForgotPasswordForm({ email: '' });
+    setShowForgotPassword(false);
   };
 
   const handleVerification = (e: React.FormEvent) => {
@@ -216,6 +263,86 @@ const CustomerSupport = () => {
     );
   }
 
+  // واجهة نسيان كلمة المرور
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen relative">
+        <StarryBackground />
+        
+        <div className="relative z-10 pt-32 pb-20">
+          <div className="container mx-auto px-4 sm:px-6">
+            <div className="text-center mb-12">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
+                استعادة كلمة المرور
+              </h1>
+              <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
+                أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين كلمة المرور
+              </p>
+            </div>
+
+            <div className="max-w-md mx-auto">
+              <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+                    <Lock className="w-6 h-6 text-blue-400" />
+                    نسيت كلمة المرور
+                  </CardTitle>
+                  <CardDescription className="text-gray-300">
+                    سنرسل لك رابط إعادة تعيين كلمة المرور على بريدك الإلكتروني
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    {forgotPasswordMessage && (
+                      <div className={`border rounded-lg p-3 text-sm ${
+                        forgotPasswordMessage.includes('تم إرسال') 
+                          ? 'bg-green-500/20 border-green-500/30 text-green-300'
+                          : 'bg-red-500/20 border-red-500/30 text-red-300'
+                      }`}>
+                        {forgotPasswordMessage}
+                      </div>
+                    )}
+                    <div>
+                      <Label htmlFor="forgotEmail" className="text-white">البريد الإلكتروني</Label>
+                      <div className="relative">
+                        <Input
+                          id="forgotEmail"
+                          type="email"
+                          placeholder="أدخل بريدك الإلكتروني"
+                          value={forgotPasswordForm.email}
+                          onChange={(e) => setForgotPasswordForm({...forgotPasswordForm, email: e.target.value})}
+                          className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10"
+                          required
+                        />
+                        <Mail className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                      </div>
+                    </div>
+                    <Button type="submit" className="w-full glow-button">
+                      إرسال رابط الاستعادة
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      className="w-full text-blue-400 hover:text-blue-300 flex items-center justify-center gap-2"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotPasswordMessage('');
+                        setForgotPasswordForm({ email: '' });
+                      }}
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      العودة لتسجيل الدخول
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // واجهة تسجيل الدخول/التسجيل
   return (
     <div className="min-h-screen relative">
@@ -297,7 +424,10 @@ const CustomerSupport = () => {
                               type="email"
                               placeholder="أدخل بريدك الإلكتروني"
                               value={loginForm.email}
-                              onChange={(e) => setLoginForm({...loginForm, email: e.target.value})}
+                              onChange={(e) => {
+                                setLoginForm({...loginForm, email: e.target.value});
+                                if (loginError) setLoginError('');
+                              }}
                               className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10"
                               required
                             />
@@ -312,7 +442,10 @@ const CustomerSupport = () => {
                               type={showPassword ? "text" : "password"}
                               placeholder="أدخل كلمة المرور"
                               value={loginForm.password}
-                              onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                              onChange={(e) => {
+                                setLoginForm({...loginForm, password: e.target.value});
+                                if (loginError) setLoginError('');
+                              }}
                               className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
                               required
                             />
@@ -329,6 +462,16 @@ const CustomerSupport = () => {
                         <Button type="submit" className="w-full glow-button">
                           تسجيل الدخول
                         </Button>
+                        <div className="text-center">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            className="text-blue-400 hover:text-blue-300 text-sm"
+                            onClick={() => setShowForgotPassword(true)}
+                          >
+                            نسيت كلمة المرور؟
+                          </Button>
+                        </div>
                       </form>
                     </TabsContent>
 
@@ -347,7 +490,10 @@ const CustomerSupport = () => {
                               type="email"
                               placeholder="أدخل بريدك الإلكتروني"
                               value={registerForm.email}
-                              onChange={(e) => setRegisterForm({...registerForm, email: e.target.value})}
+                              onChange={(e) => {
+                                setRegisterForm({...registerForm, email: e.target.value});
+                                if (registerError) setRegisterError('');
+                              }}
                               className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10"
                               required
                             />
@@ -360,12 +506,15 @@ const CustomerSupport = () => {
                             <Input
                               id="registerPassword"
                               type={showPassword ? "text" : "password"}
-                              placeholder="أدخل كلمة مرور قوية"
+                              placeholder="أدخل كلمة مرور قوية (6 أحرف على الأقل)"
                               value={registerForm.password}
-                              onChange={(e) => setRegisterForm({...registerForm, password: e.target.value})}
+                              onChange={(e) => {
+                                setRegisterForm({...registerForm, password: e.target.value});
+                                if (registerError) setRegisterError('');
+                              }}
                               className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
                               required
-                              minLength={8}
+                              minLength={6}
                             />
                             <Lock className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
                             <button
@@ -385,7 +534,10 @@ const CustomerSupport = () => {
                               type={showConfirmPassword ? "text" : "password"}
                               placeholder="أعد إدخال كلمة المرور"
                               value={registerForm.confirmPassword}
-                              onChange={(e) => setRegisterForm({...registerForm, confirmPassword: e.target.value})}
+                              onChange={(e) => {
+                                setRegisterForm({...registerForm, confirmPassword: e.target.value});
+                                if (registerError) setRegisterError('');
+                              }}
                               className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 pl-10 pr-10"
                               required
                             />
