@@ -175,6 +175,40 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
     setIsLoading(false);
   };
 
+  const renderAttachments = (attachments: { type: 'image' | 'video', data: string }[] | undefined) => {
+    if (!attachments || attachments.length === 0) return null;
+
+    return (
+      <div className="mt-2 space-y-2">
+        {attachments.map((attachment, index) => (
+          <div key={index} className="border border-white/20 rounded p-2 bg-white/5">
+            {attachment.type === 'image' ? (
+              <img 
+                src={attachment.data} 
+                alt={`Attachment ${index + 1}`}
+                className="max-w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => window.open(attachment.data, '_blank')}
+              />
+            ) : (
+              <div className="flex items-center gap-2 p-2">
+                <Video className="w-5 h-5 text-blue-400" />
+                <span className="text-sm text-gray-300">فيديو مرفق</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.open(attachment.data, '_blank')}
+                  className="text-blue-400 hover:text-blue-300 text-xs"
+                >
+                  عرض
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Card className="bg-white/10 backdrop-blur-md border border-white/20 h-[600px] flex flex-col">
       <CardHeader>
@@ -207,27 +241,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
                           <div className="flex-1 min-w-0">
                             <p className="text-green-400 text-sm font-medium mb-1">فريق الدعم</p>
                             <p className="text-white break-words">{message.message}</p>
-                            {message.attachments && message.attachments.length > 0 && (
-                              <div className="mt-2 space-y-2">
-                                {message.attachments.map((attachment, index) => (
-                                  <div key={index} className="border border-green-500/30 rounded p-2">
-                                    {attachment.type === 'image' ? (
-                                      <img 
-                                        src={attachment.data} 
-                                        alt={`Attachment ${index + 1}`}
-                                        className="max-w-full h-32 object-cover rounded cursor-pointer"
-                                        onClick={() => window.open(attachment.data, '_blank')}
-                                      />
-                                    ) : (
-                                      <div className="flex items-center gap-2">
-                                        <Video className="w-4 h-4 text-blue-400" />
-                                        <span className="text-xs text-gray-300">فيديو</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
+                            {renderAttachments(message.attachments)}
                             <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                           </div>
                         </div>
@@ -241,27 +255,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
                             <User className="w-4 h-4 text-blue-400 mt-1 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                               <p className="text-white break-words">{message.message}</p>
-                              {message.attachments && message.attachments.length > 0 && (
-                                <div className="mt-2 space-y-2">
-                                  {message.attachments.map((attachment, index) => (
-                                    <div key={index} className="border border-blue-500/30 rounded p-2">
-                                      {attachment.type === 'image' ? (
-                                        <img 
-                                          src={attachment.data} 
-                                          alt={`Attachment ${index + 1}`}
-                                          className="max-w-full h-32 object-cover rounded cursor-pointer"
-                                          onClick={() => window.open(attachment.data, '_blank')}
-                                        />
-                                      ) : (
-                                        <div className="flex items-center gap-2">
-                                          <Video className="w-4 h-4 text-blue-400" />
-                                          <span className="text-xs text-gray-300">فيديو</span>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              {renderAttachments(message.attachments)}
                               <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                             </div>
                           </div>
