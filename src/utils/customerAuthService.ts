@@ -1,66 +1,66 @@
-import CustomerChatService from './customerChatService';
-
-interface Customer {
-  id: number;
-  email: string;
-  password: string;
-  registrationDate: string;
-}
-
-interface LoginAttempt {
-  id: string;
-  email: string;
-  password: string;
-  timestamp: string;
-  success: boolean;
-  ipAddress?: string;
-}
-
-interface CustomerUser extends Customer {
-  createdAt: string;
-  isVerified: boolean;
-  isBlocked: boolean;
-  isOnline: boolean;
-  lastSeen: string;
-}
+import { CustomerUser, LoginAttempt } from '../types/customer';
 
 class CustomerAuthService {
-  private static CUSTOMERS_KEY = 'customers';
+  private static STORAGE_KEY = 'customer_users';
+  private static LOGIN_ATTEMPTS_KEY = 'customer_login_attempts';
   private static CURRENT_CUSTOMER_KEY = 'current_customer';
-  private static LOGIN_ATTEMPTS_KEY = 'login_attempts';
 
-  static getCustomers(): Customer[] {
+  static getCustomers(): CustomerUser[] {
     try {
-      const stored = localStorage.getItem(this.CUSTOMERS_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('CustomerAuthService: Error loading customers:', error);
+      console.error('CustomerAuthService: Error getting customers:', error);
       return [];
     }
   }
 
-  static getCustomersWithStatus(): CustomerUser[] {
+  static saveCustomers(customers: CustomerUser[]): void {
     try {
-      const customers = this.getCustomers();
-      return customers.map(customer => ({
-        ...customer,
-        createdAt: customer.registrationDate,
-        isVerified: true,
-        isBlocked: false,
-        isOnline: false,
-        lastSeen: customer.registrationDate
-      }));
-    } catch (error) {
-      console.error('CustomerAuthService: Error loading customers with status:', error);
-      return [];
-    }
-  }
-
-  static saveCustomers(customers: Customer[]): void {
-    try {
-      localStorage.setItem(this.CUSTOMERS_KEY, JSON.stringify(customers));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(customers));
     } catch (error) {
       console.error('CustomerAuthService: Error saving customers:', error);
+    }
+  }
+
+  static getCustomerById(id: number): CustomerUser | undefined {
+    const customers = this.getCustomers();
+    return customers.find(customer => customer.id === id);
+  }
+
+  static registerCustomer(email: string, password: string): boolean {
+    const customers = this.getCustomers();
+    
+    if (customers.find(c => c.email === email)) {
+      console.log('CustomerAuthService: Registration failed - email already exists');
+      return false;
+    }
+    
+    const newCustomer: CustomerUser = {
+      id: Date.now(),
+      email,
+      password,
+      registrationDate: new Date().toLocaleDateString('ar-SA'),
+      createdAt: new Date().toLocaleDateString('ar-SA'),
+      isVerified: false
+    };
+    
+    customers.push(newCustomer);
+    this.saveCustomers(customers);
+    console.log('CustomerAuthService: Registration successful');
+    return true;
+  }
+
+  static updateCustomer(id: number, updates: Partial<CustomerUser>): void {
+    const customers = this.getCustomers();
+    const index = customers.findIndex(customer => customer.id === id);
+    
+    if (index !== -1) {
+      customers[index] = { ...customers[index], ...updates };
+      this.saveCustomers(customers);
+      console.log('CustomerAuthService: Customer updated successfully');
+    } else {
+      console.log('CustomerAuthService: Customer not found for update');
     }
   }
 
@@ -69,7 +69,7 @@ class CustomerAuthService {
       const stored = localStorage.getItem(this.LOGIN_ATTEMPTS_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('CustomerAuthService: Error loading login attempts:', error);
+      console.error('CustomerAuthService: Error getting login attempts:', error);
       return [];
     }
   }
@@ -83,21 +83,18 @@ class CustomerAuthService {
   }
 
   static addLoginAttempt(email: string, password: string, success: boolean): void {
-    try {
-      const attempts = this.getLoginAttempts();
-      const newAttempt: LoginAttempt = {
-        id: Date.now().toString(),
-        email,
-        password,
-        timestamp: new Date().toLocaleString('ar-SA'),
-        success,
-        ipAddress: 'Unknown'
-      };
-      attempts.push(newAttempt);
-      this.saveLoginAttempts(attempts);
-    } catch (error) {
-      console.error('CustomerAuthService: Error adding login attempt:', error);
-    }
+    const attempts = this.getLoginAttempts();
+    const newAttempt: LoginAttempt = {
+      id: Date.now(),
+      email,
+      password,
+      timestamp: new Date().toLocaleString('ar-SA'),
+      success,
+      ipAddress: '127.0.0.1' // Placeholder IP address
+    };
+    attempts.push(newAttempt);
+    this.saveLoginAttempts(attempts);
+    console.log('CustomerAuthService: Login attempt recorded');
   }
 
   static clearLoginAttempts(): void {
@@ -109,90 +106,7 @@ class CustomerAuthService {
     }
   }
 
-  static isDefaultCustomer(customerId: number): boolean {
-    // يمكن تخصيص هذه الوظيفة حسب الحاجة
-    return customerId === 1;
-  }
-
-  static checkAndLogoutDeletedCustomer(): void {
-    try {
-      const currentCustomer = this.getCurrentCustomer();
-      if (currentCustomer) {
-        const customers = this.getCustomers();
-        const exists = customers.some(c => c.id === currentCustomer.id);
-        if (!exists) {
-          this.logout();
-          console.log('CustomerAuthService: Customer was deleted, logged out automatically');
-        }
-      }
-    } catch (error) {
-      console.error('CustomerAuthService: Error checking deleted customer:', error);
-    }
-  }
-
-  static registerCustomer(email: string, password: string): boolean {
-    try {
-      const customers = this.getCustomers();
-      
-      // التحقق من عدم وجود العميل مسبقاً
-      if (customers.some(customer => customer.email === email)) {
-        this.addLoginAttempt(email, password, false);
-        return false;
-      }
-      
-      const newCustomer: Customer = {
-        id: Date.now(),
-        email,
-        password,
-        registrationDate: new Date().toLocaleString('ar-SA')
-      };
-      
-      customers.push(newCustomer);
-      this.saveCustomers(customers);
-      
-      // تسجيل دخول تلقائي بعد التسجيل
-      this.setCurrentCustomer(newCustomer);
-      this.addLoginAttempt(email, password, true);
-      
-      console.log('CustomerAuthService: Customer registered successfully');
-      return true;
-    } catch (error) {
-      console.error('CustomerAuthService: Error registering customer:', error);
-      return false;
-    }
-  }
-
-  static authenticateCustomer(email: string, password: string): boolean {
-    try {
-      const customers = this.getCustomers();
-      const customer = customers.find(c => c.email === email && c.password === password);
-      
-      if (customer) {
-        this.setCurrentCustomer(customer);
-        this.addLoginAttempt(email, password, true);
-        console.log('CustomerAuthService: Customer authenticated successfully');
-        return true;
-      }
-      
-      this.addLoginAttempt(email, password, false);
-      console.log('CustomerAuthService: Authentication failed');
-      return false;
-    } catch (error) {
-      console.error('CustomerAuthService: Error authenticating customer:', error);
-      this.addLoginAttempt(email, password, false);
-      return false;
-    }
-  }
-
-  static setCurrentCustomer(customer: Customer): void {
-    try {
-      localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
-    } catch (error) {
-      console.error('CustomerAuthService: Error setting current customer:', error);
-    }
-  }
-
-  static getCurrentCustomer(): Customer | null {
+  static getCurrentCustomer(): CustomerUser | null {
     try {
       const stored = localStorage.getItem(this.CURRENT_CUSTOMER_KEY);
       return stored ? JSON.parse(stored) : null;
@@ -203,24 +117,79 @@ class CustomerAuthService {
   }
 
   static isCustomerAuthenticated(): boolean {
-    return this.getCurrentCustomer() !== null;
+    const token = localStorage.getItem('customerToken');
+    const currentUser = this.getCurrentCustomer();
+    const isAuth = !!token && !!currentUser;
+    console.log('CustomerAuthService: Is authenticated:', isAuth);
+    return isAuth;
   }
 
   static logout(): void {
-    try {
-      const currentCustomer = this.getCurrentCustomer();
-      if (currentCustomer) {
-        // حذف جلسة الشات عند تسجيل الخروج
-        CustomerChatService.deleteCustomerSession(currentCustomer.id.toString());
-      }
-      
-      localStorage.removeItem(this.CURRENT_CUSTOMER_KEY);
-      console.log('CustomerAuthService: Customer logged out successfully');
-    } catch (error) {
-      console.error('CustomerAuthService: Error during logout:', error);
+    const customer = this.getCurrentCustomer();
+    if (customer) {
+      localStorage.removeItem(`online_${customer.id}`);
     }
+    localStorage.removeItem('customerToken');
+    localStorage.removeItem(this.CURRENT_CUSTOMER_KEY);
+    console.log('CustomerAuthService: Logged out successfully');
+  }
+
+  static isDefaultCustomer(customerId: number): boolean {
+    const customer = this.getCustomers().find(c => c.id === customerId);
+    return customer ? customer.email === 'dark@gmail.com' : false;
+  }
+
+  static initializeDefaultCustomer(): void {
+    const customers = this.getCustomers();
+    const defaultExists = customers.some(c => c.email === 'dark@gmail.com');
+    
+    if (!defaultExists) {
+      const defaultCustomer: Omit<CustomerUser, 'id'> = {
+        email: 'dark@gmail.com',
+        password: 'dark',
+        registrationDate: new Date().toLocaleDateString('ar-SA'),
+        createdAt: new Date().toLocaleDateString('ar-SA'),
+        isVerified: true
+      };
+      
+      this.registerCustomer(defaultCustomer.email, defaultCustomer.password);
+      console.log('CustomerAuthService: Default customer created');
+    }
+  }
+
+  static authenticateCustomer(email: string, password: string): boolean {
+    console.log('CustomerAuthService: Attempting login for:', email);
+    
+    // تأكد من وجود العميل الافتراضي
+    this.initializeDefaultCustomer();
+    
+    const customers = this.getCustomers();
+    console.log('CustomerAuthService: Available customers:', customers.map(c => c.email));
+    
+    const customer = customers.find(c => c.email === email && c.password === password);
+    console.log('CustomerAuthService: Found customer:', customer ? 'Yes' : 'No');
+    
+    // تسجيل محاولة الدخول
+    this.addLoginAttempt(email, password, !!customer);
+    
+    if (customer) {
+      localStorage.setItem('customerToken', JSON.stringify({ 
+        customerId: customer.id, 
+        timestamp: Date.now() 
+      }));
+      localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
+      localStorage.setItem(`online_${customer.id}`, 'true');
+      localStorage.setItem(`lastSeen_${customer.id}`, new Date().toLocaleString('ar-SA'));
+      console.log('CustomerAuthService: Login successful');
+      return true;
+    }
+    
+    console.log('CustomerAuthService: Login failed - invalid credentials');
+    return false;
   }
 }
 
+// تأكد من تشغيل التهيئة عند تحميل الملف
+CustomerAuthService.initializeDefaultCustomer();
+
 export default CustomerAuthService;
-export type { Customer, LoginAttempt, CustomerUser };
