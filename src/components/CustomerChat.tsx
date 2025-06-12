@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, MessageCircle, User, UserCheck, Upload, X, Image as ImageIcon, Video } from 'lucide-react';
+import { Send, MessageCircle, User, UserCheck, Paperclip, X, Image as ImageIcon, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,7 +41,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
     CustomerChatService.markMessagesAsRead(customerId.toString());
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -52,12 +51,16 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
     for (const file of Array.from(files)) {
       try {
         let processedFile: string;
-        if (type === 'image') {
+        const isVideo = file.type.startsWith('video/');
+        const isImage = file.type.startsWith('image/');
+        
+        if (isImage) {
           processedFile = await compressImage(file, 0.7);
-        } else {
+          newAttachments.push({ type: 'image', data: processedFile });
+        } else if (isVideo) {
           processedFile = await compressVideo(file, 0.6);
+          newAttachments.push({ type: 'video', data: processedFile });
         }
-        newAttachments.push({ type, data: processedFile });
       } catch (error) {
         console.error('Error processing file:', error);
       }
@@ -366,14 +369,14 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
           <div className="flex gap-1">
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               multiple
-              onChange={(e) => handleFileUpload(e, 'image')}
+              onChange={handleFileUpload}
               className="hidden"
-              id="image-upload"
+              id="media-upload"
               disabled={isLoading}
             />
-            <label htmlFor="image-upload">
+            <label htmlFor="media-upload">
               <Button 
                 type="button" 
                 variant="outline"
@@ -383,31 +386,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
                 asChild
               >
                 <span className="cursor-pointer">
-                  <ImageIcon className="w-4 h-4" />
-                </span>
-              </Button>
-            </label>
-
-            <input
-              type="file"
-              accept="video/*"
-              multiple
-              onChange={(e) => handleFileUpload(e, 'video')}
-              className="hidden"
-              id="video-upload"
-              disabled={isLoading}
-            />
-            <label htmlFor="video-upload">
-              <Button 
-                type="button" 
-                variant="outline"
-                size="sm"
-                disabled={isLoading}
-                className="bg-white/10 border-white/20 hover:bg-white/20"
-                asChild
-              >
-                <span className="cursor-pointer">
-                  <Video className="w-4 h-4" />
+                  <Paperclip className="w-4 h-4" />
                 </span>
               </Button>
             </label>
