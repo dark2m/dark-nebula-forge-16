@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Clock, Shield, User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
+import CustomerChat from '../components/CustomerChat';
 import SettingsService from '../utils/settingsService';
 import CustomerAuthService from '../utils/customerAuthService';
 import { Button } from '@/components/ui/button';
@@ -112,7 +112,7 @@ const CustomerSupport = () => {
     // سيتم ربطها بـ Supabase لاحقاً
   };
 
-  // إذا كان العميل مسجل دخول، عرض واجهة خدمة العملاء
+  // إذا كان العميل مسجل دخول، عرض واجهة خدمة العملاء مع الشات
   if (isAuthenticated && currentCustomer) {
     // استخراج اسم المستخدم من الإيميل (الجزء قبل @)
     const username = currentCustomer.email.split('@')[0];
@@ -128,43 +128,86 @@ const CustomerSupport = () => {
                 مرحباً {username}
               </h1>
               <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
-                نحن سعداء لخدمتك. يمكنك الآن الوصول إلى جميع خدمات الدعم المتاحة
+                نحن سعداء لخدمتك. يمكنك الآن التواصل معنا مباشرة
               </p>
             </div>
 
-            <div className="max-w-4xl mx-auto">
-              {/* ساعات العمل فقط */}
-              <Card className="bg-white/10 backdrop-blur-md border border-white/20 mb-6">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                    <Clock className="w-5 h-5" />
-                    {customerSupportTexts.workingHoursTitle}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
-                    <div>
-                      <p><strong>الأحد - الخميس:</strong> {customerSupportTexts.workingHours.weekdays}</p>
-                      <p><strong>الجمعة:</strong> {customerSupportTexts.workingHours.friday}</p>
-                    </div>
-                    <div>
-                      <p className="text-green-400">
-                        {customerSupportTexts.supportNote}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* الشات */}
+                <div>
+                  <CustomerChat 
+                    customerId={currentCustomer.id} 
+                    customerEmail={currentCustomer.email} 
+                  />
+                </div>
 
-              {/* زر تسجيل الخروج */}
-              <div className="text-center">
-                <Button 
-                  onClick={handleLogout}
-                  variant="outline"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                >
-                  تسجيل الخروج
-                </Button>
+                {/* معلومات إضافية */}
+                <div className="space-y-6">
+                  {/* ساعات العمل */}
+                  <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                        <Clock className="w-5 h-5" />
+                        {customerSupportTexts.workingHoursTitle}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 text-gray-300">
+                        <div>
+                          <p><strong>الأحد - الخميس:</strong> {customerSupportTexts.workingHours.weekdays}</p>
+                          <p><strong>الجمعة:</strong> {customerSupportTexts.workingHours.friday}</p>
+                        </div>
+                        <div>
+                          <p className="text-green-400">
+                            {customerSupportTexts.supportNote}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* نصائح للاستخدام */}
+                  <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+                    <CardHeader>
+                      <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                        <Shield className="w-5 h-5" />
+                        نصائح للحصول على أفضل دعم
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3 text-gray-300">
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                          <p>وضح مشكلتك بالتفصيل</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
+                          <p>أرفق صور إن أمكن (سيتم إضافة هذه الميزة قريباً)</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
+                          <p>انتظر الرد - فريقنا يعمل على مدار الساعة</p>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+                          <p>تحقق من الشات بانتظام للحصول على الردود</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* زر تسجيل الخروج */}
+                  <div className="text-center">
+                    <Button 
+                      onClick={handleLogout}
+                      variant="outline"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                    >
+                      تسجيل الخروج
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

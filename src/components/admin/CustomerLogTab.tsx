@@ -1,12 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock } from 'lucide-react';
+import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock, MessageCircle, Send, Reply } from 'lucide-react';
 import CustomerAuthService, { type LoginAttempt } from '../../utils/customerAuthService';
+import CustomerChatService, { type ChatMessage, type ChatSession } from '../../utils/customerChatService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CustomerUser {
   id: number;
@@ -23,15 +27,21 @@ interface CustomerUser {
 const CustomerLogTab = () => {
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
   const [loginAttempts, setLoginAttempts] = useState<LoginAttempt[]>([]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
+  const [adminReplies, setAdminReplies] = useState<{[key: number]: string}>({});
   const { toast } = useToast();
 
   useEffect(() => {
     loadCustomers();
     loadLoginAttempts();
+    loadChatSessions();
     
-    // تحديث حالة الاتصال كل 30 ثانية
-    const interval = setInterval(updateOnlineStatus, 30000);
+    // تحديث البيانات كل 30 ثانية
+    const interval = setInterval(() => {
+      updateOnlineStatus();
+      loadChatSessions();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -50,6 +60,13 @@ const CustomerLogTab = () => {
   const loadLoginAttempts = () => {
     const attempts = CustomerAuthService.getLoginAttempts();
     setLoginAttempts(attempts.reverse()); // عرض الأحدث أولاً
+  };
+
+  const loadChatSessions = () => {
+    const sessions = CustomerChatService.getChatSessions();
+    setChatSessions(sessions.sort((a, b) => 
+      new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
+    ));
   };
 
   const updateOnlineStatus = () => {
@@ -158,6 +175,30 @@ const CustomerLogTab = () => {
     });
   };
 
+  const handleAdminReply = (messageId: number, customerId: number) => {
+    const reply = adminReplies[messageId];
+    if (!reply?.trim()) return;
+
+    const success = CustomerChatService.sendAdminReply(customerId, messageId, reply.trim());
+    if (success) {
+      setAdminReplies(prev => ({
+        ...prev,
+        [messageId]: ''
+      }));
+      loadChatSessions();
+      toast({
+        title: "تم إرسال الرد",
+        description: "تم إرسال ردك للعميل بنجاح"
+      });
+    } else {
+      toast({
+        title: "خطأ في الإرسال",
+        description: "حدث خطأ أثناء إرسال الرد",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusBadge = (customer: CustomerUser) => {
     if (customer.isDefault) {
       return <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs flex items-center gap-1">
@@ -186,6 +227,7 @@ const CustomerLogTab = () => {
   const onlineCustomers = customers.filter(c => c.isOnline && !c.isBlocked).length;
   const blockedCustomers = customers.filter(c => c.isBlocked).length;
   const failedAttempts = loginAttempts.filter(a => !a.success).length;
+  const totalUnreadMessages = CustomerChatService.getTotalUnreadCount();
 
   return (
     <div className="space-y-6">
@@ -195,6 +237,7 @@ const CustomerLogTab = () => {
           onClick={() => {
             loadCustomers();
             loadLoginAttempts();
+            loadChatSessions();
           }}
           className="glow-button"
         >
@@ -203,7 +246,7 @@ const CustomerLogTab = () => {
       </div>
 
       {/* إحصائيات سريعة */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
         <Card className="bg-white/10 backdrop-blur-md border border-white/20">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2 rtl:space-x-reverse">
@@ -263,13 +306,34 @@ const CustomerLogTab = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <MessageCircle className="w-5 h-5 text-cyan-400" />
+              <div>
+                <p className="text-gray-400 text-sm">رسائل جديدة</p>
+                <p className="text-white text-xl font-bold">{totalUnreadMessages}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* التبويبات */}
       <Tabs defaultValue="customers" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 bg-white/10">
+        <TabsList className="grid w-full grid-cols-3 bg-white/10">
           <TabsTrigger value="customers" className="text-white data-[state=active]:bg-blue-500/20">
             العملاء المسجلون
+          </TabsTrigger>
+          <TabsTrigger value="chat" className="text-white data-[state=active]:bg-blue-500/20 flex items-center gap-2">
+            <MessageCircle className="w-4 h-4" />
+            رسائل العملاء
+            {totalUnreadMessages > 0 && (
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                {totalUnreadMessages}
+              </span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="attempts" className="text-white data-[state=active]:bg-blue-500/20">
             محاولات تسجيل الدخول
@@ -396,6 +460,100 @@ const CustomerLogTab = () => {
                   <p className="text-gray-400">لا يوجد عملاء مسجلين حتى الآن</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="chat">
+          {/* جدول رسائل العملاء */}
+          <Card className="bg-white/10 backdrop-blur-md border border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <MessageCircle className="w-5 h-5" />
+                رسائل العملاء
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                جميع رسائل العملاء وردود الإدارة - الرسائل مرتبة حسب آخر نشاط
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                {chatSessions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">لا توجد رسائل من العملاء</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {chatSessions.map((session) => (
+                      <div key={session.customerId} className="border border-white/20 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-white font-medium">{session.customerEmail}</h3>
+                            <p className="text-gray-400 text-sm">آخر نشاط: {session.lastActivity}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              session.status === 'waiting' ? 'bg-orange-500/20 text-orange-400' :
+                              session.status === 'active' ? 'bg-green-500/20 text-green-400' :
+                              'bg-gray-500/20 text-gray-400'
+                            }`}>
+                              {session.status === 'waiting' ? 'في انتظار الرد' :
+                               session.status === 'active' ? 'نشط' : 'مغلق'}
+                            </span>
+                            {session.unreadCount > 0 && (
+                              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                {session.unreadCount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          {session.messages.map((message) => (
+                            <div key={message.id} className="space-y-2">
+                              {/* رسالة العميل */}
+                              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                                <p className="text-white">{message.message}</p>
+                                <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
+                              </div>
+                              
+                              {/* رد الإدارة إن وجد */}
+                              {message.adminReply ? (
+                                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mr-4">
+                                  <p className="text-green-400 text-sm font-medium mb-1">رد الإدارة:</p>
+                                  <p className="text-white">{message.adminReply}</p>
+                                  <p className="text-gray-400 text-xs mt-1">{message.adminReplyTimestamp}</p>
+                                </div>
+                              ) : (
+                                /* نموذج الرد */
+                                <div className="mr-4 flex gap-2">
+                                  <Textarea
+                                    placeholder="اكتب ردك هنا..."
+                                    value={adminReplies[message.id] || ''}
+                                    onChange={(e) => setAdminReplies(prev => ({
+                                      ...prev,
+                                      [message.id]: e.target.value
+                                    }))}
+                                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 flex-1 min-h-[80px]"
+                                  />
+                                  <Button
+                                    onClick={() => handleAdminReply(message.id, session.customerId)}
+                                    disabled={!adminReplies[message.id]?.trim()}
+                                    className="glow-button"
+                                  >
+                                    <Send className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
