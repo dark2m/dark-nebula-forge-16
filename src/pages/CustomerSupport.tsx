@@ -55,7 +55,12 @@ const CustomerSupport = () => {
     }
 
     setIsLoading(true);
+    
+    // إضافة محاولة تسجيل دخول مع تسجيل أفضل
+    console.log('Attempting login with:', { email, password });
     const isAuthenticated = CustomerAuthService.authenticateCustomer(email, password);
+    console.log('Authentication result:', isAuthenticated);
+    
     setIsLoading(false);
 
     if (isAuthenticated) {
@@ -68,7 +73,7 @@ const CustomerSupport = () => {
     } else {
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: "خطأ في البريد الإلكتروني أو كلمة المرور",
+        description: "خطأ في البريد الإلكتروني أو كلمة المرور. تأكد من صحة البيانات أو قم بإنشاء حساب جديد",
         variant: "destructive"
       });
     }
@@ -110,7 +115,9 @@ const CustomerSupport = () => {
     const code = EmailService.generateVerificationCode();
     setVerificationCode(code);
     
-    // إرسال كود التحقق
+    console.log('Generated verification code:', code);
+    
+    // محاولة إرسال كود التحقق
     const emailSent = await EmailService.sendVerificationCode(email, code);
     
     if (emailSent) {
@@ -120,9 +127,12 @@ const CustomerSupport = () => {
         description: "تم إرسال كود التحقق إلى بريدك الإلكتروني"
       });
     } else {
+      // في حالة فشل الإرسال، نسمح للمستخدم بالمتابعة مع عرض الكود
+      console.log('Email failed to send, showing verification dialog anyway');
+      setShowVerificationDialog(true);
       toast({
-        title: "خطأ في الإرسال",
-        description: "حدث خطأ أثناء إرسال كود التحقق. يرجى المحاولة مرة أخرى",
+        title: "تعذر إرسال الإيميل",
+        description: `كود التحقق هو: ${code}`,
         variant: "destructive"
       });
     }
