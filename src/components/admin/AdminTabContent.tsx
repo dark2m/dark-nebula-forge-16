@@ -12,6 +12,7 @@ import OverviewTab from './OverviewTab';
 import UsersTab from './UsersTab';
 import PasswordsTab from './PasswordsTab';
 import ToolsTab from './ToolsTab';
+import CustomerSupportTab from './CustomerSupportTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -64,6 +65,15 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       case 'tools':
         return (
           <ToolsTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
+
+      case 'customer-support':
+        return (
+          <CustomerSupportTab
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             saveSiteSettings={saveSiteSettings}
