@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Save, Palette, Type, Layout, Settings, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
   saveSiteSettings
 }) => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white/10 backdrop-blur-sm rounded-xl p-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white">تحكم شامل في الموقع</h2>
@@ -37,23 +38,23 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 bg-white/10">
-          <TabsTrigger value="general" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">عام</TabsTrigger>
-          <TabsTrigger value="taskbar" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">شريط المهام</TabsTrigger>
-          <TabsTrigger value="appearance" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">المظهر</TabsTrigger>
-          <TabsTrigger value="layout" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">التخطيط</TabsTrigger>
-          <TabsTrigger value="background" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">الخلفية</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 bg-white/20 backdrop-blur-sm">
+          <TabsTrigger value="general" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">عام</TabsTrigger>
+          <TabsTrigger value="taskbar" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">شريط المهام</TabsTrigger>
+          <TabsTrigger value="appearance" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">المظهر</TabsTrigger>
+          <TabsTrigger value="layout" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">التخطيط</TabsTrigger>
+          <TabsTrigger value="background" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">الخلفية</TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
         <TabsContent value="general" className="space-y-6">
-          <Card className="bg-white/5 border-white/20">
+          <Card className="bg-white/20 backdrop-blur-sm border-white/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
                 <Globe className="w-5 h-5" />
                 إعدادات الموقع العامة
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription className="text-gray-200">
                 إعدادات أساسية للموقع
               </CardDescription>
             </CardHeader>
@@ -69,7 +70,7 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                       title: e.target.value
                     })}
                     placeholder="اسم الموقع"
-                    className="bg-white/10 border-white/20 text-white"
+                    className="bg-white/20 border-white/30 text-white placeholder:text-gray-300"
                   />
                 </div>
                 <div>
@@ -81,10 +82,10 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                       titleSize: value as any
                     })}
                   >
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-white/20">
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
                       <SelectItem value="small">صغير</SelectItem>
                       <SelectItem value="medium">متوسط</SelectItem>
                       <SelectItem value="large">كبير</SelectItem>
@@ -105,7 +106,7 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                   })}
                   placeholder="وصف مختصر للموقع"
                   rows={3}
-                  className="bg-white/10 border-white/20 text-white"
+                  className="bg-white/20 border-white/30 text-white placeholder:text-gray-300"
                 />
               </div>
 
@@ -118,10 +119,10 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                     globalTextSize: value as any
                   })}
                 >
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                  <SelectTrigger className="bg-white/20 border-white/30 text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-white/20">
+                  <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
                     <SelectItem value="small">صغير</SelectItem>
                     <SelectItem value="medium">متوسط</SelectItem>
                     <SelectItem value="large">كبير</SelectItem>
@@ -134,22 +135,24 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
 
         {/* Taskbar Control */}
         <TabsContent value="taskbar" className="space-y-6">
-          <TaskbarControl
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
-            saveSiteSettings={saveSiteSettings}
-          />
+          <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg p-6">
+            <TaskbarControl
+              siteSettings={siteSettings}
+              setSiteSettings={setSiteSettings}
+              saveSiteSettings={saveSiteSettings}
+            />
+          </div>
         </TabsContent>
 
         {/* Appearance Settings */}
         <TabsContent value="appearance" className="space-y-6">
-          <Card className="bg-white/5 border-white/20">
+          <Card className="bg-white/20 backdrop-blur-sm border-white/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
                 <Palette className="w-5 h-5" />
                 إعدادات المظهر
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription className="text-gray-200">
                 تخصيص ألوان وشكل الموقع
               </CardDescription>
             </CardHeader>
@@ -168,7 +171,7 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                         primary: e.target.value
                       }
                     })}
-                    className="h-12"
+                    className="h-12 bg-white/20 border-white/30"
                   />
                 </div>
                 <div>
@@ -184,7 +187,7 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                         secondary: e.target.value
                       }
                     })}
-                    className="h-12"
+                    className="h-12 bg-white/20 border-white/30"
                   />
                 </div>
                 <div>
@@ -200,12 +203,12 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                         accent: e.target.value
                       }
                     })}
-                    className="h-12"
+                    className="h-12 bg-white/20 border-white/30"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 bg-white/10 p-3 rounded-lg">
                 <Switch
                   id="animations"
                   checked={siteSettings.design?.animations || false}
@@ -225,13 +228,13 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
 
         {/* Layout Settings */}
         <TabsContent value="layout" className="space-y-6">
-          <Card className="bg-white/5 border-white/20">
+          <Card className="bg-white/20 backdrop-blur-sm border-white/30">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
                 <Layout className="w-5 h-5" />
                 إعدادات التخطيط
               </CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription className="text-gray-200">
                 تحكم في تباعد العناصر وتخطيط الصفحة
               </CardDescription>
             </CardHeader>
@@ -249,10 +252,10 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                       }
                     })}
                   >
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-white/20">
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
                       <SelectItem value="system">النظام الافتراضي</SelectItem>
                       <SelectItem value="arabic">خط عربي</SelectItem>
                       <SelectItem value="modern">خط عصري</SelectItem>
@@ -271,10 +274,10 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                       }
                     })}
                   >
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-white/20">
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
                       <SelectItem value="tight">ضيق</SelectItem>
                       <SelectItem value="normal">عادي</SelectItem>
                       <SelectItem value="relaxed">مريح</SelectItem>
@@ -288,16 +291,16 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
 
         {/* Background Settings */}
         <TabsContent value="background" className="space-y-6">
-          <Card className="bg-white/5 border-white/20">
+          <Card className="bg-white/20 backdrop-blur-sm border-white/30">
             <CardHeader>
               <CardTitle className="text-white">إعدادات الخلفية المتحركة</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription className="text-gray-200">
                 تخصيص النجوم والشهب في الخلفية
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="bg-white/10 p-4 rounded-lg">
                   <Label className="text-white">عدد النجوم: {siteSettings.backgroundSettings?.starCount || 80}</Label>
                   <Slider
                     value={[siteSettings.backgroundSettings?.starCount || 80]}
@@ -314,7 +317,7 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                     className="mt-2"
                   />
                 </div>
-                <div>
+                <div className="bg-white/10 p-4 rounded-lg">
                   <Label className="text-white">عدد الشهب: {siteSettings.backgroundSettings?.meteorCount || 10}</Label>
                   <Slider
                     value={[siteSettings.backgroundSettings?.meteorCount || 10]}
@@ -346,10 +349,10 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                       }
                     })}
                   >
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-white/20">
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
                       <SelectItem value="slow">بطيء</SelectItem>
                       <SelectItem value="normal">عادي</SelectItem>
                       <SelectItem value="fast">سريع</SelectItem>
@@ -368,10 +371,10 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
                       }
                     })}
                   >
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-white/20">
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
                       <SelectItem value="small">صغير</SelectItem>
                       <SelectItem value="medium">متوسط</SelectItem>
                       <SelectItem value="large">كبير</SelectItem>

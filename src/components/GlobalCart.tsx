@@ -78,8 +78,8 @@ const GlobalCart = () => {
 
   return (
     <>
-      {/* Cart Button */}
-      <div className="fixed top-20 right-6 z-50">
+      {/* Cart Button - Positioned at bottom right for mobile and tablets */}
+      <div className="fixed bottom-6 right-6 z-50 md:top-20 md:bottom-auto">
         <Button
           onClick={() => setIsCartOpen(true)}
           className="glow-button relative"
