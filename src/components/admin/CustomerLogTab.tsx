@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock, MessageCircle, Send, Reply } from 'lucide-react';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock, MessageCircle, Send, Reply, Paperclip, Image, Video, X, ExternalLink } from 'lucide-react';
 import CustomerAuthService, { type LoginAttempt } from '../../utils/customerAuthService';
 import CustomerChatService, { type ChatMessage, type ChatSession, type AdminMessage } from '../../utils/customerChatService';
 import { useToast } from '@/hooks/use-toast';
@@ -28,8 +29,10 @@ const CustomerLogTab = () => {
   const [loginAttempts, setLoginAttempts] = useState<LoginAttempt[]>([]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
-  const [adminMessage, setAdminMessage] = useState<{[key: number]: string}>({});
+  const [adminMessage, setAdminMessage] = useState<{[key: string]: string}>({});
   const [adminReplies, setAdminReplies] = useState<{[key: number]: string}>({});
+  const [selectedFiles, setSelectedFiles] = useState<{[key: string]: File[]}>({});
+  const fileInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -175,15 +178,68 @@ const CustomerLogTab = () => {
     });
   };
 
-  const handleSendAdminMessage = (customerId: number) => {
-    const message = adminMessage[customerId];
-    if (!message?.trim()) return;
+  const handleFileSelect = (customerId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      const isValidSize = file.size <= 50 * 1024 * 1024; // 50MB
+      
+      if (!isValidSize) {
+        toast({
+          title: "حجم الملف كبير جداً",
+          description: "يجب أن يكون حجم الملف أقل من 50 ميجابايت",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      return isImage || isVideo;
+    });
 
-    const success = CustomerChatService.sendAdminMessage(customerId, message.trim());
+    setSelectedFiles(prev => ({
+      ...prev,
+      [customerId]: [...(prev[customerId] || []), ...validFiles]
+    }));
+  };
+
+  const removeFile = (customerId: string, index: number) => {
+    setSelectedFiles(prev => ({
+      ...prev,
+      [customerId]: (prev[customerId] || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleSendAdminMessage = (customerId: string) => {
+    const message = adminMessage[customerId];
+    const files = selectedFiles[customerId] || [];
+    
+    if (!message?.trim() && files.length === 0) return;
+
+    const fileAttachments = files.map(file => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      url: URL.createObjectURL(file)
+    }));
+
+    const success = CustomerChatService.sendAdminMessage(customerId, message?.trim() || '', undefined, fileAttachments);
     if (success) {
       setAdminMessage(prev => ({
         ...prev,
         [customerId]: ''
+      }));
+      setSelectedFiles(prev => ({
+        ...prev,
+        [customerId]: []
       }));
       loadChatSessions();
       toast({
@@ -199,7 +255,7 @@ const CustomerLogTab = () => {
     }
   };
 
-  const handleAdminReply = (messageId: number, customerId: number) => {
+  const handleAdminReply = (messageId: number, customerId: string) => {
     const reply = adminReplies[messageId];
     if (!reply?.trim()) return;
 
@@ -497,7 +553,7 @@ const CustomerLogTab = () => {
                 رسائل العملاء
               </CardTitle>
               <CardDescription className="text-gray-400">
-                جميع رسائل العملاء وردود الإدارة - يمكنك إرسال رسائل متعددة للعميل
+                جميع رسائل العملاء وردود الإدارة - يمكنك إرسال رسائل متعددة وملفات للعميل
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -540,7 +596,61 @@ const CustomerLogTab = () => {
                                 // رسالة من الإدارة
                                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 mr-4">
                                   <p className="text-green-400 text-sm font-medium mb-1">رسالة من الإدارة:</p>
-                                  <p className="text-white">{message.message}</p>
+                                  {message.message && <p className="text-white mb-2">{message.message}</p>}
+                                  
+                                  {/* عرض الملفات المرفقة من الإدارة */}
+                                  {message.files && message.files.length > 0 && (
+                                    <div className="space-y-2">
+                                      {message.files.map((file, index) => (
+                                        <div key={index} className="border border-green-500/20 rounded-lg p-2">
+                                          {file.type.startsWith('image/') ? (
+                                            <div className="space-y-2">
+                                              <img 
+                                                src={file.url} 
+                                                alt={file.name}
+                                                className="max-w-full h-auto rounded cursor-pointer hover:opacity-80 transition-opacity max-h-60"
+                                                onClick={() => window.open(file.url, '_blank')}
+                                              />
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-green-300">{file.name}</span>
+                                                <button
+                                                  onClick={() => window.open(file.url, '_blank')}
+                                                  className="text-green-400 hover:text-green-300"
+                                                >
+                                                  <ExternalLink className="w-3 h-3" />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ) : file.type.startsWith('video/') ? (
+                                            <div className="space-y-2">
+                                              <video 
+                                                src={file.url} 
+                                                controls 
+                                                className="max-w-full h-auto rounded max-h-60"
+                                                preload="metadata"
+                                              />
+                                              <div className="flex items-center justify-between text-xs">
+                                                <span className="text-green-300">{file.name}</span>
+                                                <button
+                                                  onClick={() => window.open(file.url, '_blank')}
+                                                  className="text-green-400 hover:text-green-300"
+                                                >
+                                                  <ExternalLink className="w-3 h-3" />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                                              <Paperclip className="w-4 h-4 text-green-400" />
+                                              <span className="text-sm text-green-300">{file.name}</span>
+                                              <span className="text-xs text-green-400">({formatFileSize(file.size)})</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  
                                   <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                                 </div>
                               ) : (
@@ -588,9 +698,37 @@ const CustomerLogTab = () => {
                           ))}
                         </div>
 
+                        {/* منطقة الملفات المحددة */}
+                        {selectedFiles[session.customerId] && selectedFiles[session.customerId].length > 0 && (
+                          <div className="mb-4 p-3 bg-white/10 rounded-lg border-t border-white/20">
+                            <h4 className="text-sm font-medium text-white mb-2">الملفات المحددة:</h4>
+                            <div className="space-y-2">
+                              {selectedFiles[session.customerId].map((file, index) => (
+                                <div key={index} className="flex items-center justify-between bg-black/20 rounded p-2">
+                                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                                    {file.type.startsWith('image/') ? (
+                                      <Image className="w-4 h-4 text-green-400" />
+                                    ) : (
+                                      <Video className="w-4 h-4 text-blue-400" />
+                                    )}
+                                    <span className="text-sm text-white">{file.name}</span>
+                                    <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
+                                  </div>
+                                  <button
+                                    onClick={() => removeFile(session.customerId, index)}
+                                    className="text-red-400 hover:text-red-300"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* نموذج إرسال رسالة جديدة للعميل */}
                         <div className="border-t border-white/20 pt-4">
-                          <div className="flex gap-2">
+                          <div className="space-y-3">
                             <Textarea
                               placeholder="إرسال رسالة جديدة للعميل..."
                               value={adminMessage[session.customerId] || ''}
@@ -598,16 +736,36 @@ const CustomerLogTab = () => {
                                 ...prev,
                                 [session.customerId]: e.target.value
                               }))}
-                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 flex-1 min-h-[80px]"
+                              className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 min-h-[80px]"
                             />
-                            <Button
-                              onClick={() => handleSendAdminMessage(session.customerId)}
-                              disabled={!adminMessage[session.customerId]?.trim()}
-                              className="glow-button"
-                              title="إرسال رسالة جديدة"
-                            >
-                              <Send className="w-4 h-4" />
-                            </Button>
+                            <div className="flex gap-2">
+                              <input
+                                ref={(el) => fileInputRefs.current[session.customerId] = el}
+                                type="file"
+                                multiple
+                                accept="image/*,video/*"
+                                onChange={(e) => handleFileSelect(session.customerId, e)}
+                                className="hidden"
+                              />
+                              <Button
+                                onClick={() => fileInputRefs.current[session.customerId]?.click()}
+                                variant="outline"
+                                className="flex items-center gap-2"
+                                title="إرفاق صور أو فيديوهات"
+                              >
+                                <Paperclip className="w-4 h-4" />
+                                إرفاق ملف
+                              </Button>
+                              <Button
+                                onClick={() => handleSendAdminMessage(session.customerId)}
+                                disabled={!adminMessage[session.customerId]?.trim() && (!selectedFiles[session.customerId] || selectedFiles[session.customerId].length === 0)}
+                                className="glow-button flex items-center gap-2"
+                                title="إرسال رسالة جديدة"
+                              >
+                                <Send className="w-4 h-4" />
+                                إرسال
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>

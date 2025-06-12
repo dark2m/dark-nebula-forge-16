@@ -1,3 +1,4 @@
+
 interface MediaAttachment {
   type: 'image' | 'video';
   data: string;
@@ -127,39 +128,6 @@ class CustomerChatService {
     }
   }
 
-  static addMessage(messageData: Omit<ChatMessage | AdminMessage, 'id' | 'timestamp'>): void {
-    try {
-      const sessions = this.getChatSessions();
-      const newMessage = {
-        ...messageData,
-        id: Date.now(),
-        timestamp: new Date().toLocaleString('ar-SA')
-      };
-
-      let session = sessions.find(s => s.customerId === messageData.customerId);
-      if (session) {
-        session.messages.push(newMessage);
-        session.lastActivity = newMessage.timestamp;
-        session.status = 'active';
-      } else {
-        session = {
-          customerId: messageData.customerId,
-          customerEmail: `customer${messageData.customerId}@example.com`,
-          messages: [newMessage],
-          lastActivity: newMessage.timestamp,
-          status: 'active',
-          unreadCount: 0
-        };
-        sessions.push(session);
-      }
-
-      this.saveChatSessions(sessions);
-      console.log('CustomerChatService: Message added successfully');
-    } catch (error) {
-      console.error('CustomerChatService: Error adding message:', error);
-    }
-  }
-
   static sendCustomerMessage(
     customerId: string, 
     customerEmail: string, 
@@ -212,7 +180,7 @@ class CustomerChatService {
     }
   }
 
-  static sendAdminMessage(customerId: string, message: string, attachments?: MediaAttachment[]): boolean {
+  static sendAdminMessage(customerId: string, message: string, attachments?: MediaAttachment[], files?: FileAttachment[]): boolean {
     try {
       const sessions = this.getChatSessions();
       const adminMessages = this.getAdminMessages();
@@ -224,7 +192,8 @@ class CustomerChatService {
         timestamp: new Date().toLocaleString('ar-SA'),
         isFromAdmin: true,
         attachments: attachments || [],
-        sender: 'support'
+        sender: 'support',
+        files: files || []
       };
 
       adminMessages.push(newAdminMessage);
