@@ -9,6 +9,8 @@ import DesignTab from './DesignTab';
 import LivePreviewTab from './LivePreviewTab';
 import BackupTab from './BackupTab';
 import OverviewTab from './OverviewTab';
+import UsersTab from './UsersTab';
+import PasswordsTab from './PasswordsTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -51,6 +53,12 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
             canAccess={canAccess}
           />
         );
+
+      case 'users':
+        return <UsersTab />;
+
+      case 'passwords':
+        return <PasswordsTab />;
 
       case 'site-control':
         return (

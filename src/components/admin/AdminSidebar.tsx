@@ -11,7 +11,8 @@ import {
   Eye,
   Database,
   Shield,
-  User
+  User,
+  Key
 } from 'lucide-react';
 import type { AdminUser } from '../../types/admin';
 
@@ -39,7 +40,19 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       id: 'products',
       name: 'إدارة المنتجات',
       icon: Package,
-      requiredRole: 'مبرمج' as const
+      requiredRole: 'مشرف' as const
+    },
+    {
+      id: 'users',
+      name: 'إدارة المستخدمين',
+      icon: User,
+      requiredRole: 'مدير عام' as const
+    },
+    {
+      id: 'passwords',
+      name: 'إدارة كلمات المرور',
+      icon: Key,
+      requiredRole: 'مدير عام' as const
     },
     {
       id: 'site-control',
@@ -63,7 +76,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       id: 'contact',
       name: 'معلومات التواصل',
       icon: MessageCircle,
-      requiredRole: 'مبرمج' as const
+      requiredRole: 'مشرف' as const
     },
     {
       id: 'design',
