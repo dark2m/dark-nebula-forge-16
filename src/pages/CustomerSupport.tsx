@@ -265,10 +265,9 @@ const CustomerSupport = () => {
             <div className="grid grid-cols-[1fr_auto] gap-2">
               <div className="font-semibold">
                 <InputOTP
-                  length={6}
+                  maxLength={6}
                   value={otp}
                   onChange={setOtp}
-                  mask
                 >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
