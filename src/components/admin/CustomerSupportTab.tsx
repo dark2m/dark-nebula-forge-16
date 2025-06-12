@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Save, MessageCircle, Phone, Clock, Shield } from 'lucide-react';
+import { Save, Phone, Clock, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -54,62 +54,9 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     });
   };
 
-  const updateSupportPolicy = (index: number, value: string) => {
-    const currentPolicies = siteSettings.pageTexts.customerSupport?.supportPolicies || [];
-    const newPolicies = [...currentPolicies];
-    newPolicies[index] = value;
-    
-    setSiteSettings({
-      ...siteSettings,
-      pageTexts: {
-        ...siteSettings.pageTexts,
-        customerSupport: {
-          ...siteSettings.pageTexts.customerSupport,
-          supportPolicies: newPolicies
-        }
-      }
-    });
-  };
-
-  const addSupportPolicy = () => {
-    const currentPolicies = siteSettings.pageTexts.customerSupport?.supportPolicies || [];
-    setSiteSettings({
-      ...siteSettings,
-      pageTexts: {
-        ...siteSettings.pageTexts,
-        customerSupport: {
-          ...siteSettings.pageTexts.customerSupport,
-          supportPolicies: [...currentPolicies, 'سياسة دعم جديدة']
-        }
-      }
-    });
-  };
-
-  const removeSupportPolicy = (index: number) => {
-    const currentPolicies = siteSettings.pageTexts.customerSupport?.supportPolicies || [];
-    const newPolicies = currentPolicies.filter((_, i) => i !== index);
-    
-    setSiteSettings({
-      ...siteSettings,
-      pageTexts: {
-        ...siteSettings.pageTexts,
-        customerSupport: {
-          ...siteSettings.pageTexts.customerSupport,
-          supportPolicies: newPolicies
-        }
-      }
-    });
-  };
-
   const customerSupportTexts = siteSettings.pageTexts.customerSupport || {
     pageTitle: 'خدمة العملاء',
     pageDescription: 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة',
-    telegramTitle: 'تيليجرام',
-    telegramDescription: 'للدعم الفوري والاستفسارات العامة',
-    telegramButtonText: 'تواصل عبر تيليجرام',
-    discordTitle: 'ديسكورد',
-    discordDescription: 'انضم إلى مجتمعنا ودردش مع الفريق',
-    discordButtonText: 'انضم إلى الديسكورد',
     whatsappTitle: 'واتساب',
     whatsappDescription: 'للدعم الشخصي المباشر',
     whatsappButtonText: 'راسل عبر واتساب',
@@ -118,14 +65,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
       weekdays: '9:00 ص - 11:00 م',
       friday: '2:00 م - 11:00 م'
     },
-    supportNote: '💡 الدعم الفني متاح 24/7 عبر تيليجرام للحالات الطارئة',
-    supportPolicyTitle: 'سياسة الدعم',
-    supportPolicies: [
-      'استجابة فورية للاستفسارات العامة',
-      'دعم فني متخصص لجميع المنتجات',
-      'ضمان الجودة وحل المشاكل',
-      'متابعة مستمرة لرضا العملاء'
-    ]
+    supportNote: '💡 الدعم الفني متاح 24/7 عبر واتساب للحالات الطارئة'
   };
 
   return (
@@ -133,7 +73,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <MessageCircle className="w-6 h-6" />
+            <Phone className="w-6 h-6" />
             إدارة صفحة خدمة العملاء
           </h2>
           <p className="text-gray-400 mt-1">تحكم في جميع النصوص والمحتوى الخاص بصفحة خدمة العملاء</p>
@@ -175,122 +115,41 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* نصوص طرق التواصل */}
+      {/* إعدادات الواتساب */}
       <Card className="bg-white/5 border-white/20">
         <CardHeader>
-          <CardTitle className="text-white">نصوص طرق التواصل</CardTitle>
+          <CardTitle className="text-white">إعدادات الواتساب</CardTitle>
           <CardDescription className="text-gray-400">
-            تحرير النصوص الخاصة بكل طريقة تواصل
+            تحرير النصوص الخاصة بالواتساب
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* تيليجرام */}
-          <div className="space-y-3">
-            <h3 className="text-white font-semibold flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
-              تيليجرام
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-white">العنوان</Label>
-                <Input
-                  value={customerSupportTexts.telegramTitle}
-                  onChange={(e) => updateCustomerSupportTexts('telegramTitle', e.target.value)}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              <div>
-                <Label className="text-white">نص الزر</Label>
-                <Input
-                  value={customerSupportTexts.telegramButtonText}
-                  onChange={(e) => updateCustomerSupportTexts('telegramButtonText', e.target.value)}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-white">العنوان</Label>
+              <Input
+                value={customerSupportTexts.whatsappTitle}
+                onChange={(e) => updateCustomerSupportTexts('whatsappTitle', e.target.value)}
+                className="bg-white/10 border-white/20 text-white"
+              />
             </div>
             <div>
-              <Label className="text-white">الوصف</Label>
-              <Textarea
-                value={customerSupportTexts.telegramDescription}
-                onChange={(e) => updateCustomerSupportTexts('telegramDescription', e.target.value)}
+              <Label className="text-white">نص الزر</Label>
+              <Input
+                value={customerSupportTexts.whatsappButtonText}
+                onChange={(e) => updateCustomerSupportTexts('whatsappButtonText', e.target.value)}
                 className="bg-white/10 border-white/20 text-white"
-                rows={2}
               />
             </div>
           </div>
-
-          <Separator className="bg-white/20" />
-
-          {/* ديسكورد */}
-          <div className="space-y-3">
-            <h3 className="text-white font-semibold flex items-center gap-2">
-              <MessageCircle className="w-4 h-4" />
-              ديسكورد
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-white">العنوان</Label>
-                <Input
-                  value={customerSupportTexts.discordTitle}
-                  onChange={(e) => updateCustomerSupportTexts('discordTitle', e.target.value)}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              <div>
-                <Label className="text-white">نص الزر</Label>
-                <Input
-                  value={customerSupportTexts.discordButtonText}
-                  onChange={(e) => updateCustomerSupportTexts('discordButtonText', e.target.value)}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-            </div>
-            <div>
-              <Label className="text-white">الوصف</Label>
-              <Textarea
-                value={customerSupportTexts.discordDescription}
-                onChange={(e) => updateCustomerSupportTexts('discordDescription', e.target.value)}
-                className="bg-white/10 border-white/20 text-white"
-                rows={2}
-              />
-            </div>
-          </div>
-
-          <Separator className="bg-white/20" />
-
-          {/* واتساب */}
-          <div className="space-y-3">
-            <h3 className="text-white font-semibold flex items-center gap-2">
-              <Phone className="w-4 h-4" />
-              واتساب
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-white">العنوان</Label>
-                <Input
-                  value={customerSupportTexts.whatsappTitle}
-                  onChange={(e) => updateCustomerSupportTexts('whatsappTitle', e.target.value)}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              <div>
-                <Label className="text-white">نص الزر</Label>
-                <Input
-                  value={customerSupportTexts.whatsappButtonText}
-                  onChange={(e) => updateCustomerSupportTexts('whatsappButtonText', e.target.value)}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-            </div>
-            <div>
-              <Label className="text-white">الوصف</Label>
-              <Textarea
-                value={customerSupportTexts.whatsappDescription}
-                onChange={(e) => updateCustomerSupportTexts('whatsappDescription', e.target.value)}
-                className="bg-white/10 border-white/20 text-white"
-                rows={2}
-              />
-            </div>
+          <div>
+            <Label className="text-white">الوصف</Label>
+            <Textarea
+              value={customerSupportTexts.whatsappDescription}
+              onChange={(e) => updateCustomerSupportTexts('whatsappDescription', e.target.value)}
+              className="bg-white/10 border-white/20 text-white"
+              rows={2}
+            />
           </div>
         </CardContent>
       </Card>
@@ -347,61 +206,6 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* سياسة الدعم */}
-      <Card className="bg-white/5 border-white/20">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            سياسة الدعم
-          </CardTitle>
-          <CardDescription className="text-gray-400">
-            إدارة نقاط سياسة الدعم المعروضة للعملاء
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label className="text-white">عنوان القسم</Label>
-            <Input
-              value={customerSupportTexts.supportPolicyTitle}
-              onChange={(e) => updateCustomerSupportTexts('supportPolicyTitle', e.target.value)}
-              className="bg-white/10 border-white/20 text-white"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-white">نقاط السياسة</Label>
-              <Button
-                onClick={addSupportPolicy}
-                size="sm"
-                className="glow-button"
-              >
-                إضافة نقطة
-              </Button>
-            </div>
-            
-            {customerSupportTexts.supportPolicies?.map((policy, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Input
-                  value={policy}
-                  onChange={(e) => updateSupportPolicy(index, e.target.value)}
-                  className="bg-white/10 border-white/20 text-white flex-1"
-                  placeholder="نص النقطة"
-                />
-                <Button
-                  onClick={() => removeSupportPolicy(index)}
-                  size="sm"
-                  variant="destructive"
-                  className="px-3"
-                >
-                  حذف
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* زر الحفظ السفلي */}
       <div className="flex justify-end pt-4 border-t border-white/20">
         <Button onClick={saveSiteSettings} className="glow-button">
@@ -414,4 +218,3 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
 };
 
 export default CustomerSupportTab;
-

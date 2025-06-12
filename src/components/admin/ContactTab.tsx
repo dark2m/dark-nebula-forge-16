@@ -27,34 +27,6 @@ const ContactTab: React.FC<ContactTabProps> = ({
         <div className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">تيليجرام</label>
-              <input
-                type="text"
-                value={siteSettings.contactInfo?.telegram || ''}
-                onChange={(e) => setSiteSettings({
-                  ...siteSettings,
-                  contactInfo: { ...siteSettings.contactInfo, telegram: e.target.value }
-                })}
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
-                placeholder="@username"
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-300 text-sm font-medium mb-2">ديسكورد</label>
-              <input
-                type="text"
-                value={siteSettings.contactInfo?.discord || ''}
-                onChange={(e) => setSiteSettings({
-                  ...siteSettings,
-                  contactInfo: { ...siteSettings.contactInfo, discord: e.target.value }
-                })}
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-400"
-                placeholder="Discord Server Invite Link"
-              />
-            </div>
-
-            <div>
               <label className="block text-gray-300 text-sm font-medium mb-2">واتساب</label>
               <input
                 type="text"

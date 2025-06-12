@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { MessageCircle, Phone, Mail, Users, Clock, Shield, User, Lock, Eye, EyeOff } from 'lucide-react';
+import { Phone, Clock, Shield, User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import SettingsService from '../utils/settingsService';
 import CustomerAuthService from '../utils/customerAuthService';
@@ -123,72 +122,44 @@ const CustomerSupport = () => {
             </div>
 
             <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {/* تيليجرام */}
-                <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
-                      <MessageCircle className="w-6 h-6 text-blue-400" />
-                      تيليجرام
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-gray-300 mb-4">للدعم الفوري والاستفسارات العامة</p>
-                    <Button className="w-full glow-button">
-                      تواصل عبر تيليجرام
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* ديسكورد */}
-                <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
-                      <Users className="w-6 h-6 text-purple-400" />
-                      ديسكورد
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-gray-300 mb-4">انضم إلى مجتمعنا ودردش مع الفريق</p>
-                    <Button className="w-full glow-button">
-                      انضم إلى الديسكورد
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* واتساب */}
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
+                {/* واتساب فقط */}
                 <Card className="bg-white/10 backdrop-blur-md border border-white/20">
                   <CardHeader className="text-center">
                     <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
                       <Phone className="w-6 h-6 text-green-400" />
-                      واتساب
+                      {customerSupportTexts.whatsappTitle || 'واتساب'}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-center">
-                    <p className="text-gray-300 mb-4">للدعم الشخصي المباشر</p>
+                    <p className="text-gray-300 mb-4">
+                      {customerSupportTexts.whatsappDescription || 'للدعم الشخصي المباشر'}
+                    </p>
                     <Button className="w-full glow-button">
-                      راسل عبر واتساب
+                      {customerSupportTexts.whatsappButtonText || 'راسل عبر واتساب'}
                     </Button>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* معلومات إضافية */}
+              {/* ساعات العمل */}
               <Card className="bg-white/10 backdrop-blur-md border border-white/20 mb-6">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
                     <Clock className="w-5 h-5" />
-                    ساعات العمل
+                    {customerSupportTexts.workingHoursTitle || 'ساعات العمل'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
                     <div>
-                      <p><strong>الأحد - الخميس:</strong> 9:00 ص - 11:00 م</p>
-                      <p><strong>الجمعة:</strong> 2:00 م - 11:00 م</p>
+                      <p><strong>الأحد - الخميس:</strong> {customerSupportTexts.workingHours?.weekdays || '9:00 ص - 11:00 م'}</p>
+                      <p><strong>الجمعة:</strong> {customerSupportTexts.workingHours?.friday || '2:00 م - 11:00 م'}</p>
                     </div>
                     <div>
-                      <p className="text-green-400">💡 الدعم الفني متاح 24/7 عبر تيليجرام للحالات الطارئة</p>
+                      <p className="text-green-400">
+                        {customerSupportTexts.supportNote || '💡 الدعم الفني متاح 24/7 عبر واتساب للحالات الطارئة'}
+                      </p>
                     </div>
                   </div>
                 </CardContent>

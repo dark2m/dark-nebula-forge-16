@@ -1,4 +1,3 @@
-
 import { SiteSettings } from '../types/admin';
 
 class SettingsService {
@@ -135,8 +134,6 @@ class SettingsService {
         { id: 'customer-support', name: 'خدمة العملاء', path: '/sport', icon: 'MessageCircle', visible: true }
       ],
       contactInfo: {
-        telegram: '@DarkTeam_Support',
-        discord: 'Discord Server',
         whatsapp: '+966 XX XXX XXXX',
         email: 'support@dark.com',
         phone: '+966 XX XXX XXXX',
@@ -271,13 +268,7 @@ class SettingsService {
         },
         customerSupport: {
           pageTitle: 'خدمة العملاء',
-          pageDescription: 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة',
-          telegramTitle: 'تيليجرام',
-          telegramDescription: 'للدعم الفوري والاستفسارات العامة',
-          telegramButtonText: 'تواصل عبر تيليجرام',
-          discordTitle: 'ديسكورد',
-          discordDescription: 'انضم إلى مجتمعنا ودردش مع الفريق',
-          discordButtonText: 'انضم إلى الديسكورد',
+          pageDescription: 'سجل دخولك للوصول إلى خدمة العملاء المتخصصة',
           whatsappTitle: 'واتساب',
           whatsappDescription: 'للدعم الشخصي المباشر',
           whatsappButtonText: 'راسل عبر واتساب',
@@ -286,14 +277,7 @@ class SettingsService {
             weekdays: '9:00 ص - 11:00 م',
             friday: '2:00 م - 11:00 م'
           },
-          supportNote: '💡 الدعم الفني متاح 24/7 عبر تيليجرام للحالات الطارئة',
-          supportPolicyTitle: 'سياسة الدعم',
-          supportPolicies: [
-            'استجابة فورية للاستفسارات العامة',
-            'دعم فني متخصص لجميع المنتجات',
-            'ضمان الجودة وحل المشاكل',
-            'متابعة مستمرة لرضا العملاء'
-          ]
+          supportNote: '💡 الدعم الفني متاح 24/7 عبر واتساب للحالات الطارئة'
         }
       }
     };
