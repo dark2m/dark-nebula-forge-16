@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench } from 'lucide-react';
+import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '../hooks/use-mobile';
 import AdminStorage from '../utils/adminStorage';
 import { getTextContent } from '../utils/textUtils';
@@ -44,7 +44,8 @@ const Navigation = () => {
       'Home': Home,
       'Menu': Home,
       'Wrench': Wrench,
-      'Tools': Wrench
+      'Tools': Wrench,
+      'Support': MessageCircle
     };
 
     return siteSettings.navigation
