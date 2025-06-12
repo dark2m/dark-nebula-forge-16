@@ -18,6 +18,11 @@ const Navigation = () => {
   
   const navItems = [
     { 
+      name: getTextContent(navTexts.officialTitle), 
+      path: '/official', 
+      icon: Users 
+    },
+    { 
       name: getTextContent(navTexts.pubgTitle), 
       path: '/pubg-hacks', 
       icon: Shield 
@@ -31,11 +36,6 @@ const Navigation = () => {
       name: getTextContent(navTexts.discordTitle), 
       path: '/discord-bots', 
       icon: Bot 
-    },
-    { 
-      name: getTextContent(navTexts.officialTitle), 
-      path: '/official', 
-      icon: Users 
     },
   ];
 
