@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2 } from 'lucide-react';
+import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock } from 'lucide-react';
 import CustomerAuthService, { type LoginAttempt } from '../../utils/customerAuthService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ interface CustomerUser {
   password: string;
   createdAt: string;
   isVerified: boolean;
+  isDefault?: boolean;
   isBlocked?: boolean;
   isOnline?: boolean;
   lastSeen?: string;
@@ -68,6 +70,16 @@ const CustomerLogTab = () => {
   };
 
   const blockCustomer = (customerId: number) => {
+    // منع حظر الحسابات الافتراضية
+    if (CustomerAuthService.isDefaultCustomer(customerId)) {
+      toast({
+        title: "غير مسموح",
+        description: "لا يمكن حظر الحسابات الافتراضية المحمية",
+        variant: "destructive"
+      });
+      return;
+    }
+
     localStorage.setItem(`blocked_${customerId}`, 'true');
     
     // تسجيل خروج العميل إذا كان متصلاً حالياً
@@ -90,6 +102,16 @@ const CustomerLogTab = () => {
   };
 
   const forceLogout = (customerId: number) => {
+    // منع تسجيل خروج الحسابات الافتراضية إجبارياً
+    if (CustomerAuthService.isDefaultCustomer(customerId)) {
+      toast({
+        title: "غير مسموح",
+        description: "لا يمكن تسجيل خروج الحسابات الافتراضية إجبارياً",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // إزالة الرمز المميز للعميل
     const currentCustomer = CustomerAuthService.getCurrentCustomer();
     if (currentCustomer && currentCustomer.id === customerId) {
@@ -107,6 +129,16 @@ const CustomerLogTab = () => {
   };
 
   const deleteCustomer = (customerId: number) => {
+    // منع حذف الحسابات الافتراضية
+    if (CustomerAuthService.isDefaultCustomer(customerId)) {
+      toast({
+        title: "غير مسموح",
+        description: "لا يمكن حذف الحسابات الافتراضية المحمية",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const allCustomers = CustomerAuthService.getCustomers();
     const updatedCustomers = allCustomers.filter(c => c.id !== customerId);
     CustomerAuthService.saveCustomers(updatedCustomers);
@@ -127,6 +159,12 @@ const CustomerLogTab = () => {
   };
 
   const getStatusBadge = (customer: CustomerUser) => {
+    if (customer.isDefault) {
+      return <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs flex items-center gap-1">
+        <Lock className="w-3 h-3" />
+        محمي
+      </span>;
+    }
     if (customer.isBlocked) {
       return <span className="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs">محظور</span>;
     }
@@ -247,7 +285,7 @@ const CustomerLogTab = () => {
                 قائمة العملاء
               </CardTitle>
               <CardDescription className="text-gray-400">
-                إدارة جميع العملاء المسجلين في النظام (العميل المحظور لن يتمكن من تسجيل الدخول نهائياً)
+                إدارة جميع العملاء المسجلين في النظام (الحسابات المحمية لا يمكن حذفها أو حظرها)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -295,49 +333,55 @@ const CustomerLogTab = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            {customer.isBlocked ? (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => unblockCustomer(customer.id)}
-                                className="text-green-400 hover:text-green-300 p-1"
-                                title="إلغاء الحظر (تمكين تسجيل الدخول)"
-                              >
-                                <UserCheck className="w-3 h-3" />
-                              </Button>
+                            {customer.isDefault ? (
+                              <span className="text-blue-400 text-xs px-2">حساب محمي</span>
                             ) : (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => blockCustomer(customer.id)}
-                                className="text-red-400 hover:text-red-300 p-1"
-                                title="حظر العميل (منع تسجيل الدخول نهائياً)"
-                              >
-                                <Ban className="w-3 h-3" />
-                              </Button>
+                              <>
+                                {customer.isBlocked ? (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => unblockCustomer(customer.id)}
+                                    className="text-green-400 hover:text-green-300 p-1"
+                                    title="إلغاء الحظر (تمكين تسجيل الدخول)"
+                                  >
+                                    <UserCheck className="w-3 h-3" />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => blockCustomer(customer.id)}
+                                    className="text-red-400 hover:text-red-300 p-1"
+                                    title="حظر العميل (منع تسجيل الدخول نهائياً)"
+                                  >
+                                    <Ban className="w-3 h-3" />
+                                  </Button>
+                                )}
+                                
+                                {customer.isOnline && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => forceLogout(customer.id)}
+                                    className="text-orange-400 hover:text-orange-300 p-1"
+                                    title="تسجيل خروج إجباري"
+                                  >
+                                    <LogOut className="w-3 h-3" />
+                                  </Button>
+                                )}
+                                
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => deleteCustomer(customer.id)}
+                                  className="text-red-400 hover:text-red-300 p-1"
+                                  title="حذف العميل نهائياً"
+                                >
+                                  <UserX className="w-3 h-3" />
+                                </Button>
+                              </>
                             )}
-                            
-                            {customer.isOnline && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => forceLogout(customer.id)}
-                                className="text-orange-400 hover:text-orange-300 p-1"
-                                title="تسجيل خروج إجباري"
-                              >
-                                <LogOut className="w-3 h-3" />
-                              </Button>
-                            )}
-                            
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => deleteCustomer(customer.id)}
-                              className="text-red-400 hover:text-red-300 p-1"
-                              title="حذف العميل نهائياً"
-                            >
-                              <UserX className="w-3 h-3" />
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>

@@ -4,6 +4,7 @@ interface CustomerUser {
   password: string;
   createdAt: string;
   isVerified: boolean;
+  isDefault?: boolean; // إضافة خاصية لتحديد الحسابات الافتراضية
 }
 
 interface LoginAttempt {
@@ -20,38 +21,58 @@ class CustomerAuthService {
   private static CURRENT_CUSTOMER_KEY = 'current_customer';
   private static LOGIN_ATTEMPTS_KEY = 'login_attempts';
 
+  // قائمة الحسابات الافتراضية المحمية
+  private static DEFAULT_CUSTOMERS: CustomerUser[] = [
+    { 
+      id: 1, 
+      email: 'dark@gmail.com', 
+      password: 'dark', 
+      createdAt: new Date().toISOString(),
+      isVerified: true,
+      isDefault: true
+    },
+    { 
+      id: 2, 
+      email: 'dark@gamil.com', 
+      password: 'dark', 
+      createdAt: new Date().toISOString(),
+      isVerified: true,
+      isDefault: true
+    }
+  ];
+
   static getCustomers(): CustomerUser[] {
     try {
       const stored = localStorage.getItem(this.CUSTOMERS_KEY);
       if (stored) {
         const customers = JSON.parse(stored);
         console.log('CustomerAuthService: Loaded customers:', customers);
+        
+        // التأكد من وجود الحسابات الافتراضية
+        const defaultEmails = this.DEFAULT_CUSTOMERS.map(c => c.email);
+        const existingEmails = customers.map((c: CustomerUser) => c.email);
+        
+        // إضافة أي حسابات افتراضية مفقودة
+        const missingDefaults = this.DEFAULT_CUSTOMERS.filter(
+          defaultCustomer => !existingEmails.includes(defaultCustomer.email)
+        );
+        
+        if (missingDefaults.length > 0) {
+          const updatedCustomers = [...customers, ...missingDefaults];
+          this.saveCustomers(updatedCustomers);
+          return updatedCustomers;
+        }
+        
         return customers;
       }
     } catch (error) {
       console.error('CustomerAuthService: Error loading customers:', error);
     }
     
-    // إضافة العملاء الافتراضيين المؤقتين للتطوير
-    const defaultCustomers: CustomerUser[] = [
-      { 
-        id: 1, 
-        email: 'dark@gmail.com', 
-        password: 'dark', 
-        createdAt: new Date().toISOString(),
-        isVerified: true
-      },
-      { 
-        id: 2, 
-        email: 'dark@gamil.com', 
-        password: 'dark', 
-        createdAt: new Date().toISOString(),
-        isVerified: true
-      }
-    ];
-    
-    this.saveCustomers(defaultCustomers);
-    return defaultCustomers;
+    // إنشاء الحسابات الافتراضية إذا لم توجد بيانات
+    console.log('CustomerAuthService: Creating default customers');
+    this.saveCustomers(this.DEFAULT_CUSTOMERS);
+    return this.DEFAULT_CUSTOMERS;
   }
 
   static saveCustomers(customers: CustomerUser[]): void {
@@ -154,7 +175,8 @@ class CustomerAuthService {
       email,
       password,
       createdAt: new Date().toISOString(),
-      isVerified: true // يمكن تغييرها لاحقاً لإضافة تأكيد الإيميل
+      isVerified: true,
+      isDefault: false // الحسابات الجديدة ليست افتراضية
     };
     
     customers.push(newCustomer);
@@ -217,6 +239,16 @@ class CustomerAuthService {
       // إعادة تحميل الصفحة للعودة إلى شاشة تسجيل الدخول
       window.location.reload();
     }
+  }
+
+  // التحقق من كون العميل حساب افتراضي محمي
+  static isDefaultCustomer(customerId: number): boolean {
+    return this.DEFAULT_CUSTOMERS.some(c => c.id === customerId);
+  }
+
+  // التحقق من كون العميل حساب افتراضي بالإيميل
+  static isDefaultCustomerByEmail(email: string): boolean {
+    return this.DEFAULT_CUSTOMERS.some(c => c.email === email);
   }
 
   static clearLoginAttempts(): void {
