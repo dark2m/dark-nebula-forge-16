@@ -1,4 +1,9 @@
 
+interface MediaAttachment {
+  type: 'image' | 'video';
+  data: string;
+}
+
 interface ChatMessage {
   id: number;
   customerId: number;
@@ -9,6 +14,7 @@ interface ChatMessage {
   isRead: boolean;
   adminReply?: string;
   adminReplyTimestamp?: string;
+  attachments?: MediaAttachment[];
 }
 
 interface AdminMessage {
@@ -17,6 +23,7 @@ interface AdminMessage {
   message: string;
   timestamp: string;
   isFromAdmin: true;
+  attachments?: MediaAttachment[];
 }
 
 interface ChatSession {
@@ -87,7 +94,12 @@ class CustomerChatService {
     }
   }
 
-  static sendCustomerMessage(customerId: number, customerEmail: string, message: string): boolean {
+  static sendCustomerMessage(
+    customerId: number, 
+    customerEmail: string, 
+    message: string, 
+    attachments?: MediaAttachment[]
+  ): boolean {
     try {
       const messages = this.getChatMessages();
       const sessions = this.getChatSessions();
@@ -99,13 +111,13 @@ class CustomerChatService {
         message,
         timestamp: new Date().toLocaleString('ar-SA'),
         isFromCustomer: true,
-        isRead: false
+        isRead: false,
+        attachments: attachments || []
       };
 
       messages.push(newMessage);
       this.saveChatMessages(messages);
 
-      // تحديث أو إنشاء جلسة الشات
       let session = sessions.find(s => s.customerId === customerId);
       if (session) {
         session.messages.push(newMessage);
@@ -133,7 +145,7 @@ class CustomerChatService {
     }
   }
 
-  static sendAdminMessage(customerId: number, message: string): boolean {
+  static sendAdminMessage(customerId: number, message: string, attachments?: MediaAttachment[]): boolean {
     try {
       const sessions = this.getChatSessions();
       const adminMessages = this.getAdminMessages();
@@ -143,13 +155,13 @@ class CustomerChatService {
         customerId,
         message,
         timestamp: new Date().toLocaleString('ar-SA'),
-        isFromAdmin: true
+        isFromAdmin: true,
+        attachments: attachments || []
       };
 
       adminMessages.push(newAdminMessage);
       this.saveAdminMessages(adminMessages);
 
-      // تحديث الجلسة
       const session = sessions.find(s => s.customerId === customerId);
       if (session) {
         session.messages.push(newAdminMessage);
@@ -179,7 +191,6 @@ class CustomerChatService {
         this.saveChatMessages(messages);
       }
 
-      // تحديث الجلسة
       const session = sessions.find(s => s.customerId === customerId);
       if (session) {
         const sessionMessageIndex = session.messages.findIndex(m => m.id === messageId);
@@ -206,7 +217,6 @@ class CustomerChatService {
     const customerMessages = this.getChatMessages().filter(m => m.customerId === customerId);
     const adminMessages = this.getAdminMessages().filter(m => m.customerId === customerId);
     
-    // دمج الرسائل وترتيبها حسب الوقت
     const allMessages = [...customerMessages, ...adminMessages];
     return allMessages.sort((a, b) => {
       const timeA = new Date(a.timestamp).getTime();
@@ -240,4 +250,4 @@ class CustomerChatService {
 }
 
 export default CustomerChatService;
-export type { ChatMessage, ChatSession, AdminMessage };
+export type { ChatMessage, ChatSession, AdminMessage, MediaAttachment };
