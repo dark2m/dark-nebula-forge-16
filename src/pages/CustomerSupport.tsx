@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight, CheckCircle } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -56,7 +57,6 @@ const CustomerSupport = () => {
 
     setIsLoading(true);
     
-    // إضافة محاولة تسجيل دخول مع تسجيل أفضل
     console.log('Attempting login with:', { email, password });
     const isAuthenticated = CustomerAuthService.authenticateCustomer(email, password);
     console.log('Authentication result:', isAuthenticated);
@@ -89,10 +89,11 @@ const CustomerSupport = () => {
       return;
     }
 
-    if (password.length < 6) {
+    // تبسيط التحقق من كلمة المرور - تحتاج على الأقل 3 أحرف
+    if (password.length < 3) {
       toast({
-        title: "كلمة المرور ضعيفة",
-        description: "يجب أن تحتوي كلمة المرور على 6 أحرف على الأقل",
+        title: "كلمة المرور قصيرة",
+        description: "يجب أن تحتوي كلمة المرور على 3 أحرف على الأقل",
         variant: "destructive"
       });
       return;
@@ -111,42 +112,35 @@ const CustomerSupport = () => {
 
     setIsLoading(true);
     
-    // توليد كود التحقق
-    const code = EmailService.generateVerificationCode();
+    // توليد كود التحقق البسيط
+    const code = Math.floor(1000 + Math.random() * 9000).toString(); // كود من 4 أرقام
     setVerificationCode(code);
     
     console.log('Generated verification code:', code);
     
-    // محاولة إرسال كود التحقق
-    const emailSent = await EmailService.sendVerificationCode(email, code);
-    
-    if (emailSent) {
-      setShowVerificationDialog(true);
-      toast({
-        title: "تم إرسال الكود",
-        description: "تم إرسال كود التحقق إلى بريدك الإلكتروني"
-      });
-    } else {
-      // في حالة فشل الإرسال، نسمح للمستخدم بالمتابعة مع عرض الكود
-      console.log('Email failed to send, showing verification dialog anyway');
-      setShowVerificationDialog(true);
-      toast({
-        title: "تعذر إرسال الإيميل",
-        description: `كود التحقق هو: ${code}`,
-        variant: "destructive"
-      });
-    }
+    // عرض نافذة التحقق مباشرة
+    setShowVerificationDialog(true);
+    toast({
+      title: "كود التحقق",
+      description: `كود التحقق الخاص بك هو: ${code}`,
+      duration: 10000 // يبقى لمدة 10 ثواني
+    });
     
     setIsLoading(false);
   };
 
   const handleVerifyCode = () => {
+    console.log('Verifying code:', otp, 'Expected:', verificationCode);
+    
     if (otp === verificationCode) {
       const registrationSuccess = CustomerAuthService.registerCustomer(email, password);
+      console.log('Registration result:', registrationSuccess);
+      
       if (registrationSuccess) {
         setIsRegistered(true);
         setShowChat(true);
         setShowVerificationDialog(false);
+        setOtp(''); // إعادة تعيين الكود
         toast({
           title: "تم التسجيل بنجاح",
           description: "تم إنشاء حسابك بنجاح. يمكنك الآن الدردشة مع فريق الدعم",
@@ -173,6 +167,8 @@ const CustomerSupport = () => {
     setShowChat(false);
     setEmail('');
     setPassword('');
+    setOtp('');
+    setVerificationCode('');
     toast({
       title: "تم تسجيل الخروج",
       description: "تم تسجيل الخروج بنجاح",
@@ -214,7 +210,7 @@ const CustomerSupport = () => {
                 </div>
                 <div>
                   <label className="block text-white text-sm font-medium mb-2">
-                    كلمة المرور
+                    كلمة المرور (3 أحرف على الأقل)
                   </label>
                   <div className="relative">
                     <input
@@ -266,16 +262,21 @@ const CustomerSupport = () => {
       <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
         <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-sm border border-white/30">
           <DialogHeader>
-            <DialogTitle>التحقق من البريد الإلكتروني</DialogTitle>
-            <DialogDescription>
-              أدخل رمز التحقق المرسل إلى بريدك الإلكتروني.
+            <DialogTitle className="text-white">التحقق من البريد الإلكتروني</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              أدخل رمز التحقق المكون من 4 أرقام.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-[1fr_auto] gap-2">
+            <div className="text-center">
+              <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mb-4">
+                <p className="text-blue-200 text-sm mb-2">كود التحقق الخاص بك:</p>
+                <p className="text-2xl font-bold text-blue-300">{verificationCode}</p>
+              </div>
+              
               <div className="font-semibold">
                 <InputOTP
-                  maxLength={6}
+                  maxLength={4}
                   value={otp}
                   onChange={setOtp}
                 >
@@ -284,8 +285,6 @@ const CustomerSupport = () => {
                     <InputOTPSlot index={1} />
                     <InputOTPSlot index={2} />
                     <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
