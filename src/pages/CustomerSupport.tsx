@@ -14,7 +14,7 @@ const CustomerSupport = () => {
 
   if (!settings) return null;
 
-  // Provide proper default values with ALL required properties
+  // Provide proper default values with ALL required properties including workingHours
   const customerSupportTexts = settings.pageTexts?.customerSupport || {
     pageTitle: 'خدمة العملاء',
     pageDescription: 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة',
@@ -40,6 +40,12 @@ const CustomerSupport = () => {
       'ضمان الجودة وحل المشاكل',
       'متابعة مستمرة لرضا العملاء'
     ]
+  };
+
+  // Ensure workingHours is always defined with fallback
+  const workingHours = customerSupportTexts.workingHours || {
+    weekdays: '9:00 ص - 11:00 م',
+    friday: '2:00 م - 11:00 م'
   };
 
   return (
@@ -120,13 +126,13 @@ const CustomerSupport = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300">السبت - الخميس</span>
                   <span className="text-white font-medium">
-                    {customerSupportTexts.workingHours.weekdays}
+                    {workingHours.weekdays}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-300">الجمعة</span>
                   <span className="text-white font-medium">
-                    {customerSupportTexts.workingHours.friday}
+                    {workingHours.friday}
                   </span>
                 </div>
                 <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
