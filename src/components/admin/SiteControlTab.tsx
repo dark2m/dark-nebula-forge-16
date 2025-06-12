@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Save, Palette, Type, Layout, Settings, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import TaskbarControl from './TaskbarControl';
 import type { SiteSettings } from '../../types/admin';
 
 interface SiteControlTabProps {
@@ -37,8 +37,9 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-white/10">
+        <TabsList className="grid w-full grid-cols-5 bg-white/10">
           <TabsTrigger value="general" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">عام</TabsTrigger>
+          <TabsTrigger value="taskbar" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">شريط المهام</TabsTrigger>
           <TabsTrigger value="appearance" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">المظهر</TabsTrigger>
           <TabsTrigger value="layout" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">التخطيط</TabsTrigger>
           <TabsTrigger value="background" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">الخلفية</TabsTrigger>
@@ -129,6 +130,15 @@ const SiteControlTab: React.FC<SiteControlTabProps> = ({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Taskbar Control */}
+        <TabsContent value="taskbar" className="space-y-6">
+          <TaskbarControl
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
         </TabsContent>
 
         {/* Appearance Settings */}
