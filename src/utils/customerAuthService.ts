@@ -8,9 +8,26 @@ interface Customer {
   registrationDate: string;
 }
 
+interface LoginAttempt {
+  id: string;
+  email: string;
+  timestamp: string;
+  success: boolean;
+  ipAddress?: string;
+}
+
+interface CustomerUser extends Customer {
+  createdAt: string;
+  isVerified: boolean;
+  isBlocked: boolean;
+  isOnline: boolean;
+  lastSeen: string;
+}
+
 class CustomerAuthService {
   private static CUSTOMERS_KEY = 'customers';
   private static CURRENT_CUSTOMER_KEY = 'current_customer';
+  private static LOGIN_ATTEMPTS_KEY = 'login_attempts';
 
   static getCustomers(): Customer[] {
     try {
@@ -18,6 +35,23 @@ class CustomerAuthService {
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
       console.error('CustomerAuthService: Error loading customers:', error);
+      return [];
+    }
+  }
+
+  static getCustomersWithStatus(): CustomerUser[] {
+    try {
+      const customers = this.getCustomers();
+      return customers.map(customer => ({
+        ...customer,
+        createdAt: customer.registrationDate,
+        isVerified: true,
+        isBlocked: false,
+        isOnline: false,
+        lastSeen: customer.registrationDate
+      }));
+    } catch (error) {
+      console.error('CustomerAuthService: Error loading customers with status:', error);
       return [];
     }
   }
@@ -30,12 +64,78 @@ class CustomerAuthService {
     }
   }
 
+  static getLoginAttempts(): LoginAttempt[] {
+    try {
+      const stored = localStorage.getItem(this.LOGIN_ATTEMPTS_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.error('CustomerAuthService: Error loading login attempts:', error);
+      return [];
+    }
+  }
+
+  static saveLoginAttempts(attempts: LoginAttempt[]): void {
+    try {
+      localStorage.setItem(this.LOGIN_ATTEMPTS_KEY, JSON.stringify(attempts));
+    } catch (error) {
+      console.error('CustomerAuthService: Error saving login attempts:', error);
+    }
+  }
+
+  static addLoginAttempt(email: string, success: boolean): void {
+    try {
+      const attempts = this.getLoginAttempts();
+      const newAttempt: LoginAttempt = {
+        id: Date.now().toString(),
+        email,
+        timestamp: new Date().toISOString(),
+        success,
+        ipAddress: 'Unknown'
+      };
+      attempts.push(newAttempt);
+      this.saveLoginAttempts(attempts);
+    } catch (error) {
+      console.error('CustomerAuthService: Error adding login attempt:', error);
+    }
+  }
+
+  static clearLoginAttempts(): void {
+    try {
+      localStorage.removeItem(this.LOGIN_ATTEMPTS_KEY);
+      console.log('CustomerAuthService: Login attempts cleared');
+    } catch (error) {
+      console.error('CustomerAuthService: Error clearing login attempts:', error);
+    }
+  }
+
+  static isDefaultCustomer(customerId: number): boolean {
+    // يمكن تخصيص هذه الوظيفة حسب الحاجة
+    return customerId === 1;
+  }
+
+  static checkAndLogoutDeletedCustomer(): void {
+    try {
+      const currentCustomer = this.getCurrentCustomer();
+      if (currentCustomer) {
+        const customers = this.getCustomers();
+        const exists = customers.some(c => c.id === currentCustomer.id);
+        if (!exists) {
+          this.logout();
+          console.log('CustomerAuthService: Customer was deleted, logged out automatically');
+        }
+      }
+    } catch (error) {
+      console.error('CustomerAuthService: Error checking deleted customer:', error);
+    }
+  }
+
   static registerCustomer(email: string, password: string): boolean {
     try {
       const customers = this.getCustomers();
       
       // التحقق من عدم وجود العميل مسبقاً
       if (customers.some(customer => customer.email === email)) {
+        this.addLoginAttempt(email, false);
         return false;
       }
       
@@ -51,6 +151,7 @@ class CustomerAuthService {
       
       // تسجيل دخول تلقائي بعد التسجيل
       this.setCurrentCustomer(newCustomer);
+      this.addLoginAttempt(email, true);
       
       console.log('CustomerAuthService: Customer registered successfully');
       return true;
@@ -67,14 +168,17 @@ class CustomerAuthService {
       
       if (customer) {
         this.setCurrentCustomer(customer);
+        this.addLoginAttempt(email, true);
         console.log('CustomerAuthService: Customer authenticated successfully');
         return true;
       }
       
+      this.addLoginAttempt(email, false);
       console.log('CustomerAuthService: Authentication failed');
       return false;
     } catch (error) {
       console.error('CustomerAuthService: Error authenticating customer:', error);
+      this.addLoginAttempt(email, false);
       return false;
     }
   }
@@ -118,4 +222,4 @@ class CustomerAuthService {
 }
 
 export default CustomerAuthService;
-export type { Customer };
+export type { Customer, LoginAttempt, CustomerUser };
