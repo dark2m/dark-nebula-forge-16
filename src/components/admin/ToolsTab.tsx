@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Eye, EyeOff, Save, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -177,7 +176,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                           <p className="text-gray-300 text-sm">{tool.description}</p>
                         </div>
                         
-                        {/* أيقونة العين مع النقطة الملونة */}
+                        {/* أيقونة العين فقط مع النقطة الملونة */}
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => toggleToolVisibility(tool.id)}
@@ -195,20 +194,6 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                               }`}
                             />
                           </button>
-                          
-                          {/* مفتاح التبديل المحسن */}
-                          <div className="flex items-center gap-2">
-                            <Switch
-                              checked={tool.visible}
-                              onCheckedChange={(checked) => updateTool(tool.id, { visible: checked })}
-                              className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-gray-600"
-                            />
-                            <span className={`text-sm font-medium ${
-                              tool.visible ? 'text-green-400' : 'text-red-400'
-                            }`}>
-                              {tool.visible ? 'مرئية' : 'مخفية'}
-                            </span>
-                          </div>
                         </div>
                       </div>
                     </div>
