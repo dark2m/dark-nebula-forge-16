@@ -37,13 +37,13 @@ class TranslationService {
     'services.discord.title': 'بوتات ديسكورد',
     'services.discord.description': 'بوتات ديسكورد مخصصة ومتطورة',
 
-    // Why Choose DARK - Updated to English
-    'why.choose.delivery.title': 'Fast Delivery',
-    'why.choose.delivery.desc': 'Get your products instantly with our automated delivery system',
-    'why.choose.safety.title': 'Security & Safety',
-    'why.choose.safety.desc': 'All our products are secure and protected with latest technology',
-    'why.choose.quality.title': 'Premium Quality',
-    'why.choose.quality.desc': 'Highest quality standards in all our products and services',
+    // Why Choose DARK - Back to Arabic
+    'why.choose.delivery.title': 'سرعة التسليم',
+    'why.choose.delivery.desc': 'احصل على منتجاتك فوراً مع نظام التسليم الآلي',
+    'why.choose.safety.title': 'الأمان والحماية',
+    'why.choose.safety.desc': 'جميع منتجاتنا آمنة ومحمية بأحدث التقنيات',
+    'why.choose.quality.title': 'جودة مميزة',
+    'why.choose.quality.desc': 'أعلى معايير الجودة في جميع منتجاتنا وخدماتنا',
 
     // Official Page
     'official.page.title': 'الصفحة الرسمية',
