@@ -246,6 +246,80 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
     );
   };
 
+  // دالة لعرض مرفقات الإدارة (الصور والفيديوهات والملفات)
+  const renderAdminAttachments = (attachments: { type: 'image' | 'video', data: string }[] | undefined, files: any[] | undefined) => {
+    const hasAttachments = (attachments && attachments.length > 0) || (files && files.length > 0);
+    if (!hasAttachments) return null;
+
+    return (
+      <div className="mt-2 space-y-2">
+        {/* عرض الصور والفيديوهات */}
+        {attachments && attachments.map((attachment, index) => (
+          <div key={`media-${index}`} className="border border-white/20 rounded p-2 bg-white/5">
+            {attachment.type === 'image' ? (
+              <img 
+                src={attachment.data} 
+                alt={`مرفق من الدعم ${index + 1}`}
+                className="max-w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => window.open(attachment.data, '_blank')}
+              />
+            ) : (
+              <div className="space-y-2">
+                <video 
+                  src={attachment.data} 
+                  controls 
+                  className="max-w-full h-32 rounded"
+                  preload="metadata"
+                />
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-gray-300">فيديو من فريق الدعم</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        
+        {/* عرض الملفات الأخرى */}
+        {files && files.map((file, index) => (
+          <div key={`file-${index}`} className="border border-white/20 rounded p-2 bg-white/5">
+            {file.type.startsWith('image/') ? (
+              <img 
+                src={file.url} 
+                alt={file.name}
+                className="max-w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => window.open(file.url, '_blank')}
+              />
+            ) : file.type.startsWith('video/') ? (
+              <div className="space-y-2">
+                <video 
+                  src={file.url} 
+                  controls 
+                  className="max-w-full h-32 rounded"
+                  preload="metadata"
+                />
+                <p className="text-sm text-gray-300">{file.name}</p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 p-2">
+                <Paperclip className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">{file.name}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.open(file.url, '_blank')}
+                  className="text-green-400 hover:text-green-300 text-xs"
+                >
+                  تحميل
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Card className="bg-white/10 backdrop-blur-md border border-white/20 h-[600px] flex flex-col">
       <CardHeader>
@@ -278,7 +352,8 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
                           <div className="flex-1 min-w-0">
                             <p className="text-green-400 text-sm font-medium mb-1">فريق الدعم</p>
                             <p className="text-white break-words">{renderMessageText(message.message, message.attachments)}</p>
-                            {renderAttachments(message.attachments)}
+                            {/* عرض مرفقات الإدارة */}
+                            {renderAdminAttachments(message.attachments, message.files)}
                             <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                           </div>
                         </div>

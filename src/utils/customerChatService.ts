@@ -1,3 +1,4 @@
+
 interface MediaAttachment {
   type: 'image' | 'video';
   data: string;
@@ -201,16 +202,35 @@ class CustomerChatService {
       
       // إذا لم يكن هناك نص ولكن توجد مرفقات، استخدم نص افتراضي
       let messageText = message;
-      if ((!messageText || messageText.trim() === '') && attachments && attachments.length > 0) {
-        const imageCount = attachments.filter(att => att.type === 'image').length;
-        const videoCount = attachments.filter(att => att.type === 'video').length;
+      if ((!messageText || messageText.trim() === '') && ((attachments && attachments.length > 0) || (files && files.length > 0))) {
+        let mediaCount = 0;
+        let fileCount = 0;
         
-        if (imageCount > 0 && videoCount > 0) {
-          messageText = `تم إرسال ${imageCount} صورة و ${videoCount} فيديو من فريق الدعم`;
-        } else if (imageCount > 0) {
-          messageText = imageCount === 1 ? 'تم إرسال صورة من فريق الدعم' : `تم إرسال ${imageCount} صور من فريق الدعم`;
-        } else if (videoCount > 0) {
-          messageText = videoCount === 1 ? 'تم إرسال فيديو من فريق الدعم' : `تم إرسال ${videoCount} فيديوهات من فريق الدعم`;
+        if (attachments && attachments.length > 0) {
+          const imageCount = attachments.filter(att => att.type === 'image').length;
+          const videoCount = attachments.filter(att => att.type === 'video').length;
+          mediaCount = imageCount + videoCount;
+        }
+        
+        if (files && files.length > 0) {
+          fileCount = files.length;
+        }
+        
+        if (mediaCount > 0 && fileCount > 0) {
+          messageText = `تم إرسال ${mediaCount + fileCount} ملف من فريق الدعم`;
+        } else if (mediaCount > 0) {
+          const imageCount = attachments?.filter(att => att.type === 'image').length || 0;
+          const videoCount = attachments?.filter(att => att.type === 'video').length || 0;
+          
+          if (imageCount > 0 && videoCount > 0) {
+            messageText = `تم إرسال ${imageCount} صورة و ${videoCount} فيديو من فريق الدعم`;
+          } else if (imageCount > 0) {
+            messageText = imageCount === 1 ? 'تم إرسال صورة من فريق الدعم' : `تم إرسال ${imageCount} صور من فريق الدعم`;
+          } else if (videoCount > 0) {
+            messageText = videoCount === 1 ? 'تم إرسال فيديو من فريق الدعم' : `تم إرسال ${videoCount} فيديوهات من فريق الدعم`;
+          }
+        } else if (fileCount > 0) {
+          messageText = fileCount === 1 ? 'تم إرسال ملف من فريق الدعم' : `تم إرسال ${fileCount} ملفات من فريق الدعم`;
         }
       }
       

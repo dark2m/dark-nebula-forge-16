@@ -31,6 +31,7 @@ const CustomerLogTab = () => {
   const [adminMessage, setAdminMessage] = useState<{[key: string]: string}>({});
   const [adminReplies, setAdminReplies] = useState<{[key: number]: string}>({});
   const [selectedFiles, setSelectedFiles] = useState<{[key: string]: File[]}>({});
+  const [mediaAttachments, setMediaAttachments] = useState<{[key: string]: { type: 'image' | 'video', data: string }[]}>({});
   const fileInputRefs = useRef<{[key: string]: HTMLInputElement | null}>({});
   const { toast } = useToast();
 
@@ -177,9 +178,12 @@ const CustomerLogTab = () => {
     });
   };
 
-  const handleFileSelect = (customerId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (customerId: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    const validFiles = files.filter(file => {
+    const validFiles: File[] = [];
+    const mediaFiles: { type: 'image' | 'video', data: string }[] = [];
+    
+    for (const file of files) {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
       const isValidSize = file.size <= 50 * 1024 * 1024; // 50MB
@@ -190,20 +194,96 @@ const CustomerLogTab = () => {
           description: "يجب أن يكون حجم الملف أقل من 50 ميجابايت",
           variant: "destructive"
         });
-        return false;
+        continue;
       }
       
-      return isImage || isVideo;
-    });
+      if (isImage || isVideo) {
+        try {
+          let processedData: string;
+          
+          if (isImage) {
+            processedData = await compressImage(file, 0.7);
+            mediaFiles.push({ type: 'image', data: processedData });
+          } else if (isVideo) {
+            processedData = await compressVideo(file, 0.6);
+            mediaFiles.push({ type: 'video', data: processedData });
+          }
+        } catch (error) {
+          console.error('Error processing media file:', error);
+          validFiles.push(file);
+        }
+      } else {
+        validFiles.push(file);
+      }
+    }
 
-    setSelectedFiles(prev => ({
-      ...prev,
-      [customerId]: [...(prev[customerId] || []), ...validFiles]
-    }));
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => ({
+        ...prev,
+        [customerId]: [...(prev[customerId] || []), ...validFiles]
+      }));
+    }
+    
+    if (mediaFiles.length > 0) {
+      setMediaAttachments(prev => ({
+        ...prev,
+        [customerId]: [...(prev[customerId] || []), ...mediaFiles]
+      }));
+    }
+  };
+
+  const compressImage = (file: File, quality: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new window.Image();
+
+      img.onload = () => {
+        const maxWidth = 800;
+        const maxHeight = 600;
+        let { width, height } = img;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        } else {
+          reject(new Error('Failed to get canvas context'));
+        }
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const compressVideo = (file: File, quality: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = () => reject(new Error('Failed to read video'));
+      reader.readAsDataURL(file);
+    });
   };
 
   const removeFile = (customerId: string, index: number) => {
     setSelectedFiles(prev => ({
+      ...prev,
+      [customerId]: (prev[customerId] || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const removeMediaAttachment = (customerId: string, index: number) => {
+    setMediaAttachments(prev => ({
       ...prev,
       [customerId]: (prev[customerId] || []).filter((_, i) => i !== index)
     }));
@@ -220,8 +300,9 @@ const CustomerLogTab = () => {
   const handleSendAdminMessage = (customerId: string) => {
     const message = adminMessage[customerId];
     const files = selectedFiles[customerId] || [];
+    const media = mediaAttachments[customerId] || [];
     
-    if (!message?.trim() && files.length === 0) return;
+    if (!message?.trim() && files.length === 0 && media.length === 0) return;
 
     const fileAttachments = files.map(file => ({
       name: file.name,
@@ -230,13 +311,23 @@ const CustomerLogTab = () => {
       url: URL.createObjectURL(file)
     }));
 
-    const success = CustomerChatService.sendAdminMessage(customerId, message?.trim() || '', undefined, fileAttachments);
+    const success = CustomerChatService.sendAdminMessage(
+      customerId, 
+      message?.trim() || '', 
+      media, 
+      fileAttachments
+    );
+    
     if (success) {
       setAdminMessage(prev => ({
         ...prev,
         [customerId]: ''
       }));
       setSelectedFiles(prev => ({
+        ...prev,
+        [customerId]: []
+      }));
+      setMediaAttachments(prev => ({
         ...prev,
         [customerId]: []
       }));
@@ -359,6 +450,126 @@ const CustomerLogTab = () => {
             )}
           </div>
         ))}
+      </div>
+    );
+  };
+
+  // دالة لعرض المرفقات من الإدارة
+  const renderAdminAttachments = (attachments: { type: 'image' | 'video', data: string }[] | undefined, files: any[] | undefined) => {
+    const hasAttachments = (attachments && attachments.length > 0) || (files && files.length > 0);
+    if (!hasAttachments) return null;
+
+    return (
+      <div className="mt-3 space-y-2">
+        {/* عرض المرفقات الوسائطية */}
+        {attachments && attachments.length > 0 && (
+          <>
+            <p className="text-green-400 text-sm font-medium">الصور والفيديوهات:</p>
+            {attachments.map((attachment, index) => (
+              <div key={index} className="border border-green-500/20 rounded-lg p-3 bg-green-500/5">
+                {attachment.type === 'image' ? (
+                  <div className="space-y-2">
+                    <img 
+                      src={attachment.data} 
+                      alt={`مرفق ${index + 1}`}
+                      className="max-w-full h-auto rounded cursor-pointer hover:opacity-80 transition-opacity max-h-60"
+                      onClick={() => window.open(attachment.data, '_blank')}
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-green-300 text-sm flex items-center gap-1">
+                        <Image className="w-4 h-4" />
+                        صورة من فريق الدعم
+                      </span>
+                      <button
+                        onClick={() => window.open(attachment.data, '_blank')}
+                        className="text-green-400 hover:text-green-300"
+                        title="فتح في نافذة جديدة"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <video 
+                      src={attachment.data} 
+                      controls 
+                      className="max-w-full h-auto rounded max-h-60"
+                      preload="metadata"
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-green-300 text-sm flex items-center gap-1">
+                        <Video className="w-4 h-4" />
+                        فيديو من فريق الدعم
+                      </span>
+                      <button
+                        onClick={() => window.open(attachment.data, '_blank')}
+                        className="text-green-400 hover:text-green-300"
+                        title="فتح في نافذة جديدة"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+        
+        {/* عرض الملفات الأخرى */}
+        {files && files.length > 0 && (
+          <>
+            <p className="text-green-400 text-sm font-medium">الملفات:</p>
+            {files.map((file, index) => (
+              <div key={index} className="border border-green-500/20 rounded-lg p-2">
+                {file.type.startsWith('image/') ? (
+                  <div className="space-y-2">
+                    <img 
+                      src={file.url} 
+                      alt={file.name}
+                      className="max-w-full h-auto rounded cursor-pointer hover:opacity-80 transition-opacity max-h-60"
+                      onClick={() => window.open(file.url, '_blank')}
+                    />
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-300">{file.name}</span>
+                      <button
+                        onClick={() => window.open(file.url, '_blank')}
+                        className="text-green-400 hover:text-green-300"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ) : file.type.startsWith('video/') ? (
+                  <div className="space-y-2">
+                    <video 
+                      src={file.url} 
+                      controls 
+                      className="max-w-full h-auto rounded max-h-60"
+                      preload="metadata"
+                    />
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-green-300">{file.name}</span>
+                      <button
+                        onClick={() => window.open(file.url, '_blank')}
+                        className="text-green-400 hover:text-green-300"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <Paperclip className="w-4 h-4 text-green-400" />
+                    <span className="text-sm text-green-300">{file.name}</span>
+                    <span className="text-xs text-green-400">({formatFileSize(file.size)})</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
       </div>
     );
   };
@@ -657,58 +868,8 @@ const CustomerLogTab = () => {
                                   <p className="text-green-400 text-sm font-medium mb-1">رسالة من الإدارة:</p>
                                   {message.message && <p className="text-white mb-2">{message.message}</p>}
                                   
-                                  {/* عرض الملفات المرفقة من الإدارة */}
-                                  {message.files && message.files.length > 0 && (
-                                    <div className="space-y-2">
-                                      {message.files.map((file, index) => (
-                                        <div key={index} className="border border-green-500/20 rounded-lg p-2">
-                                          {file.type.startsWith('image/') ? (
-                                            <div className="space-y-2">
-                                              <img 
-                                                src={file.url} 
-                                                alt={file.name}
-                                                className="max-w-full h-auto rounded cursor-pointer hover:opacity-80 transition-opacity max-h-60"
-                                                onClick={() => window.open(file.url, '_blank')}
-                                              />
-                                              <div className="flex items-center justify-between text-xs">
-                                                <span className="text-green-300">{file.name}</span>
-                                                <button
-                                                  onClick={() => window.open(file.url, '_blank')}
-                                                  className="text-green-400 hover:text-green-300"
-                                                >
-                                                  <ExternalLink className="w-3 h-3" />
-                                                </button>
-                                              </div>
-                                            </div>
-                                          ) : file.type.startsWith('video/') ? (
-                                            <div className="space-y-2">
-                                              <video 
-                                                src={file.url} 
-                                                controls 
-                                                className="max-w-full h-auto rounded max-h-60"
-                                                preload="metadata"
-                                              />
-                                              <div className="flex items-center justify-between text-xs">
-                                                <span className="text-green-300">{file.name}</span>
-                                                <button
-                                                  onClick={() => window.open(file.url, '_blank')}
-                                                  className="text-green-400 hover:text-green-300"
-                                                >
-                                                  <ExternalLink className="w-3 h-3" />
-                                                </button>
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                                              <Paperclip className="w-4 h-4 text-green-400" />
-                                              <span className="text-sm text-green-300">{file.name}</span>
-                                              <span className="text-xs text-green-400">({formatFileSize(file.size)})</span>
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
+                                  {/* عرض المرفقات من الإدارة */}
+                                  {renderAdminAttachments(message.attachments, message.files)}
                                   
                                   <p className="text-gray-400 text-xs mt-1">{message.timestamp}</p>
                                 </div>
@@ -761,31 +922,53 @@ const CustomerLogTab = () => {
                           ))}
                         </div>
 
-                        {/* منطقة الملفات المحددة */}
-                        {selectedFiles[session.customerId] && selectedFiles[session.customerId].length > 0 && (
+                        {/* منطقة الملفات والوسائط المحددة */}
+                        {((selectedFiles[session.customerId] && selectedFiles[session.customerId].length > 0) || 
+                          (mediaAttachments[session.customerId] && mediaAttachments[session.customerId].length > 0)) && (
                           <div className="mb-4 p-3 bg-white/10 rounded-lg border-t border-white/20">
                             <h4 className="text-sm font-medium text-white mb-2">الملفات المحددة:</h4>
-                            <div className="space-y-2">
-                              {selectedFiles[session.customerId].map((file, index) => (
-                                <div key={index} className="flex items-center justify-between bg-black/20 rounded p-2">
-                                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                                    {file.type.startsWith('image/') ? (
+                            
+                            {/* عرض الوسائط */}
+                            {mediaAttachments[session.customerId]?.map((media, index) => (
+                              <div key={`media-${index}`} className="flex items-center justify-between bg-black/20 rounded p-2 mb-2">
+                                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                                  {media.type === 'image' ? (
+                                    <>
                                       <Image className="w-4 h-4 text-green-400" />
-                                    ) : (
+                                      <span className="text-sm text-white">صورة</span>
+                                    </>
+                                  ) : (
+                                    <>
                                       <Video className="w-4 h-4 text-blue-400" />
-                                    )}
-                                    <span className="text-sm text-white">{file.name}</span>
-                                    <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
-                                  </div>
-                                  <button
-                                    onClick={() => removeFile(session.customerId, index)}
-                                    className="text-red-400 hover:text-red-300"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
+                                      <span className="text-sm text-white">فيديو</span>
+                                    </>
+                                  )}
                                 </div>
-                              ))}
-                            </div>
+                                <button
+                                  onClick={() => removeMediaAttachment(session.customerId, index)}
+                                  className="text-red-400 hover:text-red-300"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                            
+                            {/* عرض الملفات العادية */}
+                            {selectedFiles[session.customerId]?.map((file, index) => (
+                              <div key={`file-${index}`} className="flex items-center justify-between bg-black/20 rounded p-2 mb-2">
+                                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                                  <Paperclip className="w-4 h-4 text-gray-400" />
+                                  <span className="text-sm text-white">{file.name}</span>
+                                  <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
+                                </div>
+                                <button
+                                  onClick={() => removeFile(session.customerId, index)}
+                                  className="text-red-400 hover:text-red-300"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
                           </div>
                         )}
 
@@ -806,7 +989,7 @@ const CustomerLogTab = () => {
                                 ref={(el) => fileInputRefs.current[session.customerId] = el}
                                 type="file"
                                 multiple
-                                accept="image/*,video/*"
+                                accept="image/*,video/*,*/*"
                                 onChange={(e) => handleFileSelect(session.customerId, e)}
                                 className="hidden"
                               />
@@ -814,14 +997,16 @@ const CustomerLogTab = () => {
                                 onClick={() => fileInputRefs.current[session.customerId]?.click()}
                                 variant="outline"
                                 className="flex items-center gap-2"
-                                title="إرفاق صور أو فيديوهات"
+                                title="إرفاق صور أو فيديوهات أو ملفات"
                               >
                                 <Paperclip className="w-4 h-4" />
                                 إرفاق ملف
                               </Button>
                               <Button
                                 onClick={() => handleSendAdminMessage(session.customerId)}
-                                disabled={!adminMessage[session.customerId]?.trim() && (!selectedFiles[session.customerId] || selectedFiles[session.customerId].length === 0)}
+                                disabled={!adminMessage[session.customerId]?.trim() && 
+                                         (!selectedFiles[session.customerId] || selectedFiles[session.customerId].length === 0) &&
+                                         (!mediaAttachments[session.customerId] || mediaAttachments[session.customerId].length === 0)}
                                 className="glow-button flex items-center gap-2"
                                 title="إرسال رسالة جديدة"
                               >
