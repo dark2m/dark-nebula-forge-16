@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Phone, Clock, Shield, User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
+import { Clock, Shield, User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import SettingsService from '../utils/settingsService';
 import CustomerAuthService from '../utils/customerAuthService';
@@ -48,15 +48,12 @@ const CustomerSupport = () => {
   const customerSupportTexts = {
     pageTitle: settings.pageTexts?.customerSupport?.pageTitle || 'خدمة العملاء',
     pageDescription: settings.pageTexts?.customerSupport?.pageDescription || 'سجل دخولك للوصول إلى خدمة العملاء المتخصصة',
-    whatsappTitle: settings.pageTexts?.customerSupport?.whatsappTitle || 'واتساب',
-    whatsappDescription: settings.pageTexts?.customerSupport?.whatsappDescription || 'للدعم الشخصي المباشر',
-    whatsappButtonText: settings.pageTexts?.customerSupport?.whatsappButtonText || 'راسل عبر واتساب',
     workingHoursTitle: settings.pageTexts?.customerSupport?.workingHoursTitle || 'ساعات العمل',
     workingHours: {
       weekdays: settings.pageTexts?.customerSupport?.workingHours?.weekdays || '9:00 ص - 11:00 م',
       friday: settings.pageTexts?.customerSupport?.workingHours?.friday || '2:00 م - 11:00 م'
     },
-    supportNote: settings.pageTexts?.customerSupport?.supportNote || '💡 الدعم الفني متاح 24/7 عبر واتساب للحالات الطارئة'
+    supportNote: settings.pageTexts?.customerSupport?.supportNote || '💡 الدعم الفني متاح 24/7 للحالات الطارئة'
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -132,30 +129,7 @@ const CustomerSupport = () => {
             </div>
 
             <div className="max-w-4xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
-                {/* واتساب فقط */}
-                <Card className="bg-white/10 backdrop-blur-md border border-white/20">
-                  <CardHeader className="text-center">
-                    <CardTitle className="text-xl font-bold text-white flex items-center justify-center gap-2">
-                      <Phone className="w-6 h-6 text-green-400" />
-                      {customerSupportTexts.whatsappTitle}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-gray-300 mb-4">
-                      {customerSupportTexts.whatsappDescription}
-                    </p>
-                    <Button 
-                      className="w-full glow-button"
-                      onClick={() => window.open(`https://wa.me/${settings.contactInfo.whatsapp.replace(/\D/g, '')}`, '_blank')}
-                    >
-                      {customerSupportTexts.whatsappButtonText}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* ساعات العمل */}
+              {/* ساعات العمل فقط */}
               <Card className="bg-white/10 backdrop-blur-md border border-white/20 mb-6">
                 <CardHeader>
                   <CardTitle className="text-xl font-bold text-white flex items-center gap-2">

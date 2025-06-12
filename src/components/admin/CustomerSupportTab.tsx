@@ -1,12 +1,11 @@
 
 import React from 'react';
-import { Save, Phone, Clock, Shield } from 'lucide-react';
+import { Save, Clock, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import type { SiteSettings } from '../../types/admin';
 
 interface CustomerSupportTabProps {
@@ -57,15 +56,12 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
   const customerSupportTexts = siteSettings.pageTexts.customerSupport || {
     pageTitle: 'خدمة العملاء',
     pageDescription: 'نحن هنا لمساعدتك في أي وقت. تواصل معنا عبر القنوات المختلفة',
-    whatsappTitle: 'واتساب',
-    whatsappDescription: 'للدعم الشخصي المباشر',
-    whatsappButtonText: 'راسل عبر واتساب',
     workingHoursTitle: 'ساعات العمل',
     workingHours: {
       weekdays: '9:00 ص - 11:00 م',
       friday: '2:00 م - 11:00 م'
     },
-    supportNote: '💡 الدعم الفني متاح 24/7 عبر واتساب للحالات الطارئة'
+    supportNote: '💡 الدعم الفني متاح 24/7 للحالات الطارئة'
   };
 
   return (
@@ -73,7 +69,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Phone className="w-6 h-6" />
+            <Shield className="w-6 h-6" />
             إدارة صفحة خدمة العملاء
           </h2>
           <p className="text-gray-400 mt-1">تحكم في جميع النصوص والمحتوى الخاص بصفحة خدمة العملاء</p>
@@ -110,45 +106,6 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               className="bg-white/10 border-white/20 text-white"
               placeholder="وصف الصفحة"
               rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* إعدادات الواتساب */}
-      <Card className="bg-white/5 border-white/20">
-        <CardHeader>
-          <CardTitle className="text-white">إعدادات الواتساب</CardTitle>
-          <CardDescription className="text-gray-400">
-            تحرير النصوص الخاصة بالواتساب
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-white">العنوان</Label>
-              <Input
-                value={customerSupportTexts.whatsappTitle}
-                onChange={(e) => updateCustomerSupportTexts('whatsappTitle', e.target.value)}
-                className="bg-white/10 border-white/20 text-white"
-              />
-            </div>
-            <div>
-              <Label className="text-white">نص الزر</Label>
-              <Input
-                value={customerSupportTexts.whatsappButtonText}
-                onChange={(e) => updateCustomerSupportTexts('whatsappButtonText', e.target.value)}
-                className="bg-white/10 border-white/20 text-white"
-              />
-            </div>
-          </div>
-          <div>
-            <Label className="text-white">الوصف</Label>
-            <Textarea
-              value={customerSupportTexts.whatsappDescription}
-              onChange={(e) => updateCustomerSupportTexts('whatsappDescription', e.target.value)}
-              className="bg-white/10 border-white/20 text-white"
-              rows={2}
             />
           </div>
         </CardContent>
