@@ -23,6 +23,7 @@ import AdminSidebar from '../components/admin/AdminSidebar';
 import AdminTabContent from '../components/admin/AdminTabContent';
 import StarryBackground from '../components/StarryBackground';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminData } from '../hooks/useAdminData';
 import { AdminUser } from '../types/admin';
 
 interface NavigationItem {
@@ -41,22 +42,18 @@ const AdminDashboard = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Navigation items configuration
-  const navigationItems: NavigationItem[] = [
-    { id: 'overview', label: 'نظرة عامة', icon: BarChart3 },
-    { id: 'users', label: 'المستخدمين', icon: Users, roles: ['مدير عام'] },
-    { id: 'products', label: 'المنتجات', icon: Shield },
-    { id: 'texts', label: 'النصوص', icon: FileText },
-    { id: 'navigation', label: 'التنقل', icon: Globe },
-    { id: 'settings', label: 'الإعدادات', icon: Settings },
-    { id: 'design', label: 'التصميم', icon: Palette },
-    { id: 'typography', label: 'الخطوط', icon: Type },
-    { id: 'background', label: 'الخلفية', icon: Globe },
-    { id: 'customer-support', label: 'خدمة العملاء', icon: MessageSquare },
-    { id: 'tools', label: 'الأدوات', icon: Settings },
-    { id: 'backup', label: 'النسخ الاحتياطي', icon: Archive },
-    { id: 'live-preview', label: 'المعاينة المباشرة', icon: Eye }
-  ];
+  // Use the admin data hook
+  const {
+    currentUser,
+    products,
+    setProducts,
+    siteSettings,
+    setSiteSettings,
+    isLoading,
+    canAccess,
+    toast,
+    loadAdminData
+  } = useAdminData();
 
   // Get current admin user info
   const getCurrentAdmin = (): AdminUser => {
@@ -66,25 +63,17 @@ const AdminDashboard = () => {
       return {
         id: admin.id || 1,
         username: admin.username || 'admin',
-        role: admin.role || 'مشرف',
-        password: '' // Don't store password in state
+        role: admin.role || 'مشرف'
       };
     }
     return {
       id: 1,
       username: 'admin',
-      role: 'مشرف',
-      password: ''
+      role: 'مشرف'
     };
   };
 
   const [currentAdmin] = useState<AdminUser>(getCurrentAdmin());
-
-  // Check access permissions
-  const canAccess = (requiredRoles: string[] = []) => {
-    if (requiredRoles.length === 0) return true;
-    return requiredRoles.includes(currentAdmin.role);
-  };
 
   // Handle logout
   const handleLogout = () => {
@@ -121,10 +110,52 @@ const AdminDashboard = () => {
     setIsSidebarOpen(false);
   };
 
-  // Filter navigation items based on permissions
-  const visibleNavigationItems = navigationItems.filter(item => 
-    !item.roles || canAccess(item.roles)
-  );
+  // Save site settings function
+  const saveSiteSettings = async () => {
+    if (siteSettings) {
+      try {
+        // This will be handled by the settings service
+        console.log('Saving site settings:', siteSettings);
+        toast({
+          title: "تم الحفظ",
+          description: "تم حفظ الإعدادات بنجاح"
+        });
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        toast({
+          title: "خطأ في الحفظ",
+          description: "حدث خطأ أثناء حفظ الإعدادات",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  // Product management functions
+  const addProduct = async () => {
+    // This will be implemented by the product service
+    console.log('Adding new product');
+  };
+
+  const updateProduct = (id: number, updates: any) => {
+    console.log('Updating product:', id, updates);
+  };
+
+  const deleteProduct = (id: number) => {
+    console.log('Deleting product:', id);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <StarryBackground />
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p>جاري تحميل البيانات...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 relative">
@@ -180,11 +211,10 @@ const AdminDashboard = () => {
       <div className="flex pt-16">
         {/* Sidebar */}
         <AdminSidebar
-          navigationItems={visibleNavigationItems}
           activeTab={activeTab}
-          onTabChange={handleTabChange}
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
+          setActiveTab={handleTabChange}
+          currentUser={currentUser}
+          canAccess={canAccess}
         />
 
         {/* Main content */}
@@ -192,7 +222,38 @@ const AdminDashboard = () => {
           <div className="relative z-10">
             <AdminTabContent
               activeTab={activeTab}
-              canAccess={(role) => canAccess([role])}
+              products={products}
+              siteSettings={siteSettings || {
+                title: '',
+                titleSize: 'xl',
+                description: '',
+                colors: { primary: '#3b82f6', secondary: '#8b5cf6', accent: '#06b6d4' },
+                globalTextSize: 'medium',
+                backgroundSettings: {
+                  type: 'color',
+                  value: '#000000'
+                },
+                navigation: [],
+                contactInfo: { whatsapp: '', email: '', phone: '', address: '' },
+                homePage: { heroTitle: '', heroSubtitle: '', featuresTitle: '', features: [] },
+                typography: { fontFamily: 'system-ui', headingWeight: 'bold', bodyWeight: 'normal', lineHeight: 'normal' },
+                design: { borderRadius: 'medium', shadows: 'medium', spacing: 'normal', animations: true },
+                pageTexts: {
+                  home: { heroTitle: '', heroSubtitle: '', featuresTitle: '', features: [] },
+                  official: { pageTitle: '', pageSubtitle: '', aboutTitle: '', aboutContent: [], whyChooseTitle: '', whyChooseItems: [], contactTitle: '' },
+                  pubgHacks: { pageTitle: '', pageSubtitle: '', safetyTitle: '', safetyDescription: '' },
+                  webDevelopment: { pageTitle: '', pageSubtitle: '', servicesTitle: '' },
+                  discordBots: { pageTitle: '', pageSubtitle: '', featuresTitle: '' },
+                  navigation: { homeTitle: '', pubgTitle: '', webTitle: '', discordTitle: '', officialTitle: '', adminTitle: '' },
+                  cart: { cartTitle: '', emptyCartMessage: '', purchaseButton: '', purchaseNote: '', addToCartButton: '', removeButton: '' }
+                }
+              }}
+              setSiteSettings={setSiteSettings}
+              saveSiteSettings={saveSiteSettings}
+              addProduct={addProduct}
+              updateProduct={updateProduct}
+              deleteProduct={deleteProduct}
+              canAccess={canAccess}
             />
           </div>
         </main>

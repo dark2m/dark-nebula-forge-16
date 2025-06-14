@@ -14,6 +14,8 @@ import PasswordsTab from './PasswordsTab';
 import ToolsTab from './ToolsTab';
 import CustomerSupportTab from './CustomerSupportTab';
 import CustomerLogTab from './CustomerLogTab';
+import BackgroundTab from './BackgroundTab';
+import TypographyTab from './TypographyTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -117,9 +119,33 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         );
 
       case 'design':
-        return <DesignTab />;
+        return (
+          <DesignTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
 
-      case 'preview':
+      case 'typography':
+        return (
+          <TypographyTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
+
+      case 'background':
+        return (
+          <BackgroundTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
+          />
+        );
+
+      case 'live-preview':
         return <LivePreviewTab siteSettings={siteSettings} />;
 
       case 'backup':
@@ -127,6 +153,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
           <BackupTab
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
           />
         );
 

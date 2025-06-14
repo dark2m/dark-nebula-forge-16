@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Trash2, Plus, Edit, Save, X } from 'lucide-react';
 import { Product } from '../../types/admin';
 import { useProductManagement } from '../../hooks/useProductManagement';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductsTabProps {
   canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
@@ -13,13 +14,14 @@ interface ProductsTabProps {
 }
 
 const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
+  const { toast } = useToast();
   const {
     products,
+    isLoading,
     addProduct,
     updateProduct,
-    deleteProduct,
-    loading
-  } = useProductManagement();
+    deleteProduct
+  } = useProductManagement(canAccess, toast);
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState<Partial<Product>>({
@@ -34,20 +36,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
 
   const handleAddProduct = async () => {
     if (newProduct.name && newProduct.price !== undefined) {
-      const productToAdd = {
-        id: Date.now(),
-        name: newProduct.name,
-        price: newProduct.price,
-        category: newProduct.category || 'pubg',
-        description: newProduct.description || '',
-        features: newProduct.features || [],
-        images: newProduct.images || [],
-        videos: newProduct.videos || [],
-        titleSize: 'large' as const,
-        textSize: 'medium' as const
-      };
-      
-      await addProduct(productToAdd);
+      await addProduct();
       setNewProduct({
         name: '',
         price: 0,
@@ -61,7 +50,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
   };
 
   const handleUpdateProduct = async (product: Product) => {
-    await updateProduct(product);
+    await updateProduct(product.id, product);
     setEditingProduct(null);
   };
 
@@ -79,7 +68,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
