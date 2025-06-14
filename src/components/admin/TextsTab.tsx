@@ -26,6 +26,10 @@ const TextsTab: React.FC<TextsTabProps> = ({
   const handleSave = () => {
     console.log('TextsTab: Saving text settings:', siteSettings.pageTexts);
     saveSiteSettings();
+    toast({
+      title: "تم الحفظ بنجاح",
+      description: "تم حفظ جميع التغييرات على النصوص"
+    });
   };
 
   const updatePageTexts = (page: string, field: string, value: any) => {
@@ -86,7 +90,7 @@ const TextsTab: React.FC<TextsTabProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <TextsTabHeader 
         onSave={handleSave}
         onExport={exportTexts}
@@ -98,7 +102,7 @@ const TextsTab: React.FC<TextsTabProps> = ({
         onSearchChange={setSearchTerm}
       />
 
-      <div className="admin-card rounded-xl p-6">
+      <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
         <TextsTabSections 
           activeSection={activeSection}
           onSectionChange={setActiveSection}
