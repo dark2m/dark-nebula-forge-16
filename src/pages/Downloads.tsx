@@ -8,71 +8,39 @@ import { getTextContent } from '../utils/textUtils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import DownloadService from '../utils/downloadService';
+import type { DownloadItem } from '../types/downloads';
 
 const Downloads = () => {
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+  const [downloadItems, setDownloadItems] = useState<DownloadItem[]>([]);
 
   useEffect(() => {
     const loadedSettings = AdminStorage.getSiteSettings();
     setSiteSettings(loadedSettings);
 
+    // Load downloads from service
+    const downloads = DownloadService.getDownloads();
+    setDownloadItems(downloads);
+
     const handleSettingsUpdate = (event: CustomEvent) => {
       setSiteSettings(event.detail.settings);
     };
 
+    const handleDownloadsUpdate = (event: CustomEvent) => {
+      setDownloadItems(event.detail.downloads);
+    };
+
     window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    window.addEventListener('downloadsUpdated', handleDownloadsUpdate as EventListener);
     
     return () => {
       window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+      window.removeEventListener('downloadsUpdated', handleDownloadsUpdate as EventListener);
     };
   }, []);
 
-  const downloadItems = [
-    {
-      id: 1,
-      title: "PUBG Mobile Hack V2.0",
-      description: "أحدث إصدار من هاك ببجي موبايل مع ميزات متقدمة",
-      category: "ألعاب",
-      size: "15.2 MB",
-      downloads: 2847,
-      rating: 4.8,
-      version: "2.0.1",
-      lastUpdate: "منذ يومين",
-      features: ["Wall Hack", "Aimbot", "Speed Hack", "Recoil Control"],
-      status: "جديد",
-      icon: Shield
-    },
-    {
-      id: 2,
-      title: "Discord Bot Builder",
-      description: "أداة إنشاء بوتات ديسكورد بدون برمجة",
-      category: "أدوات",
-      size: "8.7 MB",
-      downloads: 1523,
-      rating: 4.6,
-      version: "1.5.3",
-      lastUpdate: "منذ أسبوع",
-      features: ["واجهة بصرية", "قوالب جاهزة", "دعم API", "تحديثات تلقائية"],
-      status: "محدث",
-      icon: Package
-    },
-    {
-      id: 3,
-      title: "Website Template Pack",
-      description: "مجموعة قوالب مواقع احترافية جاهزة للاستخدام",
-      category: "تصميم",
-      size: "45.8 MB",
-      downloads: 892,
-      rating: 4.9,
-      version: "3.2.0",
-      lastUpdate: "منذ 3 أيام",
-      features: ["HTML5/CSS3", "Bootstrap", "Responsive", "SEO Ready"],
-      status: "شائع",
-      icon: FileText
-    }
-  ];
-
-  const categories = ["الكل", "ألعاب", "أدوات", "تصميم"];
+  const categories = ["الكل", "ألعاب", "أدوات", "تصميم", "برمجة"];
   const [selectedCategory, setSelectedCategory] = useState("الكل");
 
   const filteredItems = selectedCategory === "الكل" 
@@ -85,6 +53,17 @@ const Downloads = () => {
       case "محدث": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
       case "شائع": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
       default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+    }
+  };
+
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'Shield': return Shield;
+      case 'Package': return Package;
+      case 'FileText': return FileText;
+      case 'Download': return Download;
+      case 'Star': return Star;
+      default: return Package;
     }
   };
 
@@ -128,7 +107,7 @@ const Downloads = () => {
           {/* Downloads Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item) => {
-              const IconComponent = item.icon;
+              const IconComponent = getIconComponent(item.icon);
               return (
                 <Card key={item.id} className="bg-white/5 backdrop-blur-sm border-white/20 hover:bg-white/10 transition-all duration-300">
                   <CardHeader>
@@ -202,15 +181,19 @@ const Downloads = () => {
           {/* Stats Section */}
           <div className="mt-16 grid md:grid-cols-3 gap-6">
             <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20">
-              <div className="text-3xl font-bold text-blue-400 mb-2">5,262</div>
+              <div className="text-3xl font-bold text-blue-400 mb-2">
+                {downloadItems.reduce((total, item) => total + item.downloads, 0).toLocaleString()}
+              </div>
               <div className="text-gray-300">إجمالي التنزيلات</div>
             </div>
             <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20">
-              <div className="text-3xl font-bold text-green-400 mb-2">12</div>
+              <div className="text-3xl font-bold text-green-400 mb-2">{downloadItems.length}</div>
               <div className="text-gray-300">ملفات متاحة</div>
             </div>
             <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20">
-              <div className="text-3xl font-bold text-purple-400 mb-2">4.7</div>
+              <div className="text-3xl font-bold text-purple-400 mb-2">
+                {downloadItems.length > 0 ? (downloadItems.reduce((total, item) => total + item.rating, 0) / downloadItems.length).toFixed(1) : '0'}
+              </div>
               <div className="text-gray-300">متوسط التقييم</div>
             </div>
           </div>
