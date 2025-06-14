@@ -12,15 +12,16 @@ import {
   UserCheck,
   MessageSquare,
   Settings,
-  Bell,
-  Filter,
-  Search,
-  Download,
   RefreshCw,
   BarChart3,
-  Calendar,
   Star,
-  Archive
+  Archive,
+  Ban,
+  Trash2,
+  X,
+  Reply,
+  Paperclip,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +30,9 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import CustomerChatService, { type ChatSession } from '../../utils/customerChatService';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CustomerChatService, { type ChatSession, type ChatMessage, type AdminMessage } from '../../utils/customerChatService';
+import CustomerAuthService, { type CustomerUser, type LoginAttempt } from '../../utils/customerAuthService';
 import { useToast } from '@/hooks/use-toast';
 
 interface CustomerSupportTabProps {
@@ -43,24 +46,51 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
   setSiteSettings, 
   saveSiteSettings 
 }) => {
-  const [activeView, setActiveView] = useState<'overview' | 'messages' | 'analytics' | 'settings'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'messages' | 'customers' | 'analytics' | 'settings'>('overview');
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [customers, setCustomers] = useState<CustomerUser[]>([]);
+  const [loginAttempts, setLoginAttempts] = useState<LoginAttempt[]>([]);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerUser | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'waiting' | 'closed'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentMessages, setCurrentMessages] = useState<(ChatMessage | AdminMessage)[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    loadChatSessions();
-    const interval = setInterval(loadChatSessions, 5000);
+    loadData();
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const loadData = () => {
+    loadChatSessions();
+    loadCustomers();
+    loadLoginAttempts();
+  };
 
   const loadChatSessions = () => {
     const sessions = CustomerChatService.getChatSessions();
     setChatSessions(sessions);
+  };
+
+  const loadCustomers = () => {
+    const allCustomers = CustomerAuthService.getCustomers();
+    const enrichedCustomers: CustomerUser[] = allCustomers.map(customer => ({
+      ...customer,
+      createdAt: customer.registrationDate,
+      isVerified: true,
+      isBlocked: localStorage.getItem(`blocked_${customer.id}`) === 'true',
+      isOnline: localStorage.getItem(`online_${customer.id}`) === 'true',
+      lastSeen: localStorage.getItem(`lastSeen_${customer.id}`) || 'غير معروف'
+    }));
+    setCustomers(enrichedCustomers);
+  };
+
+  const loadLoginAttempts = () => {
+    setLoginAttempts(CustomerAuthService.getLoginAttempts());
   };
 
   const filteredSessions = chatSessions.filter(session => {
@@ -69,6 +99,10 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     const matchesFilter = filterStatus === 'all' || session.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
+
+  const filteredCustomers = customers.filter(customer =>
+    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleSendReply = async () => {
     if (!selectedSession || !newMessage.trim()) return;
@@ -79,6 +113,8 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     if (success) {
       setNewMessage('');
       loadChatSessions();
+      const messages = CustomerChatService.getCustomerMessages(selectedSession);
+      setCurrentMessages(messages);
       toast({
         title: "تم إرسال الرد",
         description: "تم إرسال ردك بنجاح"
@@ -102,6 +138,50 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     });
   };
 
+  const handleBlockCustomer = (customerId: number) => {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+
+    const isCurrentlyBlocked = localStorage.getItem(`blocked_${customerId}`) === 'true';
+    const newBlockedStatus = !isCurrentlyBlocked;
+
+    localStorage.setItem(`blocked_${customerId}`, newBlockedStatus.toString());
+    loadCustomers();
+
+    toast({
+      title: newBlockedStatus ? "تم حظر العميل" : "تم إلغاء حظر العميل",
+      description: newBlockedStatus
+        ? `تم حظر ${customer.email} بنجاح.`
+        : `تم إلغاء حظر ${customer.email} بنجاح.`,
+    });
+  };
+
+  const handleDeleteCustomer = (customerId: number) => {
+    const customerToDelete = customers.find(c => c.id === customerId);
+    if (!customerToDelete) return;
+
+    const confirmDelete = window.confirm(`هل أنت متأكد أنك تريد حذف ${customerToDelete.email}؟`);
+    if (!confirmDelete) return;
+
+    const allCustomers = CustomerAuthService.getCustomers();
+    const updatedCustomers = allCustomers.filter(c => c.id !== customerId);
+    CustomerAuthService.saveCustomers(updatedCustomers);
+    loadCustomers();
+
+    toast({
+      title: "تم حذف العميل",
+      description: `تم حذف ${customerToDelete.email} بنجاح.`,
+    });
+  };
+
+  const handleSelectSession = (session: ChatSession) => {
+    setSelectedSession(session.customerId);
+    const messages = CustomerChatService.getCustomerMessages(session.customerId);
+    setCurrentMessages(messages);
+    CustomerChatService.markMessagesAsRead(session.customerId);
+    loadChatSessions();
+  };
+
   const getTotalUnreadCount = () => {
     return chatSessions.reduce((total, session) => total + session.unreadCount, 0);
   };
@@ -111,7 +191,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
   };
 
   const getResponseTimeAverage = () => {
-    return "2.5 دقيقة"; // Mock data
+    return "2.5 دقيقة";
   };
 
   const renderOverview = () => (
@@ -150,11 +230,11 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-300 text-sm font-medium">تم الإغلاق</p>
-                <p className="text-3xl font-bold text-white">{getSessionsByStatus('closed')}</p>
+                <p className="text-green-300 text-sm font-medium">إجمالي العملاء</p>
+                <p className="text-3xl font-bold text-white">{customers.length}</p>
               </div>
               <div className="bg-green-500/20 p-3 rounded-full">
-                <CheckCircle className="w-6 h-6 text-green-400" />
+                <Users className="w-6 h-6 text-green-400" />
               </div>
             </div>
           </CardContent>
@@ -180,17 +260,25 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
         <CardHeader>
           <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
             <Settings className="w-5 h-5 text-blue-400" />
-            أدوات إدارة سريعة
+            أدوات إدارة شاملة
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Button 
               onClick={() => setActiveView('messages')}
               className="bg-blue-500/20 border-blue-500/30 hover:bg-blue-500/30 text-white h-20 flex flex-col gap-2"
             >
               <MessageSquare className="w-6 h-6" />
               <span className="text-sm">إدارة الرسائل</span>
+            </Button>
+            
+            <Button 
+              onClick={() => setActiveView('customers')}
+              className="bg-green-500/20 border-green-500/30 hover:bg-green-500/30 text-white h-20 flex flex-col gap-2"
+            >
+              <Users className="w-6 h-6" />
+              <span className="text-sm">إدارة العملاء</span>
             </Button>
             
             <Button 
@@ -202,8 +290,8 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
             </Button>
             
             <Button 
-              onClick={loadChatSessions}
-              className="bg-green-500/20 border-green-500/30 hover:bg-green-500/30 text-white h-20 flex flex-col gap-2"
+              onClick={loadData}
+              className="bg-cyan-500/20 border-cyan-500/30 hover:bg-cyan-500/30 text-white h-20 flex flex-col gap-2"
             >
               <RefreshCw className="w-6 h-6" />
               <span className="text-sm">تحديث البيانات</span>
@@ -220,42 +308,78 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* آخر المحادثات */}
-      <Card className="bg-white/5 backdrop-blur-md border-white/20">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-green-400" />
-            آخر المحادثات
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-64">
-            <div className="space-y-3">
-              {chatSessions.slice(0, 5).map((session) => (
-                <div key={session.customerId} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-blue-500/20 p-2 rounded-full">
-                      <Users className="w-4 h-4 text-blue-400" />
+      {/* آخر المحادثات والعملاء */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-white/5 backdrop-blur-md border-white/20">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-green-400" />
+              آخر المحادثات
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-64">
+              <div className="space-y-3">
+                {chatSessions.slice(0, 5).map((session) => (
+                  <div key={session.customerId} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-blue-500/20 p-2 rounded-full">
+                        <Users className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{session.customerEmail}</p>
+                        <p className="text-gray-400 text-sm">{session.lastActivity}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white font-medium">{session.customerEmail}</p>
-                      <p className="text-gray-400 text-sm">{session.lastActivity}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={session.status === 'waiting' ? 'destructive' : session.status === 'active' ? 'default' : 'secondary'}>
+                        {session.status === 'waiting' ? 'في الانتظار' : session.status === 'active' ? 'نشط' : 'مغلق'}
+                      </Badge>
+                      {session.unreadCount > 0 && (
+                        <Badge variant="destructive">{session.unreadCount}</Badge>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={session.status === 'waiting' ? 'destructive' : session.status === 'active' ? 'default' : 'secondary'}>
-                      {session.status === 'waiting' ? 'في الانتظار' : session.status === 'active' ? 'نشط' : 'مغلق'}
-                    </Badge>
-                    {session.unreadCount > 0 && (
-                      <Badge variant="destructive">{session.unreadCount}</Badge>
-                    )}
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/5 backdrop-blur-md border-white/20">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-purple-400" />
+              العملاء المتصلين
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-64">
+              <div className="space-y-3">
+                {customers.filter(c => c.isOnline).slice(0, 5).map((customer) => (
+                  <div key={customer.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-green-500/20 p-2 rounded-full">
+                        <UserCheck className="w-4 h-4 text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{customer.email}</p>
+                        <p className="text-gray-400 text-sm">متصل الآن</p>
+                      </div>
+                    </div>
+                    <Badge variant="default" className="bg-green-500">متصل</Badge>
                   </div>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                ))}
+                {customers.filter(c => c.isOnline).length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-gray-400">لا يوجد عملاء متصلين حالياً</p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 
@@ -299,7 +423,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               {filteredSessions.map((session) => (
                 <div
                   key={session.customerId}
-                  onClick={() => setSelectedSession(session.customerId)}
+                  onClick={() => handleSelectSession(session)}
                   className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                     selectedSession === session.customerId
                       ? 'bg-blue-500/30 border-blue-500/50'
@@ -362,7 +486,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               <CardContent className="flex-1 flex flex-col p-4">
                 <ScrollArea className="flex-1 mb-4">
                   <div className="space-y-3">
-                    {CustomerChatService.getMessages(selectedSession).map((message) => (
+                    {currentMessages.map((message) => (
                       <div key={message.id} className={`flex ${message.sender === 'support' ? 'justify-start' : 'justify-end'}`}>
                         <div className={`max-w-[70%] p-3 rounded-lg ${
                           message.sender === 'support' 
@@ -415,6 +539,247 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
           )}
         </Card>
       </div>
+    </div>
+  );
+
+  const renderCustomers = () => (
+    <div className="space-y-6">
+      <Card className="bg-white/5 backdrop-blur-md border-white/20">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-white flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-400" />
+            إدارة العملاء ({customers.length})
+          </CardTitle>
+          <div className="flex gap-2">
+            <Input
+              type="search"
+              placeholder="ابحث عن عميل..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md bg-white/10 border-white/20 text-white"
+            />
+            <Button onClick={loadCustomers} size="sm" className="bg-blue-500/20 hover:bg-blue-500/30">
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="active" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 bg-white/10">
+              <TabsTrigger value="active">العملاء النشطين</TabsTrigger>
+              <TabsTrigger value="all">جميع العملاء</TabsTrigger>
+              <TabsTrigger value="blocked">المحظورين</TabsTrigger>
+              <TabsTrigger value="attempts">محاولات الدخول</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="active" className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-white/10">
+                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
+                      <th className="text-right text-gray-300 p-2">الحالة</th>
+                      <th className="text-right text-gray-300 p-2">آخر ظهور</th>
+                      <th className="text-right text-gray-300 p-2">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCustomers.filter(c => c.isOnline).map((customer) => (
+                      <tr key={customer.id} className="border-white/10 hover:bg-white/5">
+                        <td className="text-white p-2">{customer.email}</td>
+                        <td className="p-2">
+                          <Badge variant="default" className="bg-green-500">متصل</Badge>
+                        </td>
+                        <td className="text-gray-300 p-2">{customer.lastSeen}</td>
+                        <td className="p-2">
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                            <Button
+                              onClick={() => handleBlockCustomer(customer.id)}
+                              variant="outline"
+                              size="icon"
+                              className="hover:bg-red-500/10 text-red-400"
+                            >
+                              <Ban className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => setSelectedCustomer(customer)}
+                              variant="outline"
+                              size="icon"
+                              className="hover:bg-blue-500/10 text-blue-400"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="all" className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-white/10">
+                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
+                      <th className="text-right text-gray-300 p-2">تاريخ التسجيل</th>
+                      <th className="text-right text-gray-300 p-2">الحالة</th>
+                      <th className="text-right text-gray-300 p-2">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCustomers.map((customer) => (
+                      <tr key={customer.id} className="border-white/10 hover:bg-white/5">
+                        <td className="text-white p-2">{customer.email}</td>
+                        <td className="text-gray-300 p-2">{customer.createdAt}</td>
+                        <td className="p-2">
+                          {customer.isOnline ? (
+                            <Badge variant="default" className="bg-green-500">متصل</Badge>
+                          ) : customer.isBlocked ? (
+                            <Badge variant="destructive">محظور</Badge>
+                          ) : (
+                            <Badge variant="secondary">غير متصل</Badge>
+                          )}
+                        </td>
+                        <td className="p-2">
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                            <Button
+                              onClick={() => handleBlockCustomer(customer.id)}
+                              variant="outline"
+                              size="icon"
+                              className="hover:bg-red-500/10 text-red-400"
+                            >
+                              {customer.isBlocked ? <UserCheck className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteCustomer(customer.id)}
+                              variant="destructive"
+                              size="icon"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="blocked" className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-white/10">
+                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
+                      <th className="text-right text-gray-300 p-2">تاريخ الحظر</th>
+                      <th className="text-right text-gray-300 p-2">الإجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customers.filter(c => c.isBlocked).map((customer) => (
+                      <tr key={customer.id} className="border-white/10 hover:bg-white/5">
+                        <td className="text-white p-2">{customer.email}</td>
+                        <td className="text-gray-300 p-2">{customer.lastSeen}</td>
+                        <td className="p-2">
+                          <Button
+                            onClick={() => handleBlockCustomer(customer.id)}
+                            variant="outline"
+                            size="sm"
+                            className="hover:bg-green-500/10 text-green-400"
+                          >
+                            إلغاء الحظر
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {customers.filter(c => c.isBlocked).length === 0 && (
+                  <div className="text-center py-8">
+                    <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">لا يوجد عملاء محظورين</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="attempts" className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-white/10">
+                      <th className="text-right text-gray-300 p-2">الوقت</th>
+                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
+                      <th className="text-right text-gray-300 p-2">النتيجة</th>
+                      <th className="text-right text-gray-300 p-2">عنوان IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loginAttempts.slice(0, 20).map((attempt) => (
+                      <tr key={attempt.id} className="border-white/10">
+                        <td className="text-gray-300 p-2">{attempt.timestamp}</td>
+                        <td className="text-white p-2">{attempt.email}</td>
+                        <td className="p-2">
+                          {attempt.success ? (
+                            <Badge variant="default" className="bg-green-500">نجح</Badge>
+                          ) : (
+                            <Badge variant="destructive">فشل</Badge>
+                          )}
+                        </td>
+                        <td className="text-gray-400 p-2">{attempt.ipAddress}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {loginAttempts.length === 0 && (
+                  <div className="text-center py-8">
+                    <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">لا توجد محاولات دخول</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {selectedCustomer && (
+        <Card className="bg-white/5 backdrop-blur-md border-white/20">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-white">تفاصيل العميل</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedCustomer(null)}>
+              <X className="w-4 h-4 mr-2" />
+              إغلاق
+            </Button>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-gray-400 mb-2">البريد الإلكتروني</h4>
+                <p className="text-white">{selectedCustomer.email}</p>
+              </div>
+              <div>
+                <h4 className="text-gray-400 mb-2">تاريخ التسجيل</h4>
+                <p className="text-white">{selectedCustomer.createdAt}</p>
+              </div>
+              <div>
+                <h4 className="text-gray-400 mb-2">آخر ظهور</h4>
+                <p className="text-white">{selectedCustomer.lastSeen}</p>
+              </div>
+              <div>
+                <h4 className="text-gray-400 mb-2">الحالة</h4>
+                <p className="text-white">
+                  {selectedCustomer.isOnline ? 'متصل' : selectedCustomer.isBlocked ? 'محظور' : 'غير متصل'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 
@@ -520,7 +885,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent">
-          إدارة خدمة العملاء المتطورة
+          مركز خدمة العملاء المتطور
         </h2>
         <div className="flex gap-2">
           {getTotalUnreadCount() > 0 && (
@@ -538,6 +903,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
             {[
               { key: 'overview', label: 'نظرة عامة', icon: BarChart3 },
               { key: 'messages', label: 'الرسائل', icon: MessageCircle },
+              { key: 'customers', label: 'العملاء', icon: Users },
               { key: 'analytics', label: 'التحليلات', icon: TrendingUp },
               { key: 'settings', label: 'الإعدادات', icon: Settings }
             ].map((tab) => (
@@ -563,6 +929,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
       <div className="min-h-[500px]">
         {activeView === 'overview' && renderOverview()}
         {activeView === 'messages' && renderMessages()}
+        {activeView === 'customers' && renderCustomers()}
         {activeView === 'analytics' && renderAnalytics()}
         {activeView === 'settings' && renderSettings()}
       </div>
