@@ -49,9 +49,9 @@ class SupabaseProductService {
         price: product.price,
         category: product.category,
         description: product.description,
-        features: product.features,
-        images: product.images,
-        videos: product.videos,
+        features: product.features as any,
+        images: product.images as any,
+        videos: product.videos as any,
         text_size: product.textSize,
         title_size: product.titleSize
       };
@@ -82,9 +82,9 @@ class SupabaseProductService {
         price: product.price,
         category: product.category,
         description: product.description,
-        features: product.features,
-        images: product.images,
-        videos: product.videos,
+        features: product.features as any,
+        images: product.images as any,
+        videos: product.videos as any,
         text_size: product.textSize,
         title_size: product.titleSize
       };
@@ -132,9 +132,9 @@ class SupabaseProductService {
       if (updates.price !== undefined) updateData.price = updates.price;
       if (updates.category !== undefined) updateData.category = updates.category;
       if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.features !== undefined) updateData.features = updates.features;
-      if (updates.images !== undefined) updateData.images = updates.images;
-      if (updates.videos !== undefined) updateData.videos = updates.videos;
+      if (updates.features !== undefined) updateData.features = updates.features as any;
+      if (updates.images !== undefined) updateData.images = updates.images as any;
+      if (updates.videos !== undefined) updateData.videos = updates.videos as any;
       if (updates.textSize !== undefined) updateData.text_size = updates.textSize;
       if (updates.titleSize !== undefined) updateData.title_size = updates.titleSize;
 
