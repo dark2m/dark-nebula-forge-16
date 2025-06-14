@@ -1,5 +1,6 @@
 
 import { Product } from '../types/admin';
+import PersistenceService from './persistenceService';
 
 class ProductService {
   private static PRODUCTS_KEY = 'admin_products';
@@ -94,6 +95,9 @@ class ProductService {
       }
       
       console.log('ProductService: Products saved successfully', validProducts.length, 'items');
+      
+      // تسجيل التغيير كمعلق
+      PersistenceService.setPendingChanges('products', true);
       
       // إطلاق حدث التحديث
       window.dispatchEvent(new CustomEvent('productsUpdated', { 

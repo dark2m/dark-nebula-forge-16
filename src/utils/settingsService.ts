@@ -1,4 +1,6 @@
+
 import { SiteSettings } from '../types/admin';
+import PersistenceService from './persistenceService';
 
 class SettingsService {
   private static SETTINGS_KEY = 'site_settings';
@@ -45,6 +47,9 @@ class SettingsService {
       if (!verification) {
         throw new Error('Failed to save to localStorage');
       }
+      
+      // تسجيل التغيير كمعلق
+      PersistenceService.setPendingChanges('settings', true);
       
       // إطلاق حدث التحديث
       const event = new CustomEvent('settingsUpdated', {

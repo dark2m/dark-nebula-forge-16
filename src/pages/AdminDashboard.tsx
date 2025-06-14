@@ -5,6 +5,7 @@ import StarryBackground from '../components/StarryBackground';
 import AdminSidebar from '../components/admin/AdminSidebar';
 import AdminHeader from '../components/admin/AdminHeader';
 import AdminTabContent from '../components/admin/AdminTabContent';
+import CommitChangesButton from '../components/admin/CommitChangesButton';
 import AuthService from '../utils/auth';
 import SettingsService from '../utils/settingsService';
 import { useAdminData } from '../hooks/useAdminData';
@@ -91,6 +92,9 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* زر تثبيت التغييرات */}
+      <CommitChangesButton />
     </div>
   );
 };
