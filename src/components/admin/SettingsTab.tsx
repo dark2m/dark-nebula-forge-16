@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Save, Settings, Palette, Type, Globe } from 'lucide-react';
-import SettingsService from '../../utils/settingsService';
+import { SettingsService } from '../../utils/settingsService';
 import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,30 +15,24 @@ const SettingsTab = () => {
     setSettings(loadedSettings);
     setOriginalSettings(loadedSettings);
 
-    // الاستماع لتحديثات الإعدادات
-    const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('SettingsTab: Settings updated via event:', event.detail.settings);
-      setSettings(event.detail.settings);
-      setOriginalSettings(event.detail.settings);
-    };
-
-    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    const unsubscribe = SettingsService.subscribe((newSettings) => {
+      console.log('SettingsTab: Settings updated via event:', newSettings);
+      setSettings(newSettings);
+      setOriginalSettings(newSettings);
+    });
     
-    return () => {
-      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    };
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
-    // تحقق من وجود تغييرات
     const changed = JSON.stringify(settings) !== JSON.stringify(originalSettings);
     setHasChanges(changed);
   }, [settings, originalSettings]);
 
-  const saveSettings = () => {
+  const saveSettings = async () => {
     try {
       console.log('SettingsTab: Saving settings:', settings);
-      SettingsService.saveSiteSettings(settings);
+      await SettingsService.updateSiteSettings(settings);
       setOriginalSettings(settings);
       setHasChanges(false);
       toast({

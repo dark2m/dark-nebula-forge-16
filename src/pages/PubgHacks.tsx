@@ -1,157 +1,115 @@
 
-import React, { useEffect, useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
-import StarryBackground from '../components/StarryBackground';
-import ProductImageViewer from '../components/ProductImageViewer';
-import ProductVideoViewer from '../components/ProductVideoViewer';
-import SettingsService from '../utils/settingsService';
-import ProductService from '../utils/productService';
-import TranslationService from '../utils/translationService';
+import React, { useState, useEffect } from 'react';
+import { ShoppingCart, Gamepad2, Shield, Zap, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import ProductCard from '../components/ProductCard';
+import { SettingsService } from '../utils/settingsService';
+import { ProductService } from '../utils/productService';
 import { useCart } from '../hooks/useCart';
-import type { Product, SiteSettings } from '../types/admin';
-import GlobalCart from '../components/GlobalCart';
+import type { SiteSettings, Product } from '../types/admin';
 
 const PubgHacks = () => {
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
   const [products, setProducts] = useState<Product[]>([]);
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    // تحميل المنتجات والإعدادات
-    const loadData = () => {
-      console.log('PubgHacks: Loading products and settings...');
-      const allProducts = ProductService.getProducts();
-      const pubgProducts = allProducts.filter(p => p.category === 'pubg');
-      console.log('PubgHacks: PUBG products found:', pubgProducts.length);
-      setProducts(pubgProducts);
-      setSettings(SettingsService.getSiteSettings());
-    };
+    setSiteSettings(SettingsService.getSiteSettings());
+    setProducts(ProductService.getProductsByCategory('pubg'));
 
-    loadData();
+    const unsubscribe = SettingsService.subscribe((newSettings) => {
+      setSiteSettings(newSettings);
+    });
 
-    // الاستماع لتحديثات المنتجات
-    const handleProductsUpdate = (event: CustomEvent) => {
-      console.log('PubgHacks: Products updated, refreshing...');
-      const allProducts = event.detail.products;
-      const pubgProducts = allProducts.filter((p: Product) => p.category === 'pubg');
-      setProducts(pubgProducts);
-    };
-
-    window.addEventListener('productsUpdated', handleProductsUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('productsUpdated', handleProductsUpdate as EventListener);
-    };
+    return unsubscribe;
   }, []);
 
-  if (!settings) return null;
-
-  const getTextSize = (size: string) => {
-    switch (size) {
-      case 'small': return 'text-sm';
-      case 'large': return 'text-lg';
-      default: return 'text-base';
-    }
+  const pageTexts = siteSettings.pageTexts?.pubgHacks || {
+    pageTitle: 'هاكات PUBG',
+    pageSubtitle: 'أدوات تطوير اللعبة',
+    safetyTitle: 'الأمان',
+    safetyDescription: 'جميع أدواتنا آمنة'
   };
 
   return (
-    <div className="min-h-screen relative">
-      <StarryBackground />
-      <GlobalCart />
-      
-      <div className="relative z-10 pt-32 pb-20">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
-              {TranslationService.translate('pubg.page.title')}
-            </h1>
-            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
-              {TranslationService.translate('pubg.page.subtitle')}
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 pt-20">
+      <div className="container mx-auto px-4 py-12">
+        {/* Hero Section */}
+        <div className="text-center mb-16">
+          <div className="flex justify-center items-center mb-6">
+            <Gamepad2 className="w-16 h-16 text-blue-400 mr-4" />
           </div>
-
-          {/* Safety Section */}
-          <div className="mb-12 p-6 sm:p-8 bg-green-500/10 backdrop-blur-md border border-green-500/30 rounded-xl">
-            <h2 className="text-xl sm:text-2xl font-bold text-green-400 mb-4">
-              {TranslationService.translate('services.pubg.safety_title')}
-            </h2>
-            <p className="text-gray-300 text-sm sm:text-base">
-              {TranslationService.translate('services.pubg.safety_description')}
-            </p>
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            {pageTexts.pageTitle}
+          </h1>
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
+            {pageTexts.pageSubtitle}
+          </p>
+          <div className="flex justify-center">
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/50 px-4 py-2">
+              <Shield className="w-4 h-4 mr-2" />
+              آمن ومحدث
+            </Badge>
           </div>
+        </div>
 
-          {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {products.map((product) => (
-              <div key={product.id} className="group">
-                <div className="relative overflow-hidden rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:border-blue-500/50 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
-                  <div className="relative p-4 sm:p-6">
-                    <h3 className={`font-bold text-white mb-3 ${
-                      product.titleSize === 'small' ? 'text-base sm:text-lg' :
-                      product.titleSize === 'large' ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'
-                    }`}>
-                      {product.name}
-                    </h3>
-                    
-                    <p className={`text-gray-300 mb-4 ${getTextSize(product.textSize || 'medium')}`}>
-                      {product.description}
-                    </p>
-
-                    {/* Features */}
-                    {product.features && product.features.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="text-blue-400 font-semibold mb-2">
-                          {TranslationService.translate('common.features')}:
-                        </h4>
-                        <ul className="space-y-1">
-                          {product.features.map((feature, index) => (
-                            <li key={index} className={`text-gray-300 ${getTextSize(product.textSize || 'medium')}`}>
-                              • {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* Media and Cart Buttons */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <button
-                        onClick={() => addToCart(product)}
-                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-xs sm:text-sm"
-                      >
-                        <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
-                        <span>{TranslationService.translate('common.add_to_cart')}</span>
-                      </button>
-                      
-                      <ProductImageViewer 
-                        images={product.images || []} 
-                        productName={product.name} 
-                      />
-                      
-                      <ProductVideoViewer 
-                        videos={product.videos || []} 
-                        productName={product.name} 
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-center">
-                      <span className="text-xl sm:text-2xl font-bold text-green-400">
-                        ${product.price}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+        {/* Safety Notice */}
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6 mb-16">
+          <div className="flex items-center mb-4">
+            <Shield className="w-8 h-8 text-green-400 mr-3" />
+            <h3 className="text-xl font-bold text-white">{pageTexts.safetyTitle}</h3>
           </div>
+          <p className="text-green-300 text-lg">{pageTexts.safetyDescription}</p>
+        </div>
 
-          {products.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg sm:text-xl">
-                {TranslationService.translate('common.no_products')}
-              </p>
+        {/* Features */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <Eye className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">رؤية متقدمة</h3>
+            <p className="text-gray-300">اكتشف الأعداء من مسافات بعيدة</p>
+          </div>
+          <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <Zap className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">أداء سريع</h3>
+            <p className="text-gray-300">استجابة فورية بدون تأخير</p>
+          </div>
+          <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <Shield className="w-12 h-12 text-green-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">حماية كاملة</h3>
+            <p className="text-gray-300">تحديثات منتظمة ضد الحظر</p>
+          </div>
+        </div>
+
+        {/* Products */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">هاكات PUBG المتاحة</h2>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={() => addToCart(product)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <Gamepad2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-white mb-2">لا توجد هاكات متاحة حالياً</h3>
+              <p className="text-gray-400">سيتم إضافة المزيد من الهاكات قريباً</p>
             </div>
           )}
+        </div>
+
+        {/* Warning */}
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 text-center">
+          <h3 className="text-xl font-bold text-yellow-400 mb-2">تنبيه مهم</h3>
+          <p className="text-yellow-300">
+            استخدم الهاكات بحذر واتبع تعليمات الاستخدام لتجنب أي مشاكل
+          </p>
         </div>
       </div>
     </div>
