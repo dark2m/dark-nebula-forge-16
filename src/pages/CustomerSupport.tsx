@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Eye, EyeOff, User, CheckCircle } from 'lucide-react';
+import { Mail, Eye, EyeOff, User, CheckCircle, LogIn } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import CustomerAuthService from '../utils/customerAuthService';
 import CustomerChat from '../components/CustomerChat';
@@ -19,6 +19,8 @@ const CustomerSupport = () => {
   const [enteredCode, setEnteredCode] = useState('');
   const [isVerificationSent, setIsVerificationSent] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -34,6 +36,37 @@ const CustomerSupport = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleLogin = () => {
+    if (!email || !password) {
+      toast({
+        title: "خطأ في البيانات",
+        description: "يرجى ملء جميع الحقول",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const loginSuccess = CustomerAuthService.authenticateCustomer(email, password);
+    
+    if (loginSuccess) {
+      const currentCustomer = CustomerAuthService.getCurrentCustomer();
+      setIsRegistered(true);
+      setShowChat(true);
+      setShowLoginForm(false);
+      setUsername(currentCustomer?.username || '');
+      toast({
+        title: "تم تسجيل الدخول بنجاح",
+        description: "مرحباً بك في خدمة العملاء",
+      });
+    } else {
+      toast({
+        title: "خطأ في تسجيل الدخول",
+        description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSendVerification = async () => {
@@ -88,6 +121,7 @@ const CustomerSupport = () => {
       if (registrationSuccess) {
         setIsRegistered(true);
         setShowChat(true);
+        setShowRegisterForm(false);
         toast({
           title: "تم التسجيل بنجاح",
           description: "تم إنشاء حسابك بنجاح. يمكنك الآن الدردشة مع فريق الدعم (لم يتم إرسال رسالة التحقق بسبب خطأ تقني)",
@@ -114,6 +148,7 @@ const CustomerSupport = () => {
       if (registrationSuccess) {
         setIsRegistered(true);
         setShowChat(true);
+        setShowRegisterForm(false);
         toast({
           title: "تم التحقق والتسجيل بنجاح",
           description: "تم تأكيد بريدك الإلكتروني وإنشاء حسابك بنجاح. يمكنك الآن الدردشة مع فريق الدعم",
@@ -161,6 +196,8 @@ const CustomerSupport = () => {
     CustomerAuthService.logout();
     setIsRegistered(false);
     setShowChat(false);
+    setShowLoginForm(false);
+    setShowRegisterForm(false);
     setEmail('');
     setUsername('');
     setPassword('');
@@ -190,7 +227,92 @@ const CustomerSupport = () => {
 
           {!isRegistered && !showChat ? (
             <div className="max-w-md mx-auto bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl p-8">
-              {!isVerificationSent ? (
+              {!showLoginForm && !showRegisterForm ? (
+                // اختيار تسجيل دخول أو إنشاء حساب جديد
+                <>
+                  <h2 className="text-2xl font-bold text-white text-center mb-6">
+                    خدمة العملاء
+                  </h2>
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => setShowLoginForm(true)}
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2 space-x-reverse"
+                    >
+                      <LogIn className="w-5 h-5" />
+                      <span>تسجيل الدخول</span>
+                    </button>
+                    <button
+                      onClick={() => setShowRegisterForm(true)}
+                      className="glow-button w-full py-3"
+                    >
+                      إنشاء حساب جديد
+                    </button>
+                  </div>
+                </>
+              ) : showLoginForm ? (
+                // نموذج تسجيل الدخول
+                <>
+                  <h2 className="text-2xl font-bold text-white text-center mb-6">
+                    تسجيل الدخول
+                  </h2>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        البريد الإلكتروني أو اسم المستخدم
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="أدخل بريدك الإلكتروني أو اسم المستخدم"
+                          className="w-full pl-4 pr-12 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        كلمة المرور
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="أدخل كلمة المرور"
+                          className="w-full pl-12 pr-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
+                        />
+                        <button
+                          type="button"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                          onClick={togglePasswordVisibility}
+                        >
+                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <button
+                        onClick={handleLogin}
+                        className="glow-button w-full py-3"
+                      >
+                        تسجيل الدخول
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowLoginForm(false);
+                          setEmail('');
+                          setPassword('');
+                        }}
+                        className="w-full py-2 text-gray-400 hover:text-white text-sm"
+                      >
+                        العودة
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : showRegisterForm && !isVerificationSent ? (
                 // نموذج التسجيل
                 <>
                   <h2 className="text-2xl font-bold text-white text-center mb-6">
@@ -248,13 +370,24 @@ const CustomerSupport = () => {
                         </button>
                       </div>
                     </div>
-                    <div>
+                    <div className="space-y-3">
                       <button
                         onClick={handleSendVerification}
                         disabled={isLoading}
                         className="glow-button w-full py-3"
                       >
                         {isLoading ? "جاري الإرسال..." : "إرسال كود التحقق"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowRegisterForm(false);
+                          setEmail('');
+                          setUsername('');
+                          setPassword('');
+                        }}
+                        className="w-full py-2 text-gray-400 hover:text-white text-sm"
+                      >
+                        العودة
                       </button>
                     </div>
                   </div>
