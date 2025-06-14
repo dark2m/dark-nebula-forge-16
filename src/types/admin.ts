@@ -12,6 +12,7 @@ export interface Product {
   backgroundImage?: string;
   textSize: 'small' | 'medium' | 'large';
   titleSize: 'small' | 'medium' | 'large' | 'xl';
+  rating?: number;
 }
 
 export interface AdminUser {
