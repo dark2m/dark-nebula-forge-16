@@ -1,28 +1,34 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Code, Bot, ArrowLeft, User } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
+import AdminStorage from '../utils/adminStorage';
 import GlobalCart from '../components/GlobalCart';
 import TranslationService from '../utils/translationService';
 import { getTextContent } from '../utils/textUtils';
 import { useAuth } from '@/contexts/AuthContext';
-import { SettingsService } from '../utils/settingsService';
 
 const Home = () => {
   const { user } = useAuth();
-  const [siteSettings, setSiteSettings] = useState(SettingsService.getSiteSettings());
+  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
 
   useEffect(() => {
-    const loadedSettings = SettingsService.getSiteSettings();
+    const loadedSettings = AdminStorage.getSiteSettings();
     setSiteSettings(loadedSettings);
     console.log('Home: Loaded settings:', loadedSettings);
 
-    const unsubscribe = SettingsService.subscribe((newSettings) => {
-      console.log('Home: Settings updated via event:', newSettings);
-      setSiteSettings(newSettings);
-    });
+    // الاستماع لتحديثات الإعدادات
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('Home: Settings updated via event:', event.detail.settings);
+      setSiteSettings(event.detail.settings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
     
-    return unsubscribe;
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
   }, []);
 
   const services = [

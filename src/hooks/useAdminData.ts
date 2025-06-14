@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SupabaseProductService from '../utils/supabaseProductService';
-import SupabaseSettingsService from '../utils/supabaseSettingsService';
+import ProductService from '../utils/productService';
+import SettingsService from '../utils/settingsService';
 import AuthService from '../utils/auth';
 import { useToast } from '@/hooks/use-toast';
 import type { Product, AdminUser, SiteSettings } from '../types/admin';
@@ -13,68 +13,57 @@ export const useAdminData = () => {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({} as SiteSettings);
-  const [loading, setLoading] = useState(true);
 
   // Load data on component mount
   useEffect(() => {
-    const loadData = async () => {
-      const user = AuthService.getCurrentUser();
-      if (!user) {
-        navigate('/admin/login');
-        return;
-      }
-      setCurrentUser(user);
-      
-      try {
-        // تحميل المنتجات من Supabase
-        console.log('useAdminData: Loading products from Supabase...');
-        const loadedProducts = await SupabaseProductService.getProducts();
-        setProducts(loadedProducts);
-        console.log('useAdminData: Loaded products:', loadedProducts.length);
-        
-        // تحميل الإعدادات من Supabase
-        console.log('useAdminData: Loading settings from Supabase...');
-        const loadedSettings = await SupabaseSettingsService.getSiteSettings();
-        setSiteSettings(loadedSettings);
-        console.log('useAdminData: Loaded settings:', loadedSettings);
-      } catch (error) {
-        console.error('Error loading data:', error);
-        toast({
-          title: "خطأ في التحميل",
-          description: "حدث خطأ أثناء تحميل البيانات من Supabase",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
+    const user = AuthService.getCurrentUser();
+    if (!user) {
+      navigate('/admin/login');
+      return;
+    }
+    setCurrentUser(user);
+    
+    // تحميل المنتجات
+    setProducts(ProductService.getProducts());
+    
+    // تحميل الإعدادات
+    console.log('useAdminData: Loading settings...');
+    const loadedSettings = SettingsService.getSiteSettings();
+    console.log('useAdminData: Loaded settings:', loadedSettings);
+    setSiteSettings(loadedSettings);
+
+    // الاستماع لتحديثات الإعدادات
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('useAdminData: Settings updated via event:', event.detail.settings);
+      setSiteSettings(event.detail.settings);
     };
 
-    loadData();
-  }, [navigate, toast]);
+    // الاستماع لتحديثات المنتجات
+    const handleProductsUpdate = (event: CustomEvent) => {
+      console.log('useAdminData: Products updated via event:', event.detail.products);
+      setProducts(event.detail.products);
+    };
 
-  // تحديث setSiteSettings لحفظ التغييرات في Supabase
-  const updateSiteSettings = async (newSettings: SiteSettings) => {
-    console.log('useAdminData: Updating settings in Supabase:', newSettings);
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    window.addEventListener('productsUpdated', handleProductsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+      window.removeEventListener('productsUpdated', handleProductsUpdate as EventListener);
+    };
+  }, [navigate]);
+
+  // تحديث setSiteSettings لحفظ التغييرات تلقائياً
+  const updateSiteSettings = (newSettings: SiteSettings) => {
+    console.log('useAdminData: Updating settings:', newSettings);
     setSiteSettings(newSettings);
     
+    // حفظ فوري عند التحديث
     try {
-      const success = await SupabaseSettingsService.saveSiteSettings(newSettings);
-      if (success) {
-        console.log('useAdminData: Settings saved successfully to Supabase');
-        toast({
-          title: "تم حفظ الإعدادات",
-          description: "تم حفظ الإعدادات بنجاح في Supabase"
-        });
-      } else {
-        throw new Error('Failed to save settings');
-      }
+      SettingsService.saveSiteSettings(newSettings);
+      console.log('useAdminData: Settings saved successfully');
     } catch (error) {
       console.error('useAdminData: Error saving settings:', error);
-      toast({
-        title: "خطأ في الحفظ",
-        description: "حدث خطأ أثناء حفظ الإعدادات",
-        variant: "destructive"
-      });
     }
   };
 
@@ -89,7 +78,6 @@ export const useAdminData = () => {
     siteSettings,
     setSiteSettings: updateSiteSettings,
     canAccess,
-    toast,
-    loading
+    toast
   };
 };

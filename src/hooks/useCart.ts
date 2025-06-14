@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { CartService } from '../utils/cartService';
+import CartService from '../utils/cartService';
 import type { Product } from '../types/admin';
 
 export const useCart = () => {
@@ -12,8 +12,8 @@ export const useCart = () => {
       const newCartItems: {[key: string]: any[]} = {};
       
       categories.forEach(category => {
-        const cartData = CartService.getCartItems();
-        newCartItems[category] = Array.isArray(cartData) ? cartData.filter(item => item.category === category) : [];
+        const cartData = CartService.getCart(category);
+        newCartItems[category] = Array.isArray(cartData) ? cartData : [];
       });
       
       setCartItems(newCartItems);
@@ -27,25 +27,21 @@ export const useCart = () => {
 
   const addToCart = (product: Product) => {
     console.log('Adding product to cart:', product);
-    CartService.addToCart({
-      name: product.name,
-      price: product.price.toString(),
-      category: product.category
-    });
+    CartService.addToCart(product);
     // Refresh cart items
-    const updatedCart = CartService.getCartItems();
+    const updatedCart = CartService.getCart(product.category);
     setCartItems(prev => ({
       ...prev,
-      [product.category]: updatedCart.filter(item => item.category === product.category)
+      [product.category]: Array.isArray(updatedCart) ? updatedCart : []
     }));
   };
 
   const removeFromCart = (id: number, category: string) => {
-    CartService.removeFromCart(id);
-    const updatedCart = CartService.getCartItems();
+    CartService.removeFromCart(id, category);
+    const updatedCart = CartService.getCart(category);
     setCartItems(prev => ({
       ...prev,
-      [category]: updatedCart.filter(item => item.category === category)
+      [category]: Array.isArray(updatedCart) ? updatedCart : []
     }));
   };
 

@@ -1,101 +1,131 @@
 
-import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Code, Laptop, Smartphone, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import ProductCard from '../components/ProductCard';
-import { SettingsService } from '../utils/settingsService';
-import { ProductService } from '../utils/productService';
+import React, { useEffect, useState } from 'react';
+import { ShoppingCart } from 'lucide-react';
+import StarryBackground from '../components/StarryBackground';
+import ProductImageViewer from '../components/ProductImageViewer';
+import ProductVideoViewer from '../components/ProductVideoViewer';
+import SettingsService from '../utils/settingsService';
+import ProductService from '../utils/productService';
+import TranslationService from '../utils/translationService';
 import { useCart } from '../hooks/useCart';
-import type { SiteSettings, Product } from '../types/admin';
+import type { Product, SiteSettings } from '../types/admin';
+import GlobalCart from '../components/GlobalCart';
 
 const WebDevelopment = () => {
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
   const [products, setProducts] = useState<Product[]>([]);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    setSiteSettings(SettingsService.getSiteSettings());
-    setProducts(ProductService.getProductsByCategory('web'));
-
-    const unsubscribe = SettingsService.subscribe((newSettings) => {
-      setSiteSettings(newSettings);
-    });
-
-    return unsubscribe;
+    setProducts(ProductService.getProducts().filter(p => p.category === 'web'));
+    setSettings(SettingsService.getSiteSettings());
   }, []);
 
-  const pageTexts = siteSettings.pageTexts?.webDevelopment || {
-    pageTitle: 'تطوير المواقع',
-    pageSubtitle: 'خدمات تطوير احترافية',
-    servicesTitle: 'خدماتنا'
+  if (!settings) return null;
+
+  const getTextSize = (size: string) => {
+    switch (size) {
+      case 'small': return 'text-sm';
+      case 'large': return 'text-lg';
+      default: return 'text-base';
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 pt-20">
-      <div className="container mx-auto px-4 py-12">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center items-center mb-6">
-            <Code className="w-16 h-16 text-blue-400 mr-4" />
+    <div className="min-h-screen relative">
+      <StarryBackground />
+      <GlobalCart />
+      
+      <div className="relative z-10 pt-32 pb-20">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-6">
+              {TranslationService.translate('web.page.title')}
+            </h1>
+            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto px-4">
+              {TranslationService.translate('web.page.subtitle')}
+            </p>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-            {pageTexts.pageTitle}
-          </h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
-            {pageTexts.pageSubtitle}
-          </p>
-        </div>
 
-        {/* Services */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-            <Laptop className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">مواقع سطح المكتب</h3>
-            <p className="text-gray-300">تطوير مواقع متجاوبة لجميع الأجهزة</p>
+          {/* Services Section */}
+          <div className="mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
+              {TranslationService.translate('services.web.services_title')}
+            </h2>
           </div>
-          <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-            <Smartphone className="w-12 h-12 text-green-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">تطبيقات الموبايل</h3>
-            <p className="text-gray-300">تطبيقات ويب متقدمة للهواتف الذكية</p>
-          </div>
-          <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-            <Globe className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">مواقع إلكترونية</h3>
-            <p className="text-gray-300">حلول ويب شاملة ومخصصة</p>
-          </div>
-        </div>
 
-        {/* Products */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">خدمات تطوير المواقع</h2>
-          {products.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={() => addToCart(product)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <Code className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">لا توجد خدمات متاحة حالياً</h3>
-              <p className="text-gray-400">سيتم إضافة المزيد من الخدمات قريباً</p>
+          {/* Products Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {products.map((product) => (
+              <div key={product.id} className="group">
+                <div className="relative overflow-hidden rounded-xl bg-white/10 backdrop-blur-md border border-white/20 hover:border-green-500/50 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                  <div className="relative p-4 sm:p-6">
+                    <h3 className={`font-bold text-white mb-3 ${
+                      product.titleSize === 'small' ? 'text-base sm:text-lg' :
+                      product.titleSize === 'large' ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'
+                    }`}>
+                      {product.name}
+                    </h3>
+                    
+                    <p className={`text-gray-300 mb-4 ${getTextSize(product.textSize || 'medium')}`}>
+                      {product.description}
+                    </p>
+
+                    {/* Features */}
+                    {product.features && product.features.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-green-400 font-semibold mb-2">
+                          {TranslationService.translate('common.features')}:
+                        </h4>
+                        <ul className="space-y-1">
+                          {product.features.map((feature, index) => (
+                            <li key={index} className={`text-gray-300 ${getTextSize(product.textSize || 'medium')}`}>
+                              • {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Media and Cart Buttons */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-xs sm:text-sm"
+                      >
+                        <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <span>{TranslationService.translate('common.add_to_cart')}</span>
+                      </button>
+                      
+                      <ProductImageViewer 
+                        images={product.images || []} 
+                        productName={product.name} 
+                      />
+                      
+                      <ProductVideoViewer 
+                        videos={product.videos || []} 
+                        productName={product.name} 
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-center">
+                      <span className="text-xl sm:text-2xl font-bold text-green-400">
+                        ${product.price}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {products.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-lg sm:text-xl">
+                {TranslationService.translate('common.no_services')}
+              </p>
             </div>
           )}
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-12">
-          <h2 className="text-3xl font-bold text-white mb-4">لديك فكرة مشروع؟</h2>
-          <p className="text-xl text-blue-100 mb-8">
-            نحن هنا لمساعدتك في تحويل فكرتك إلى واقع رقمي
-          </p>
-          <Button className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
-            ابدأ مشروعك الآن
-          </Button>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Type, Save, RotateCcw } from 'lucide-react';
-import { SettingsService } from '../../utils/settingsService';
+import SettingsService from '../../utils/settingsService';
 import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,12 +14,17 @@ const TypographyTab = () => {
     console.log('TypographyTab: Loading settings:', loadedSettings);
     setSettings(loadedSettings);
 
-    const unsubscribe = SettingsService.subscribe((newSettings) => {
-      console.log('TypographyTab: Settings updated via event:', newSettings);
-      setSettings(newSettings);
-    });
+    // الاستماع لتحديثات الإعدادات
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('TypographyTab: Settings updated via event:', event.detail.settings);
+      setSettings(event.detail.settings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
     
-    return unsubscribe;
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
   }, []);
 
   const updateTypography = (updates: Partial<SiteSettings['typography']>) => {
@@ -55,10 +61,10 @@ const TypographyTab = () => {
     });
   };
 
-  const saveSettings = async () => {
+  const saveSettings = () => {
     try {
       console.log('TypographyTab: Saving settings:', settings);
-      await SettingsService.updateSiteSettings(settings);
+      SettingsService.saveSiteSettings(settings);
       toast({
         title: "تم حفظ الإعدادات",
         description: "تم حفظ إعدادات النصوص بنجاح"
