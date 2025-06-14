@@ -214,7 +214,7 @@ const CustomerSupport = () => {
     <div className="min-h-screen relative">
       <StarryBackground />
 
-      <style jsx>{`
+      <style>{`
         @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap");
         
         .ring {
@@ -359,6 +359,11 @@ const CustomerSupport = () => {
           color: #0078ff;
         }
         
+        .links a:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
         .verification-code-input {
           text-align: center;
           font-size: 2rem;
@@ -401,9 +406,9 @@ const CustomerSupport = () => {
               {!showLoginForm && !showRegisterForm ? (
                 // الشاشة الرئيسية لاختيار تسجيل دخول أو إنشاء حساب
                 <div className="ring">
-                  <i style={{'--clr': '#00ff0a'}}></i>
-                  <i style={{'--clr': '#ff0057'}}></i>
-                  <i style={{'--clr': '#fffd44'}}></i>
+                  <i style={{ '--clr': '#00ff0a' } as React.CSSProperties}></i>
+                  <i style={{ '--clr': '#ff0057' } as React.CSSProperties}></i>
+                  <i style={{ '--clr': '#fffd44' } as React.CSSProperties}></i>
                   <div className="login-form">
                     <h2>خدمة العملاء</h2>
                     <div className="input-container">
@@ -428,9 +433,9 @@ const CustomerSupport = () => {
               ) : showLoginForm ? (
                 // نموذج تسجيل الدخول
                 <div className="ring">
-                  <i style={{'--clr': '#00ff0a'}}></i>
-                  <i style={{'--clr': '#ff0057'}}></i>
-                  <i style={{'--clr': '#fffd44'}}></i>
+                  <i style={{ '--clr': '#00ff0a' } as React.CSSProperties}></i>
+                  <i style={{ '--clr': '#ff0057' } as React.CSSProperties}></i>
+                  <i style={{ '--clr': '#fffd44' } as React.CSSProperties}></i>
                   <div className="login-form">
                     <h2>تسجيل الدخول</h2>
                     <div className="input-container">
@@ -489,9 +494,9 @@ const CustomerSupport = () => {
               ) : showRegisterForm && !isVerificationSent ? (
                 // نموذج التسجيل
                 <div className="ring">
-                  <i style={{'--clr': '#00ff0a'}}></i>
-                  <i style={{'--clr': '#ff0057'}}></i>
-                  <i style={{'--clr': '#fffd44'}}></i>
+                  <i style={{ '--clr': '#00ff0a' } as React.CSSProperties}></i>
+                  <i style={{ '--clr': '#ff0057' } as React.CSSProperties}></i>
+                  <i style={{ '--clr': '#fffd44' } as React.CSSProperties}></i>
                   <div className="login-form">
                     <h2>تسجيل جديد</h2>
                     <div className="input-container">
@@ -563,9 +568,9 @@ const CustomerSupport = () => {
               ) : (
                 // نموذج إدخال كود التحقق
                 <div className="ring">
-                  <i style={{'--clr': '#00ff0a'}}></i>
-                  <i style={{'--clr': '#ff0057'}}></i>
-                  <i style={{'--clr': '#fffd44'}}></i>
+                  <i style={{ '--clr': '#00ff0a' } as React.CSSProperties}></i>
+                  <i style={{ '--clr': '#ff0057' } as React.CSSProperties}></i>
+                  <i style={{ '--clr': '#fffd44' } as React.CSSProperties}></i>
                   <div className="login-form">
                     <h2>تأكيد البريد</h2>
                     <div className="text-center mb-6">
@@ -595,9 +600,17 @@ const CustomerSupport = () => {
                       </button>
                     </div>
                     <div className="links">
-                      <a onClick={handleResendCode} disabled={isLoading}>
+                      <span 
+                        onClick={isLoading ? undefined : handleResendCode}
+                        style={{
+                          color: isLoading ? 'rgba(255, 255, 255, 0.4)' : '#fff',
+                          cursor: isLoading ? 'not-allowed' : 'pointer',
+                          textDecoration: 'none',
+                          transition: 'color 0.3s ease'
+                        }}
+                      >
                         إعادة إرسال
-                      </a>
+                      </span>
                       <a onClick={() => {
                         setIsVerificationSent(false);
                         setEnteredCode('');
