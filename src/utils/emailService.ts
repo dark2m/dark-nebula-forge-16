@@ -6,7 +6,7 @@ class EmailService {
   private static TEMPLATE_ID = 'template_verification';
   private static PUBLIC_KEY = 'gQqOCBJE7yOXwc0gG';
 
-  static async sendVerificationCode(email: string, verificationCode: string): Promise<boolean> {
+  static async sendVerificationLink(email: string, verificationLink: string): Promise<boolean> {
     try {
       if (!this.PUBLIC_KEY || this.PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
         console.error('EmailJS Public Key is not configured properly');
@@ -15,9 +15,9 @@ class EmailService {
 
       const templateParams = {
         to_email: email,
-        verification_code: verificationCode,
+        verification_link: verificationLink,
         to_name: email.split('@')[0],
-        message: `مرحباً بك في خدمة العملاء. كود التحقق الخاص بك هو: ${verificationCode}. يرجى إدخال هذا الكود لتأكيد بريدك الإلكتروني والحصول على الدعم الفني.`
+        message: `مرحباً بك في خدمة العملاء. لتأكيد بريدك الإلكتروني والحصول على الدعم الفني، يرجى النقر على الرابط التالي: ${verificationLink}`
       };
 
       console.log('Sending verification email with params:', templateParams);
@@ -39,6 +39,11 @@ class EmailService {
 
   static generateVerificationCode(): string {
     return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  // للتوافق مع النظام القديم
+  static async sendVerificationCode(email: string, verificationCode: string): Promise<boolean> {
+    return this.sendVerificationLink(email, `كود التحقق: ${verificationCode}`);
   }
 }
 

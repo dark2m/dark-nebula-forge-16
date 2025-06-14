@@ -19,10 +19,7 @@ const CustomerSupport = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [enteredCode, setEnteredCode] = useState('');
   const [isVerificationSent, setIsVerificationSent] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
@@ -51,25 +48,8 @@ const CustomerSupport = () => {
     };
   }, [resendTimer]);
 
-  const generateAndShowVerificationCode = () => {
-    const code = EmailService.generateVerificationCode();
-    setVerificationCode(code);
-    
-    // عرض الكود في console للتطوير والاختبار
-    console.log('🔐 كود التحقق المُولد:', code);
-    
-    // عرض الكود في toast للمستخدم مؤقتاً
-    toast({
-      title: "كود التحقق (مؤقت)",
-      description: `كود التحقق الخاص بك هو: ${code}`,
-      duration: 10000,
-    });
-    
-    return code;
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
+  const generateVerificationToken = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   };
 
   const handleLogin = () => {
@@ -103,7 +83,7 @@ const CustomerSupport = () => {
     }
   };
 
-  const handleSendVerification = async () => {
+  const handleSendVerificationLink = async () => {
     if (!email || !username || !password) {
       toast({
         title: "خطأ في البيانات",
@@ -135,83 +115,74 @@ const CustomerSupport = () => {
 
     setIsLoading(true);
 
-    // توليد وعرض كود التحقق
-    const code = generateAndShowVerificationCode();
+    // توليد رابط التحقق
+    const verificationToken = generateVerificationToken();
+    const verificationLink = `${window.location.origin}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+
+    // حفظ بيانات التحقق مؤقتاً
+    localStorage.setItem('pendingVerification', JSON.stringify({
+      email,
+      password,
+      username,
+      token: verificationToken,
+      timestamp: Date.now()
+    }));
 
     // محاولة إرسال البريد الإلكتروني
-    const emailSent = await EmailService.sendVerificationCode(email, code);
+    const emailSent = await EmailService.sendVerificationLink(email, verificationLink);
     
     setIsVerificationSent(true);
     setResendTimer(60); // 60 ثانية قبل إمكانية إعادة الإرسال
     
     if (emailSent) {
       toast({
-        title: "تم إرسال كود التحقق",
-        description: `تم إرسال كود التحقق إلى ${email}. إذا لم تستلم الرسالة، تحقق من المجلد المهمل أو استخدم الكود المعروض أعلاه.`,
+        title: "تم إرسال رابط التحقق",
+        description: `تم إرسال رابط التحقق إلى ${email}. يرجى فتح بريدك الإلكتروني والنقر على الرابط لتأكيد حسابك.`,
         duration: 8000,
       });
     } else {
       toast({
         title: "مشكلة في الإرسال",
-        description: `لم يتم إرسال البريد الإلكتروني، ولكن يمكنك استخدام كود التحقق المعروض أعلاه: ${code}`,
-        duration: 10000,
+        description: "حدث خطأ أثناء إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+        duration: 8000,
       });
     }
     
     setIsLoading(false);
   };
 
-  const handleVerifyCode = () => {
-    if (enteredCode === verificationCode) {
-      setIsVerified(true);
-      
-      // تسجيل العميل بعد التحقق
-      const registrationSuccess = CustomerAuthService.registerCustomer(email, password, username);
-      
-      if (registrationSuccess) {
-        setIsRegistered(true);
-        setShowChat(true);
-        setShowRegisterForm(false);
-        toast({
-          title: "تم التحقق والتسجيل بنجاح",
-          description: "تم تأكيد بريدك الإلكتروني وإنشاء حسابك بنجاح. يمكنك الآن الدردشة مع فريق الدعم",
-        });
-      } else {
-        toast({
-          title: "خطأ في التسجيل",
-          description: "تم التحقق من البريد ولكن حدث خطأ أثناء إنشاء الحساب",
-          variant: "destructive"
-        });
-      }
-    } else {
-      toast({
-        title: "كود خاطئ",
-        description: "كود التحقق المدخل غير صحيح. يرجى المحاولة مرة أخرى",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleResendCode = async () => {
+  const handleResendLink = async () => {
     if (resendTimer > 0) return;
     
     setIsLoading(true);
-    const code = generateAndShowVerificationCode();
+    const verificationToken = generateVerificationToken();
+    const verificationLink = `${window.location.origin}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
     
-    const emailSent = await EmailService.sendVerificationCode(email, code);
+    // تحديث بيانات التحقق
+    localStorage.setItem('pendingVerification', JSON.stringify({
+      email,
+      password,
+      username,
+      token: verificationToken,
+      timestamp: Date.now()
+    }));
+    
+    const emailSent = await EmailService.sendVerificationLink(email, verificationLink);
     setResendTimer(60);
     
     if (emailSent) {
       toast({
         title: "تم إعادة الإرسال",
-        description: `تم إرسال كود تحقق جديد إلى بريدك الإلكتروني: ${code}`,
+        description: `تم إرسال رابط تحقق جديد إلى بريدك الإلكتروني.`,
         duration: 8000,
       });
     } else {
       toast({
-        title: "كود جديد متاح",
-        description: `كود التحقق الجديد: ${code}`,
-        duration: 10000,
+        title: "مشكلة في الإرسال",
+        description: "حدث خطأ أثناء إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى.",
+        variant: "destructive",
+        duration: 8000,
       });
     }
     
@@ -227,9 +198,7 @@ const CustomerSupport = () => {
     setEmail('');
     setUsername('');
     setPassword('');
-    setEnteredCode('');
     setIsVerificationSent(false);
-    setIsVerified(false);
     setResendTimer(0);
     toast({
       title: "تم تسجيل الخروج",
@@ -391,13 +360,6 @@ const CustomerSupport = () => {
           cursor: not-allowed;
         }
         
-        .verification-code-input {
-          text-align: center;
-          font-size: 2rem;
-          letter-spacing: 0.5rem;
-          font-weight: bold;
-        }
-        
         .ring-icon {
           position: absolute;
           right: 15px;
@@ -495,36 +457,7 @@ const CustomerSupport = () => {
                     </div>
                     <div className="input-container">
                       <button
-                        onClick={() => {
-                          if (!email || !password) {
-                            toast({
-                              title: "خطأ في البيانات",
-                              description: "يرجى ملء جميع الحقول",
-                              variant: "destructive"
-                            });
-                            return;
-                          }
-
-                          const loginSuccess = CustomerAuthService.authenticateCustomer(email, password);
-                          
-                          if (loginSuccess) {
-                            const currentCustomer = CustomerAuthService.getCurrentCustomer();
-                            setIsRegistered(true);
-                            setShowChat(true);
-                            setShowLoginForm(false);
-                            setUsername(currentCustomer?.username || '');
-                            toast({
-                              title: "تم تسجيل الدخول بنجاح",
-                              description: "مرحباً بك في خدمة العملاء",
-                            });
-                          } else {
-                            toast({
-                              title: "خطأ في تسجيل الدخول",
-                              description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-                              variant: "destructive"
-                            });
-                          }
-                        }}
+                        onClick={handleLogin}
                         className="ring-button"
                       >
                         دخول
@@ -596,11 +529,11 @@ const CustomerSupport = () => {
                     </div>
                     <div className="input-container">
                       <button
-                        onClick={handleSendVerification}
+                        onClick={handleSendVerificationLink}
                         disabled={isLoading}
                         className="ring-button"
                       >
-                        {isLoading ? "جاري الإرسال..." : "إرسال كود التحقق"}
+                        {isLoading ? "جاري الإرسال..." : "إرسال رابط التحقق"}
                       </button>
                     </div>
                     <div className="links">
@@ -622,7 +555,7 @@ const CustomerSupport = () => {
                   </div>
                 </div>
               ) : (
-                // نموذج إدخال كود التحقق المحسن
+                // شاشة انتظار التحقق من البريد
                 <div className="ring">
                   <i style={{ '--clr': '#00ff0a' } as React.CSSProperties}></i>
                   <i style={{ '--clr': '#ff0057' } as React.CSSProperties}></i>
@@ -632,42 +565,20 @@ const CustomerSupport = () => {
                     <div className="text-center mb-6">
                       <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
                       <p className="text-gray-300 mb-2">
-                        تم إرسال كود التحقق إلى:
+                        تم إرسال رابط التحقق إلى:
                       </p>
                       <p className="text-blue-400 font-medium">{email}</p>
+                      <p className="text-sm text-gray-400 mt-2">
+                        يرجى فتح بريدك الإلكتروني والنقر على رابط التحقق
+                      </p>
                       <p className="text-sm text-gray-400 mt-2">
                         تحقق من صندوق الوارد أو المجلد المهمل
                       </p>
                     </div>
                     
-                    <div className="input-container flex justify-center mb-4">
-                      <InputOTP
-                        maxLength={4}
-                        value={enteredCode}
-                        onChange={(value) => setEnteredCode(value)}
-                      >
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} className="w-12 h-12 text-lg border-2 border-white bg-transparent text-white" />
-                          <InputOTPSlot index={1} className="w-12 h-12 text-lg border-2 border-white bg-transparent text-white" />
-                          <InputOTPSlot index={2} className="w-12 h-12 text-lg border-2 border-white bg-transparent text-white" />
-                          <InputOTPSlot index={3} className="w-12 h-12 text-lg border-2 border-white bg-transparent text-white" />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                    
-                    <div className="input-container">
-                      <button
-                        onClick={handleVerifyCode}
-                        disabled={!enteredCode || enteredCode.length !== 4}
-                        className="ring-button"
-                      >
-                        تأكيد الكود
-                      </button>
-                    </div>
-                    
                     <div className="links">
                       <span 
-                        onClick={resendTimer === 0 ? handleResendCode : undefined}
+                        onClick={resendTimer === 0 ? handleResendLink : undefined}
                         style={{
                           color: resendTimer > 0 ? 'rgba(255, 255, 255, 0.4)' : '#fff',
                           cursor: resendTimer > 0 ? 'not-allowed' : 'pointer',
@@ -679,7 +590,6 @@ const CustomerSupport = () => {
                       </span>
                       <a onClick={() => {
                         setIsVerificationSent(false);
-                        setEnteredCode('');
                         setResendTimer(0);
                       }}>
                         تعديل البيانات
@@ -693,24 +603,7 @@ const CustomerSupport = () => {
             <div className="max-w-4xl mx-auto">
               <CustomerChat customerId={CustomerAuthService.getCurrentCustomer()?.id || 0} customerEmail={email} />
               <div className="mt-4 text-center">
-                <button onClick={() => {
-                  CustomerAuthService.logout();
-                  setIsRegistered(false);
-                  setShowChat(false);
-                  setShowLoginForm(false);
-                  setShowRegisterForm(false);
-                  setEmail('');
-                  setUsername('');
-                  setPassword('');
-                  setEnteredCode('');
-                  setIsVerificationSent(false);
-                  setIsVerified(false);
-                  setResendTimer(0);
-                  toast({
-                    title: "تم تسجيل الخروج",
-                    description: "تم تسجيل الخروج بنجاح",
-                  });
-                }} className="text-red-400 hover:underline">
+                <button onClick={handleLogout} className="text-red-400 hover:underline">
                   تسجيل الخروج
                 </button>
               </div>
