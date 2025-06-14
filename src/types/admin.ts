@@ -20,6 +20,21 @@ export interface AdminUser {
   username: string;
   password: string;
   role: 'مدير عام' | 'مبرمج' | 'مشرف';
+  permissions?: {
+    overview: boolean;
+    products: boolean;
+    users: boolean;
+    passwords: boolean;
+    tools: boolean;
+    customerSupport: boolean;
+    siteControl: boolean;
+    texts: boolean;
+    navigation: boolean;
+    contact: boolean;
+    design: boolean;
+    preview: boolean;
+    backup: boolean;
+  };
 }
 
 export interface Tool {
