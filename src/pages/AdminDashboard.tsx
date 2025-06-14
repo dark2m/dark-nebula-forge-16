@@ -5,6 +5,10 @@ import StarryBackground from '../components/StarryBackground';
 import AdminSidebar from '../components/admin/AdminSidebar';
 import AdminHeader from '../components/admin/AdminHeader';
 import AdminTabContent from '../components/admin/AdminTabContent';
+import AnimatedParticles from '../components/admin/AnimatedParticles';
+import FloatingElements from '../components/admin/FloatingElements';
+import EnhancedCard from '../components/admin/EnhancedCard';
+import TypingAnimation from '../components/admin/TypingAnimation';
 import AuthService from '../utils/auth';
 import SettingsService from '../utils/settingsService';
 import { useAdminData } from '../hooks/useAdminData';
@@ -39,7 +43,6 @@ const AdminDashboard = () => {
       console.log('AdminDashboard: Force saving settings:', siteSettings);
       SettingsService.saveSiteSettings(siteSettings);
       
-      // إطلاق حدث لتحديث جميع المكونات
       window.dispatchEvent(new CustomEvent('settingsUpdated', {
         detail: { settings: siteSettings }
       }));
@@ -61,158 +64,179 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen relative overflow-hidden">
       <StarryBackground />
+      <AnimatedParticles />
+      <FloatingElements />
       
-      {/* Enhanced Background Effects */}
+      {/* Enhanced Background Effects with 3D depth */}
       <div className="absolute inset-0 z-[1]">
-        {/* Gradient Orbs */}
-        <div className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-br from-blue-500/30 via-purple-500/20 to-cyan-500/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-[500px] h-[500px] bg-gradient-to-tr from-purple-600/25 via-pink-500/20 to-orange-500/25 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-cyan-500/15 via-blue-500/15 to-indigo-500/15 rounded-full blur-3xl animate-pulse delay-500"></div>
+        {/* Mega Gradient Orbs with pulsing animation */}
+        <div className="absolute top-10 left-10 w-[600px] h-[600px] bg-gradient-to-br from-blue-500/40 via-purple-500/30 to-cyan-500/40 rounded-full blur-3xl animate-pulse opacity-70"></div>
+        <div className="absolute bottom-10 right-10 w-[700px] h-[700px] bg-gradient-to-tr from-purple-600/35 via-pink-500/25 to-orange-500/35 rounded-full blur-3xl animate-pulse delay-1000 opacity-60"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse delay-500 opacity-50"></div>
         
-        {/* Moving Particles */}
-        {[...Array(30)].map((_, i) => (
+        {/* Rotating Geometric Shapes */}
+        <div className="absolute top-32 right-32 w-40 h-40 border-2 border-blue-400/30 rotate-45 animate-spin opacity-60" style={{ animationDuration: '30s' }}></div>
+        <div className="absolute bottom-32 left-32 w-32 h-32 border-2 border-purple-400/30 rotate-12 animate-spin opacity-50" style={{ animationDuration: '25s' }}></div>
+        <div className="absolute top-1/2 right-1/4 w-24 h-24 border border-cyan-400/25 animate-pulse"></div>
+        
+        {/* Floating Light Orbs */}
+        {[...Array(15)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full animate-pulse"
+            className="absolute w-2 h-2 bg-gradient-to-r from-white/60 to-blue-300/60 rounded-full animate-pulse"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${3 + Math.random() * 4}s`
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 4}s`
             }}
           ></div>
         ))}
-        
-        {/* Geometric Shapes */}
-        <div className="absolute top-40 right-40 w-32 h-32 border border-blue-400/20 rotate-45 animate-spin" style={{ animationDuration: '20s' }}></div>
-        <div className="absolute bottom-40 left-40 w-24 h-24 border border-purple-400/20 rotate-12 animate-spin" style={{ animationDuration: '15s' }}></div>
       </div>
 
-      {/* Glass Overlay */}
-      <div className="absolute inset-0 z-[2] bg-gradient-to-br from-black/20 via-transparent to-black/30"></div>
+      {/* Glass Overlay with animated gradient */}
+      <div className="absolute inset-0 z-[2] bg-gradient-to-br from-black/25 via-transparent to-black/35"></div>
       
       <div className="relative z-10">
-        {/* Enhanced Header */}
+        {/* Enhanced Header with typing animation */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60 backdrop-blur-xl"></div>
-          <div className="relative border-b border-white/10 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/70 backdrop-blur-2xl"></div>
+          <div className="relative border-b border-white/20 shadow-2xl">
             <AdminHeader currentUser={currentUser} onLogout={handleLogout} />
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="container mx-auto px-6 py-8">
+        {/* Welcome Banner with typing effect */}
+        <div className="container mx-auto px-6 py-4">
+          <EnhancedCard glowColor="purple" className="mb-6">
+            <div className="p-6 text-center">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-2">
+                <TypingAnimation text="مرحباً بك في لوحة التحكم المتطورة" speed={80} />
+              </h2>
+              <p className="text-gray-300 opacity-80">إدارة احترافية بتقنيات متقدمة</p>
+            </div>
+          </EnhancedCard>
+        </div>
+
+        {/* Main Content Area with enhanced cards */}
+        <div className="container mx-auto px-6 pb-8">
           <div className="grid lg:grid-cols-4 gap-8">
             
             {/* Enhanced Sidebar */}
             <div className="lg:col-span-1">
-              <div className="relative group">
-                {/* Sidebar Glow Effect */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-2xl blur-xl opacity-60 group-hover:opacity-80 transition-opacity duration-500"></div>
-                
-                {/* Sidebar Container */}
-                <div className="relative bg-black/30 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-                  {/* Sidebar Inner Glow */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none"></div>
-                  
-                  {/* Sidebar Content */}
-                  <div className="relative z-10">
-                    <AdminSidebar 
-                      activeTab={activeTab}
-                      setActiveTab={setActiveTab}
-                      currentUser={currentUser}
-                      canAccess={canAccess}
-                    />
-                  </div>
-                  
-                  {/* Sidebar Decorative Elements */}
-                  <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-xl"></div>
-                  <div className="absolute bottom-4 left-4 w-16 h-16 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-full blur-xl"></div>
-                </div>
-              </div>
+              <EnhancedCard glowColor="blue">
+                <AdminSidebar 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  currentUser={currentUser}
+                  canAccess={canAccess}
+                />
+              </EnhancedCard>
             </div>
 
             {/* Enhanced Main Content */}
             <div className="lg:col-span-3">
-              <div className="relative group">
-                {/* Content Glow Effect */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-cyan-500/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-500"></div>
-                
-                {/* Content Container */}
-                <div className="relative bg-black/25 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl min-h-[600px]">
-                  {/* Content Inner Effects */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none"></div>
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500"></div>
-                  
-                  {/* Content Body */}
-                  <div className="relative z-10 p-6">
-                    <AdminTabContent
-                      activeTab={activeTab}
-                      products={products}
-                      siteSettings={siteSettings}
-                      setSiteSettings={setSiteSettings}
-                      saveSiteSettings={saveSiteSettings}
-                      addProduct={addProduct}
-                      updateProduct={updateProduct}
-                      deleteProduct={deleteProduct}
-                      canAccess={canAccess}
-                    />
-                  </div>
-                  
-                  {/* Content Decorative Elements */}
-                  <div className="absolute top-6 right-6 w-24 h-24 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-full blur-xl"></div>
-                  <div className="absolute bottom-6 left-6 w-20 h-20 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-full blur-xl"></div>
+              <EnhancedCard glowColor="purple">
+                <div className="p-6 min-h-[600px]">
+                  <AdminTabContent
+                    activeTab={activeTab}
+                    products={products}
+                    siteSettings={siteSettings}
+                    setSiteSettings={setSiteSettings}
+                    saveSiteSettings={saveSiteSettings}
+                    addProduct={addProduct}
+                    updateProduct={updateProduct}
+                    deleteProduct={deleteProduct}
+                    canAccess={canAccess}
+                  />
                 </div>
-              </div>
+              </EnhancedCard>
             </div>
           </div>
 
-          {/* Footer Decoration */}
+          {/* Enhanced Footer with animated elements */}
           <div className="mt-12 text-center">
-            <div className="inline-flex items-center space-x-2 rtl:space-x-reverse px-6 py-3 bg-black/20 backdrop-blur-sm border border-white/10 rounded-full">
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-              <span className="text-gray-300/60 text-sm">DARK Admin Dashboard - Premium Edition</span>
-              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse delay-500"></div>
-            </div>
+            <EnhancedCard glowColor="green" className="inline-block">
+              <div className="px-8 py-4">
+                <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                  <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full animate-pulse"></div>
+                  <span className="text-white/80 font-medium">DARK Admin Dashboard - Ultimate Edition</span>
+                  <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse delay-500"></div>
+                  <div className="w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full animate-pulse delay-1000"></div>
+                </div>
+              </div>
+            </EnhancedCard>
           </div>
         </div>
       </div>
 
       {/* Enhanced CSS Styles */}
       <style>{`
-        .admin-card {
-          background: rgba(0, 0, 0, 0.3);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          transition: all 0.3s ease;
+        /* Advanced Glassmorphism */
+        .enhanced-glass {
+          background: rgba(0, 0, 0, 0.15);
+          backdrop-filter: blur(25px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.125);
+          box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.37),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         
-        .admin-card:hover {
-          background: rgba(0, 0, 0, 0.4);
-          border-color: rgba(255, 255, 255, 0.2);
-          transform: translateY(-2px);
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        /* 3D Shadow Effects */
+        .shadow-3xl {
+          box-shadow: 
+            0 35px 60px -12px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(255, 255, 255, 0.05),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Animated Gradient Text */
+        .gradient-text {
+          background: linear-gradient(45deg, #00bfff, #8a2be2, #ff69b4, #00ff7f);
+          background-size: 300% 300%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
         }
         
         /* Enhanced Scrollbars */
         ::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
+          width: 12px;
+          height: 12px;
         }
         
         ::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.2);
-          border-radius: 10px;
+          background: rgba(0, 0, 0, 0.3);
+          border-radius: 15px;
+          border: 2px solid rgba(255, 255, 255, 0.1);
         }
         
         ::-webkit-scrollbar-thumb {
-          background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-          border-radius: 10px;
+          background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+          border-radius: 15px;
           border: 2px solid rgba(0, 0, 0, 0.2);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(45deg, #2563eb, #7c3aed);
+          background: linear-gradient(45deg, #2563eb, #7c3aed, #db2777);
+          transform: scale(1.1);
+        }
+        
+        /* Floating Animation */
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          33% { transform: translateY(-10px) rotate(1deg); }
+          66% { transform: translateY(5px) rotate(-1deg); }
+        }
+        
+        .float-animation {
+          animation: float 6s ease-in-out infinite;
         }
       `}</style>
     </div>
