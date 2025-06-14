@@ -17,8 +17,20 @@ const WebDevelopment = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    setProducts(ProductService.getProducts().filter(p => p.category === 'web'));
-    setSettings(SettingsService.getSiteSettings());
+    const loadData = async () => {
+      try {
+        const allProducts = await ProductService.getProducts();
+        const webProducts = allProducts.filter(p => p.category === 'web');
+        setProducts(webProducts);
+        
+        const loadedSettings = await SettingsService.getSiteSettings();
+        setSettings(loadedSettings);
+      } catch (error) {
+        console.error('WebDevelopment: Error loading data:', error);
+      }
+    };
+
+    loadData();
   }, []);
 
   if (!settings) return null;

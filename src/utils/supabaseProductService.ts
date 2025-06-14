@@ -28,11 +28,11 @@ class SupabaseProductService {
         price: Number(item.price),
         category: item.category,
         description: item.description || '',
-        features: Array.isArray(item.features) ? item.features : [],
-        images: Array.isArray(item.images) ? item.images : [],
-        videos: Array.isArray(item.videos) ? item.videos : [],
-        textSize: item.text_size as 'small' | 'medium' | 'large' || 'medium',
-        titleSize: item.title_size as 'small' | 'medium' | 'large' | 'xl' || 'large'
+        features: Array.isArray(item.features) ? (item.features as string[]) : [],
+        images: Array.isArray(item.images) ? (item.images as string[]) : [],
+        videos: Array.isArray(item.videos) ? (item.videos as string[]) : [],
+        textSize: (item.text_size as 'small' | 'medium' | 'large') || 'medium',
+        titleSize: (item.title_size as 'small' | 'medium' | 'large' | 'xl') || 'large'
       }));
 
       console.log('SupabaseProductService: Loaded products:', products.length);
