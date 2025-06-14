@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import ProductService from '../utils/productService';
 import type { Product } from '../types/admin';
 
@@ -7,13 +7,31 @@ export const useProductManagement = (
   canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean,
   toast: any
 ) => {
-  const [products, setProducts] = useState<Product[]>(() => ProductService.getProducts());
+  const [products, setProducts] = useState<Product[]>([]);
 
-  // تحديث المنتجات مع مراقبة التغييرات
+  // تحميل المنتجات عند بداية الـ hook
+  useEffect(() => {
+    const loadedProducts = ProductService.getProducts();
+    console.log('useProductManagement: Initial products loaded:', loadedProducts.length);
+    setProducts(loadedProducts);
+    
+    // الاستماع لتحديثات المنتجات
+    const handleProductsUpdate = (event: CustomEvent) => {
+      console.log('useProductManagement: Products updated via event:', event.detail.products);
+      setProducts(event.detail.products);
+    };
+
+    window.addEventListener('productsUpdated', handleProductsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('productsUpdated', handleProductsUpdate as EventListener);
+    };
+  }, []);
+
   const refreshProducts = useCallback(() => {
     const updatedProducts = ProductService.getProducts();
+    console.log('useProductManagement: Refreshing products:', updatedProducts.length);
     setProducts(updatedProducts);
-    console.log('Products refreshed:', updatedProducts.length);
   }, []);
 
   const addProduct = useCallback(() => {
@@ -23,10 +41,8 @@ export const useProductManagement = (
         description: "ليس لديك صلاحية لإضافة المنتجات",
         variant: "destructive"
       });
-      return;
+      return null;
     }
-    
-    console.log('Adding new product...');
     
     try {
       const newProduct = ProductService.addProduct({
@@ -41,12 +57,10 @@ export const useProductManagement = (
         titleSize: 'large'
       });
       
-      console.log('New product added:', newProduct);
-      refreshProducts();
-      
       toast({
         title: "تم إضافة المنتج",
-        description: "تم إضافة منتج جديد بنجاح"
+        description: "تم إضافة منتج جديد بنجاح",
+        variant: "default"
       });
       
       return newProduct;
@@ -57,8 +71,9 @@ export const useProductManagement = (
         description: "حدث خطأ أثناء إضافة المنتج",
         variant: "destructive"
       });
+      return null;
     }
-  }, [canAccess, toast, refreshProducts]);
+  }, [canAccess, toast]);
 
   const updateProduct = useCallback((id: number, updates: Partial<Product>) => {
     if (!canAccess('مبرمج')) {
@@ -71,11 +86,14 @@ export const useProductManagement = (
     }
     
     try {
-      console.log('Updating product:', id, updates);
+      console.log('useProductManagement: Updating product:', id, updates);
       ProductService.updateProduct(id, updates);
-      refreshProducts();
       
-      console.log('Product updated successfully');
+      toast({
+        title: "تم حفظ التعديل",
+        description: "تم حفظ تعديلات المنتج بنجاح",
+        variant: "default"
+      });
     } catch (error) {
       console.error('Error updating product:', error);
       toast({
@@ -84,7 +102,7 @@ export const useProductManagement = (
         variant: "destructive"
       });
     }
-  }, [canAccess, toast, refreshProducts]);
+  }, [canAccess, toast]);
 
   const deleteProduct = useCallback((id: number) => {
     if (!canAccess('مبرمج')) {
@@ -98,11 +116,11 @@ export const useProductManagement = (
     
     try {
       ProductService.deleteProduct(id);
-      refreshProducts();
       
       toast({
         title: "تم حذف المنتج",
-        description: "تم حذف المنتج بنجاح"
+        description: "تم حذف المنتج بنجاح",
+        variant: "default"
       });
     } catch (error) {
       console.error('Error deleting product:', error);
@@ -112,7 +130,7 @@ export const useProductManagement = (
         variant: "destructive"
       });
     }
-  }, [canAccess, toast, refreshProducts]);
+  }, [canAccess, toast]);
 
   return {
     products,

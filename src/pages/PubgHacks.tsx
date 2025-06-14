@@ -17,8 +17,31 @@ const PubgHacks = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    setProducts(ProductService.getProducts().filter(p => p.category === 'pubg'));
-    setSettings(SettingsService.getSiteSettings());
+    // تحميل المنتجات والإعدادات
+    const loadData = () => {
+      console.log('PubgHacks: Loading products and settings...');
+      const allProducts = ProductService.getProducts();
+      const pubgProducts = allProducts.filter(p => p.category === 'pubg');
+      console.log('PubgHacks: PUBG products found:', pubgProducts.length);
+      setProducts(pubgProducts);
+      setSettings(SettingsService.getSiteSettings());
+    };
+
+    loadData();
+
+    // الاستماع لتحديثات المنتجات
+    const handleProductsUpdate = (event: CustomEvent) => {
+      console.log('PubgHacks: Products updated, refreshing...');
+      const allProducts = event.detail.products;
+      const pubgProducts = allProducts.filter((p: Product) => p.category === 'pubg');
+      setProducts(pubgProducts);
+    };
+
+    window.addEventListener('productsUpdated', handleProductsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('productsUpdated', handleProductsUpdate as EventListener);
+    };
   }, []);
 
   if (!settings) return null;

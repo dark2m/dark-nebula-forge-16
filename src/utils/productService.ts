@@ -3,6 +3,7 @@ import { Product } from '../types/admin';
 
 class ProductService {
   private static PRODUCTS_KEY = 'admin_products';
+  private static BACKUP_KEY = 'products_backup';
 
   static getProducts(): Product[] {
     try {
@@ -26,19 +27,7 @@ class ProductService {
         return defaultProducts;
       }
       
-      // تصفية أقل صرامة - فقط التأكد من الخصائص الأساسية
-      const validProducts = parsed.filter(item => 
-        item && 
-        typeof item === 'object' && 
-        typeof item.id !== 'undefined' && 
-        typeof item.name === 'string' && 
-        typeof item.category === 'string' &&
-        typeof item.price === 'number'
-      );
-      
-      console.log('ProductService: Valid products found:', validProducts.length);
-      
-      return validProducts;
+      return parsed;
     } catch (error) {
       console.error('ProductService: Error loading products:', error);
       const defaultProducts = ProductService.getDefaultProducts();
@@ -72,39 +61,15 @@ class ProductService {
         features: ['رؤية ليلية متقدمة', 'كشف الأعداء المختبئين', 'تحسين الرؤية', 'آمن ومحدث'],
         textSize: 'medium',
         titleSize: 'large'
-      },
-      { 
-        id: 3, 
-        name: 'موقع ويب شخصي', 
-        price: 150, 
-        category: 'web',
-        images: [],
-        videos: [],
-        description: 'تصميم موقع ويب شخصي احترافي',
-        features: ['تصميم عصري', 'متجاوب مع جميع الأجهزة', 'سرعة عالية', 'SEO محسن'],
-        textSize: 'medium',
-        titleSize: 'large'
-      },
-      { 
-        id: 4, 
-        name: 'بوت ديسكورد متعدد الوظائف', 
-        price: 75, 
-        category: 'discord',
-        images: [],
-        videos: [],
-        description: 'بوت ديسكورد مخصص مع مميزات متقدمة',
-        features: ['إدارة السيرفر', 'نظام البوتات', 'ألعاب تفاعلية', 'دعم متعدد اللغات'],
-        textSize: 'medium',
-        titleSize: 'large'
       }
     ];
   }
 
   static saveProducts(products: Product[]): void {
     try {
-      console.log('ProductService: Saving products:', products.length, 'items');
+      console.log('ProductService: Force saving products:', products);
       
-      // التأكد من أن كل منتج له خصائص صحيحة
+      // التأكد من صحة البيانات
       const validProducts = products.map(product => ({
         id: product.id,
         name: product.name || 'منتج بدون اسم',
@@ -115,80 +80,33 @@ class ProductService {
         images: Array.isArray(product.images) ? product.images : [],
         videos: Array.isArray(product.videos) ? product.videos : [],
         textSize: product.textSize || 'medium',
-        titleSize: product.titleSize || 'large',
-        backgroundColor: product.backgroundColor || '',
-        backgroundImage: product.backgroundImage || ''
+        titleSize: product.titleSize || 'large'
       }));
       
-      localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(validProducts));
-      console.log('ProductService: Products saved successfully');
+      // حفظ فوري ومباشر
+      const jsonData = JSON.stringify(validProducts);
+      localStorage.setItem(this.PRODUCTS_KEY, jsonData);
       
-      // إشعار جميع النوافذ بالتحديث
+      // التحقق من الحفظ
+      const verification = localStorage.getItem(this.PRODUCTS_KEY);
+      if (!verification) {
+        throw new Error('Failed to save to localStorage');
+      }
+      
+      console.log('ProductService: Products saved successfully', validProducts.length, 'items');
+      
+      // إطلاق حدث التحديث
       window.dispatchEvent(new CustomEvent('productsUpdated', { 
         detail: { products: validProducts } 
       }));
       
       // حفظ نسخة احتياطية
-      this.createBackup(validProducts);
+      localStorage.setItem(this.BACKUP_KEY, jsonData);
       
     } catch (error) {
-      console.error('ProductService: Error saving products:', error);
-      
-      // في حالة فشل الحفظ، نحاول تقليل البيانات
-      try {
-        const simpleProducts = products.map(product => ({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          category: product.category,
-          description: product.description || '',
-          features: [],
-          images: [],
-          videos: [],
-          textSize: 'medium',
-          titleSize: 'large'
-        }));
-        
-        localStorage.setItem(this.PRODUCTS_KEY, JSON.stringify(simpleProducts));
-        console.log('ProductService: Products saved with reduced data');
-      } catch (fallbackError) {
-        console.error('ProductService: Fallback save also failed:', fallbackError);
-        throw new Error('فشل في حفظ البيانات - مساحة التخزين ممتلئة');
-      }
+      console.error('ProductService: Critical error saving products:', error);
+      throw error;
     }
-  }
-
-  // إنشاء نسخة احتياطية
-  private static createBackup(products: Product[]) {
-    try {
-      const backup = {
-        timestamp: new Date().toISOString(),
-        products: products,
-        version: '1.0'
-      };
-      localStorage.setItem('products_backup', JSON.stringify(backup));
-      console.log('ProductService: Backup created successfully');
-    } catch (error) {
-      console.error('ProductService: Error creating backup:', error);
-    }
-  }
-
-  // استعادة النسخة الاحتياطية
-  static restoreBackup(): boolean {
-    try {
-      const backup = localStorage.getItem('products_backup');
-      if (backup) {
-        const parsedBackup = JSON.parse(backup);
-        if (parsedBackup.products && Array.isArray(parsedBackup.products)) {
-          this.saveProducts(parsedBackup.products);
-          console.log('ProductService: Backup restored successfully');
-          return true;
-        }
-      }
-    } catch (error) {
-      console.error('ProductService: Error restoring backup:', error);
-    }
-    return false;
   }
 
   static addProduct(product: Omit<Product, 'id'>): Product {
@@ -196,7 +114,7 @@ class ProductService {
     const products = ProductService.getProducts();
     const newProduct: Product = {
       ...product,
-      id: Date.now() + Math.random(), // معرف فريد
+      id: Date.now(),
       images: product.images || [],
       videos: product.videos || [],
       features: product.features || [],
@@ -216,14 +134,7 @@ class ProductService {
     const index = products.findIndex(p => p.id === id);
     
     if (index !== -1) {
-      // دمج التحديثات مع المنتج الموجود
-      const updatedProduct = { 
-        ...products[index], 
-        ...updates,
-        id: products[index].id // الحفاظ على المعرف الأصلي
-      };
-      
-      products[index] = updatedProduct;
+      products[index] = { ...products[index], ...updates };
       ProductService.saveProducts(products);
       console.log('ProductService: Product updated successfully');
     } else {
@@ -236,57 +147,6 @@ class ProductService {
     const products = ProductService.getProducts().filter(p => p.id !== id);
     ProductService.saveProducts(products);
     console.log('ProductService: Product deleted successfully');
-  }
-
-  // دالة للحصول على معلومات استخدام التخزين
-  static getStorageInfo(): { used: number, available: number, percentage: number } {
-    try {
-      const stored = localStorage.getItem(this.PRODUCTS_KEY);
-      const usedBytes = stored ? new Blob([stored]).size : 0;
-      
-      // تقدير المساحة المتاحة (5MB تقريباً)
-      const maxStorage = 5 * 1024 * 1024; // 5MB
-      const percentage = (usedBytes / maxStorage) * 100;
-      
-      return {
-        used: usedBytes,
-        available: maxStorage - usedBytes,
-        percentage: Math.round(percentage)
-      };
-    } catch (error) {
-      return { used: 0, available: 0, percentage: 0 };
-    }
-  }
-
-  // تنظيف وصيانة البيانات
-  static performMaintenance(): void {
-    try {
-      console.log('ProductService: Performing maintenance...');
-      
-      // تنظيف البيانات المكررة
-      const products = this.getProducts();
-      const uniqueProducts = products.filter((product, index, self) => 
-        index === self.findIndex(p => p.id === product.id)
-      );
-      
-      if (uniqueProducts.length !== products.length) {
-        console.log('ProductService: Removed duplicate products');
-        this.saveProducts(uniqueProducts);
-      }
-      
-      // تنظيف البيانات القديمة
-      const oldKeys = ['old_products', 'temp_products', 'draft_products'];
-      oldKeys.forEach(key => {
-        if (localStorage.getItem(key)) {
-          localStorage.removeItem(key);
-          console.log(`ProductService: Removed old key: ${key}`);
-        }
-      });
-      
-      console.log('ProductService: Maintenance completed');
-    } catch (error) {
-      console.error('ProductService: Error during maintenance:', error);
-    }
   }
 }
 

@@ -1,6 +1,6 @@
+
 import React, { useState } from 'react';
-import { Plus, X, Upload, Video, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Plus, X, Upload, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface MediaManagerProps {
@@ -19,22 +19,17 @@ const MediaManager: React.FC<MediaManagerProps> = ({
   onVideosChange
 }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [localImages, setLocalImages] = useState<string[]>(images);
-  const [localVideos, setLocalVideos] = useState<string[]>(videos);
   const { toast } = useToast();
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    console.log('Adding images to product:', productId);
-    
     setIsUploading(true);
     const newImages: string[] = [];
 
     for (const file of Array.from(files)) {
       try {
-        // التحقق من حجم الملف (أقل من 2MB)
         if (file.size > 2 * 1024 * 1024) {
           toast({
             title: "ملف كبير جداً",
@@ -48,24 +43,16 @@ const MediaManager: React.FC<MediaManagerProps> = ({
         newImages.push(compressedImage);
       } catch (error) {
         console.error('Error processing image:', error);
-        toast({
-          title: "خطأ في معالجة الصورة",
-          description: `فشل في معالجة ${file.name}`,
-          variant: "destructive"
-        });
       }
     }
 
     if (newImages.length > 0) {
-      const updatedImages = [...localImages, ...newImages];
-      setLocalImages(updatedImages);
-      
-      // حفظ فوري
+      const updatedImages = [...images, ...newImages];
       onImagesChange(productId, updatedImages);
       
       toast({
-        title: "تم إضافة الصور",
-        description: `تم إضافة ${newImages.length} صورة بنجاح وحفظها`
+        title: "تم حفظ الصور",
+        description: `تم إضافة وحفظ ${newImages.length} صورة بنجاح`
       });
     }
     
@@ -77,14 +64,11 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    console.log('Adding videos to product:', productId);
-    
     setIsUploading(true);
     const newVideos: string[] = [];
 
     for (const file of Array.from(files)) {
       try {
-        // التحقق من حجم الملف (أقل من 10MB)
         if (file.size > 10 * 1024 * 1024) {
           toast({
             title: "ملف كبير جداً",
@@ -98,24 +82,16 @@ const MediaManager: React.FC<MediaManagerProps> = ({
         newVideos.push(videoThumbnail);
       } catch (error) {
         console.error('Error processing video:', error);
-        toast({
-          title: "خطأ في معالجة الفيديو",
-          description: `فشل في معالجة ${file.name}`,
-          variant: "destructive"
-        });
       }
     }
 
     if (newVideos.length > 0) {
-      const updatedVideos = [...localVideos, ...newVideos];
-      setLocalVideos(updatedVideos);
-      
-      // حفظ فوري
+      const updatedVideos = [...videos, ...newVideos];
       onVideosChange(productId, updatedVideos);
       
       toast({
-        title: "تم إضافة الفيديوهات",
-        description: `تم إضافة ${newVideos.length} فيديو بنجاح وحفظها`
+        title: "تم حفظ الفيديوهات",
+        description: `تم إضافة وحفظ ${newVideos.length} فيديو بنجاح`
       });
     }
     
@@ -123,7 +99,6 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     event.target.value = '';
   };
 
-  // دالة ضغط الصور محسنة
   const compressImage = (file: File, quality: number): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
@@ -131,12 +106,10 @@ const MediaManager: React.FC<MediaManagerProps> = ({
       const img = new window.Image();
 
       img.onload = () => {
-        // تحديد أقصى أبعاد للصورة
         const maxWidth = 800;
         const maxHeight = 600;
         let { width, height } = img;
 
-        // تقليل الأبعاد إذا كانت كبيرة
         if (width > maxWidth || height > maxHeight) {
           const ratio = Math.min(maxWidth / width, maxHeight / height);
           width *= ratio;
@@ -160,7 +133,6 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     });
   };
 
-  // دالة إنشاء صورة مصغرة للفيديو
   const createVideoThumbnail = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
@@ -171,11 +143,10 @@ const MediaManager: React.FC<MediaManagerProps> = ({
         canvas.width = Math.min(video.videoWidth, 480);
         canvas.height = Math.min(video.videoHeight, 360);
         
-        video.currentTime = 1; // الثانية الأولى
+        video.currentTime = 1;
         video.onseeked = () => {
           if (ctx) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            // إنشاء صورة مصغرة من الفيديو
             const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
             resolve(thumbnailDataUrl);
           } else {
@@ -184,17 +155,13 @@ const MediaManager: React.FC<MediaManagerProps> = ({
         };
       };
 
-      video.onerror = () => {
-        reject(new Error('Failed to process video'));
-      };
-
+      video.onerror = () => reject(new Error('Failed to process video'));
       video.src = URL.createObjectURL(file);
     });
   };
 
   const removeImage = (index: number) => {
-    const updatedImages = localImages.filter((_, i) => i !== index);
-    setLocalImages(updatedImages);
+    const updatedImages = images.filter((_, i) => i !== index);
     onImagesChange(productId, updatedImages);
     
     toast({
@@ -204,8 +171,7 @@ const MediaManager: React.FC<MediaManagerProps> = ({
   };
 
   const removeVideo = (index: number) => {
-    const updatedVideos = localVideos.filter((_, i) => i !== index);
-    setLocalVideos(updatedVideos);
+    const updatedVideos = videos.filter((_, i) => i !== index);
     onVideosChange(productId, updatedVideos);
     
     toast({
@@ -214,58 +180,35 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     });
   };
 
-  // تحديث الحالة المحلية عند تغيير الخصائص
-  React.useEffect(() => {
-    setLocalImages(images);
-  }, [images]);
-
-  React.useEffect(() => {
-    setLocalVideos(videos);
-  }, [videos]);
-
   return (
     <div className="space-y-6">
       {/* Images Section */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="block text-gray-400 text-sm">
-            صور المنتج ({localImages.length})
-          </label>
-          <Button
-            onClick={() => onImagesChange(productId, localImages)}
-            size="sm"
-            className="text-xs"
-          >
-            <Save className="w-3 h-3 mr-1" />
-            حفظ الصور
-          </Button>
-        </div>
+        <label className="block text-gray-400 text-sm mb-3">
+          صور المنتج ({images.length}) - يتم الحفظ التلقائي
+        </label>
         
-        {/* Existing Images */}
-        {localImages.length > 0 && (
+        {images.length > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-3 max-h-64 overflow-y-auto">
-            {localImages.map((image, index) => (
+            {images.map((image, index) => (
               <div key={index} className="relative group">
                 <img 
                   src={image} 
                   alt={`Product ${index + 1}`}
                   className="w-full h-24 object-cover rounded border border-white/20"
                 />
-                <Button
+                <button
                   type="button"
-                  variant="destructive"
-                  size="sm"
                   onClick={() => removeImage(index)}
-                  className="absolute top-1 right-1 p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <X className="w-3 h-3" />
-                </Button>
+                </button>
               </div>
             ))}
           </div>
         )}
 
-        {/* Add Images */}
         <div className="relative">
           <input
             type="file"
@@ -292,39 +235,26 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 
       {/* Videos Section */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="block text-gray-400 text-sm">
-            فيديوهات المنتج ({localVideos.length})
-          </label>
-          <Button
-            onClick={() => onVideosChange(productId, localVideos)}
-            size="sm"
-            className="text-xs"
-          >
-            <Save className="w-3 h-3 mr-1" />
-            حفظ الفيديوهات
-          </Button>
-        </div>
+        <label className="block text-gray-400 text-sm mb-3">
+          فيديوهات المنتج ({videos.length}) - يتم الحفظ التلقائي
+        </label>
         
-        {/* Existing Videos */}
-        {localVideos.length > 0 && (
+        {videos.length > 0 && (
           <div className="space-y-3 mb-3 max-h-64 overflow-y-auto">
-            {localVideos.map((video, index) => (
+            {videos.map((video, index) => (
               <div key={index} className="relative group border border-white/20 rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <Video className="w-5 h-5 text-blue-400 mr-2" />
                     <span className="text-gray-300">فيديو {index + 1}</span>
                   </div>
-                  <Button
+                  <button
                     type="button"
-                    variant="destructive"
-                    size="sm"
                     onClick={() => removeVideo(index)}
-                    className="p-1"
+                    className="p-1 bg-red-500 text-white rounded"
                   >
                     <X className="w-3 h-3" />
-                  </Button>
+                  </button>
                 </div>
                 <div className="mt-2">
                   <img 
@@ -338,7 +268,6 @@ const MediaManager: React.FC<MediaManagerProps> = ({
           </div>
         )}
 
-        {/* Add Videos */}
         <div className="relative">
           <input
             type="file"
@@ -363,13 +292,9 @@ const MediaManager: React.FC<MediaManagerProps> = ({
         </div>
       </div>
 
-      {(localImages.length > 0 || localVideos.length > 0) && (
-        <div className="text-xs text-gray-500 text-center">
-          إجمالي الملفات: {localImages.length + localVideos.length}
-          <br />
-          <span className="text-green-400">
-            ✓ يتم الحفظ التلقائي عند إضافة أو حذف الملفات
-          </span>
+      {(images.length > 0 || videos.length > 0) && (
+        <div className="text-xs text-green-400 text-center">
+          ✓ إجمالي الملفات: {images.length + videos.length} | يتم الحفظ التلقائي فوراً
         </div>
       )}
     </div>

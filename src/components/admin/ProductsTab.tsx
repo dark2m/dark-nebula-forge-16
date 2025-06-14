@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, X } from 'lucide-react';
+import React from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import ProductFeaturesManager from '../ProductFeaturesManager';
 import MediaManager from '../MediaManager';
 import { useToast } from '@/hooks/use-toast';
 import { useProductManagement } from '@/hooks/useProductManagement';
-import type { Product } from '../../types/admin';
 
 interface ProductsTabProps {
   canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
@@ -14,7 +13,6 @@ interface ProductsTabProps {
 const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
   const { toast } = useToast();
   const { products, addProduct, updateProduct, deleteProduct } = useProductManagement(canAccess, toast);
-  const [editedProducts, setEditedProducts] = useState<{[key: number]: Partial<Product>}>({});
 
   const categories = [
     { value: 'pubg', label: 'هكر ببجي موبايل' },
@@ -31,9 +29,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
       other: 'خدمة'
     };
 
-    console.log('Adding product with category:', category);
     const newProduct = addProduct();
-    
     if (newProduct) {
       setTimeout(() => {
         updateProduct(newProduct.id, { 
@@ -44,86 +40,20 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
     }
   };
 
-  const handleProductChange = (productId: number, field: string, value: any) => {
-    console.log('Product change:', productId, field, value);
-    setEditedProducts(prev => ({
-      ...prev,
-      [productId]: {
-        ...prev[productId],
-        [field]: value
-      }
-    }));
-  };
-
-  const saveProduct = (productId: number) => {
-    const changes = editedProducts[productId];
-    console.log('Saving product changes:', productId, changes);
-    
-    if (changes) {
-      updateProduct(productId, changes);
-      setEditedProducts(prev => {
-        const updated = { ...prev };
-        delete updated[productId];
-        return updated;
-      });
-      toast({
-        title: "تم حفظ المنتج",
-        description: "تم حفظ التغييرات بنجاح"
-      });
-    }
-  };
-
-  const getProductValue = (product: Product, field: string) => {
-    const productId = product.id;
-    const editedValue = editedProducts[productId]?.[field];
-    const originalValue = product[field as keyof Product];
-    
-    if (editedValue !== undefined) {
-      return editedValue;
-    }
-    
-    if (field === 'images' && !originalValue) return [];
-    if (field === 'videos' && !originalValue) return [];
-    if (field === 'features' && !originalValue) return [];
-    if (field === 'textSize' && !originalValue) return 'medium';
-    if (field === 'titleSize' && !originalValue) return 'large';
-    
-    return originalValue || '';
-  };
-
-  const hasChanges = (productId: number) => {
-    return editedProducts[productId] && Object.keys(editedProducts[productId]).length > 0;
+  const handleInputChange = (productId: number, field: string, value: any) => {
+    console.log('Immediate save for product:', productId, field, value);
+    updateProduct(productId, { [field]: value });
   };
 
   const createMediaChangeHandler = (productId: number) => {
     return {
       onImagesChange: (receivedProductId: number, images: string[]) => {
-        console.log(`Images change handler called for product ${receivedProductId}`);
-        
-        if (receivedProductId !== productId) {
-          console.error('Product ID mismatch!', { received: receivedProductId, expected: productId });
-          return;
-        }
-        
+        console.log(`Saving images for product ${receivedProductId}`);
         updateProduct(receivedProductId, { images });
-        toast({
-          title: "تم حفظ الصور",
-          description: "تم حفظ الصور بنجاح"
-        });
       },
       onVideosChange: (receivedProductId: number, videos: string[]) => {
-        console.log(`Videos change handler called for product ${receivedProductId}`);
-        
-        if (receivedProductId !== productId) {
-          console.error('Product ID mismatch!', { received: receivedProductId, expected: productId });
-          return;
-        }
-        
+        console.log(`Saving videos for product ${receivedProductId}`);
         updateProduct(receivedProductId, { videos });
-        toast({
-          title: "تم حفظ الفيديوهات",
-          description: "تم حفظ الفيديوهات بنجاح"
-        });
       }
     };
   };
@@ -157,15 +87,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                   <h3 className="text-lg font-semibold text-white">
                     المنتج #{product.id} - {product.name} ({categories.find(c => c.value === product.category)?.label})
                   </h3>
-                  {hasChanges(product.id) && (
-                    <button
-                      onClick={() => saveProduct(product.id)}
-                      className="glow-button flex items-center gap-2 text-sm"
-                    >
-                      <Save className="w-4 h-4" />
-                      حفظ التغييرات
-                    </button>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
@@ -173,8 +94,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                     <label className="block text-gray-400 text-sm mb-2">اسم المنتج</label>
                     <input
                       type="text"
-                      value={getProductValue(product, 'name') || ''}
-                      onChange={(e) => handleProductChange(product.id, 'name', e.target.value)}
+                      value={product.name || ''}
+                      onChange={(e) => handleInputChange(product.id, 'name', e.target.value)}
                       className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                     />
                   </div>
@@ -182,8 +103,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                   <div>
                     <label className="block text-gray-400 text-sm mb-2">الفئة</label>
                     <select
-                      value={getProductValue(product, 'category') || 'pubg'}
-                      onChange={(e) => handleProductChange(product.id, 'category', e.target.value)}
+                      value={product.category || 'pubg'}
+                      onChange={(e) => handleInputChange(product.id, 'category', e.target.value)}
                       className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                     >
                       {categories.map((cat) => (
@@ -195,8 +116,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                   <div className="lg:col-span-2">
                     <label className="block text-gray-400 text-sm mb-2">الوصف</label>
                     <textarea
-                      value={getProductValue(product, 'description') || ''}
-                      onChange={(e) => handleProductChange(product.id, 'description', e.target.value)}
+                      value={product.description || ''}
+                      onChange={(e) => handleInputChange(product.id, 'description', e.target.value)}
                       className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400 h-20 resize-none"
                     />
                   </div>
@@ -205,8 +126,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                     <label className="block text-gray-400 text-sm mb-2">السعر ($)</label>
                     <input
                       type="number"
-                      value={getProductValue(product, 'price') || 0}
-                      onChange={(e) => handleProductChange(product.id, 'price', Number(e.target.value))}
+                      value={product.price || 0}
+                      onChange={(e) => handleInputChange(product.id, 'price', Number(e.target.value))}
                       className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                     />
                   </div>
@@ -214,20 +135,16 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
 
                 <MediaManager
                   productId={product.id}
-                  images={getProductValue(product, 'images') || []}
-                  videos={getProductValue(product, 'videos') || []}
+                  images={product.images || []}
+                  videos={product.videos || []}
                   onImagesChange={mediaHandlers.onImagesChange}
                   onVideosChange={mediaHandlers.onVideosChange}
                 />
 
                 <ProductFeaturesManager
-                  features={getProductValue(product, 'features') || []}
+                  features={product.features || []}
                   onFeaturesChange={(features) => {
-                    handleProductChange(product.id, 'features', features);
-                    // حفظ فوري للمميزات
-                    setTimeout(() => {
-                      updateProduct(product.id, { features });
-                    }, 500);
+                    updateProduct(product.id, { features });
                   }}
                 />
 
@@ -239,16 +156,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                     <Trash2 className="w-4 h-4" />
                     <span>حذف المنتج</span>
                   </button>
-                  
-                  {hasChanges(product.id) && (
-                    <button
-                      onClick={() => saveProduct(product.id)}
-                      className="glow-button flex items-center gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      حفظ المنتج
-                    </button>
-                  )}
                 </div>
               </div>
             );
