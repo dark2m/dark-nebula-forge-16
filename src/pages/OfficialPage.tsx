@@ -63,6 +63,14 @@ const OfficialPage = () => {
     );
   }
 
+  // Add safe access to contactInfo with fallbacks
+  const contactInfo = siteSettings?.contactInfo || {
+    whatsapp: '+1234567890',
+    email: 'info@dark.com',
+    phone: '+1234567890',
+    address: 'الرياض، المملكة العربية السعودية'
+  };
+
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
@@ -139,50 +147,50 @@ const OfficialPage = () => {
               
               {/* WhatsApp */}
               <button
-                onClick={() => handleContactClick('whatsapp', siteSettings.contactInfo.whatsapp)}
+                onClick={() => handleContactClick('whatsapp', contactInfo.whatsapp)}
                 className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-green-500/20 transition-colors cursor-pointer"
               >
                 <Phone className="w-6 h-6 sm:w-8 sm:h-8 text-green-400 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                   {TranslationService.translate('contact.whatsapp')}
                 </h3>
-                <p className="text-green-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.whatsapp}</p>
+                <p className="text-green-400 text-sm sm:text-base break-all">{contactInfo.whatsapp}</p>
               </button>
 
               {/* Email */}
               <button
-                onClick={() => handleContactClick('email', siteSettings.contactInfo.email)}
+                onClick={() => handleContactClick('email', contactInfo.email)}
                 className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-red-500/20 transition-colors cursor-pointer"
               >
                 <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                   {TranslationService.translate('contact.email')}
                 </h3>
-                <p className="text-red-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.email}</p>
+                <p className="text-red-400 text-sm sm:text-base break-all">{contactInfo.email}</p>
               </button>
 
               {/* Phone */}
               <button
-                onClick={() => handleContactClick('phone', siteSettings.contactInfo.phone)}
+                onClick={() => handleContactClick('phone', contactInfo.phone)}
                 className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-blue-500/20 transition-colors cursor-pointer"
               >
                 <Phone className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                   {TranslationService.translate('contact.phone')}
                 </h3>
-                <p className="text-blue-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.phone}</p>
+                <p className="text-blue-400 text-sm sm:text-base break-all">{contactInfo.phone}</p>
               </button>
 
               {/* Address */}
               <button
-                onClick={() => handleContactClick('address', siteSettings.contactInfo.address)}
+                onClick={() => handleContactClick('address', contactInfo.address)}
                 className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-gray-500/20 transition-colors cursor-pointer"
               >
                 <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                   {TranslationService.translate('contact.address')}
                 </h3>
-                <p className="text-gray-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.address}</p>
+                <p className="text-gray-400 text-sm sm:text-base break-all">{contactInfo.address}</p>
               </button>
 
             </div>
