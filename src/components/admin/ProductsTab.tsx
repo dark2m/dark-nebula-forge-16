@@ -21,7 +21,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
     { value: 'other', label: 'خدمات أخرى' }
   ];
 
-  const addProductByCategory = (category: string) => {
+  const addProductByCategory = async (category: string) => {
     const categoryLabels: { [key: string]: string } = {
       pubg: 'هكر ببجي موبايل',
       web: 'موقع ويب',
@@ -29,7 +29,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
       other: 'خدمة'
     };
 
-    const newProduct = addProduct();
+    const newProduct = await addProduct();
     if (newProduct) {
       setTimeout(() => {
         updateProduct(newProduct.id, { 
