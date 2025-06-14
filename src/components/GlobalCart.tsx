@@ -16,29 +16,75 @@ const GlobalCart = () => {
       try {
         setIsLoading(true);
         const loadedSettings = await SettingsService.getSiteSettings();
+        console.log('GlobalCart: Loaded settings successfully');
         setSettings(loadedSettings);
       } catch (error) {
         console.error('GlobalCart: Error loading settings:', error);
+        // Use fallback settings
+        setSettings({
+          contactInfo: {
+            whatsapp: '+1234567890',
+            email: 'info@dark.com',
+            phone: '+1234567890',
+            address: 'الرياض، المملكة العربية السعودية'
+          },
+          pageTexts: {
+            cart: {
+              cartTitle: 'سلة المشتريات',
+              emptyCartMessage: 'سلة المشتريات فارغة',
+              purchaseButton: 'إتمام الشراء',
+              purchaseNote: 'ملاحظة: سيتم تحويلك إلى واتساب لإتمام عملية الشراء'
+            }
+          }
+        } as any);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadSettings();
+
+    // Listen for settings updates
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('GlobalCart: Settings updated via event');
+      setSettings(event.detail.settings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
   }, []);
 
   const handlePurchase = () => {
-    if (!settings || cartItems.length === 0) return;
+    if (!settings?.contactInfo?.whatsapp || cartItems.length === 0) {
+      console.error('Cannot proceed with purchase: missing settings or empty cart');
+      return;
+    }
 
-    const message = `مرحبا، أريد شراء هذه المنتجات:\n\n${cartItems.map(item => 
-      `• ${item.name} - الكمية: ${item.quantity} - السعر: $${(typeof item.price === 'string' ? parseFloat(item.price) : item.price) * item.quantity}`
-    ).join('\n')}\n\nالمجموع الكلي: $${getTotalPrice()}`;
-    
-    const whatsappUrl = `https://wa.me/${settings.contactInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    try {
+      const message = `مرحبا، أريد شراء هذه المنتجات:\n\n${cartItems.map(item => 
+        `• ${item.name} - الكمية: ${item.quantity} - السعر: $${(typeof item.price === 'string' ? parseFloat(item.price) : item.price) * item.quantity}`
+      ).join('\n')}\n\nالمجموع الكلي: $${getTotalPrice()}`;
+      
+      const cleanNumber = settings.contactInfo.whatsapp.replace(/\D/g, '');
+      const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    } catch (error) {
+      console.error('Error creating WhatsApp message:', error);
+    }
   };
 
-  if (isLoading || !settings) return null;
+  if (isLoading) return null;
+
+  // Fallback cart texts
+  const cartTexts = settings?.pageTexts?.cart || {
+    cartTitle: 'سلة المشتريات',
+    emptyCartMessage: 'سلة المشتريات فارغة',
+    purchaseButton: 'إتمام الشراء',
+    purchaseNote: 'ملاحظة: سيتم تحويلك إلى واتساب لإتمام عملية الشراء'
+  };
 
   return (
     <>
@@ -61,7 +107,7 @@ const GlobalCart = () => {
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white">
-                {settings.pageTexts.cart.cartTitle}
+                {cartTexts.cartTitle}
               </h2>
               <button
                 onClick={() => setIsOpen(false)}
@@ -73,7 +119,7 @@ const GlobalCart = () => {
 
             {cartItems.length === 0 ? (
               <p className="text-gray-400 text-center py-8">
-                {settings.pageTexts.cart.emptyCartMessage}
+                {cartTexts.emptyCartMessage}
               </p>
             ) : (
               <div className="space-y-4">
@@ -126,12 +172,13 @@ const GlobalCart = () => {
                   <button
                     onClick={handlePurchase}
                     className="w-full glow-button mb-3"
+                    disabled={!settings?.contactInfo?.whatsapp}
                   >
-                    {settings.pageTexts.cart.purchaseButton}
+                    {cartTexts.purchaseButton}
                   </button>
                   
                   <p className="text-xs text-gray-400 text-center">
-                    {settings.pageTexts.cart.purchaseNote}
+                    {cartTexts.purchaseNote}
                   </p>
                 </div>
               </div>

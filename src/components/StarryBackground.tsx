@@ -12,22 +12,65 @@ const StarryBackground = () => {
       try {
         setIsLoading(true);
         const loadedSettings = await SettingsService.getSiteSettings();
+        console.log('StarryBackground: Loaded settings:', loadedSettings);
         setSettings(loadedSettings);
       } catch (error) {
         console.error('StarryBackground: Error loading settings:', error);
+        // Use default settings if loading fails
+        setSettings({
+          backgroundSettings: {
+            type: 'color',
+            value: '#000000',
+            starCount: 100,
+            meteorCount: 5,
+            animationSpeed: 'normal',
+            starOpacity: 0.8,
+            meteorOpacity: 0.9,
+            starSize: 'medium',
+            meteorSize: 'medium',
+            meteorDirection: 'down',
+            meteorColors: ['#ffffff', '#3b82f6', '#8b5cf6']
+          }
+        } as any);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadSettings();
+
+    // Listen for settings updates
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      console.log('StarryBackground: Settings updated via event');
+      setSettings(event.detail.settings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
   }, []);
 
-  if (isLoading || !settings || !settings.backgroundSettings) {
+  // Don't render anything while loading or if no settings
+  if (isLoading) {
     return null;
   }
 
-  const backgroundSettings = settings.backgroundSettings;
+  // Use default background settings if not available
+  const backgroundSettings = settings?.backgroundSettings || {
+    type: 'color',
+    value: '#000000',
+    starCount: 100,
+    meteorCount: 5,
+    animationSpeed: 'normal',
+    starOpacity: 0.8,
+    meteorOpacity: 0.9,
+    starSize: 'medium',
+    meteorSize: 'medium',
+    meteorDirection: 'down',
+    meteorColors: ['#ffffff', '#3b82f6', '#8b5cf6']
+  };
 
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -35,7 +78,7 @@ const StarryBackground = () => {
       <div 
         className="absolute inset-0"
         style={{ 
-          backgroundColor: backgroundSettings.type === 'color' ? backgroundSettings.value : 'transparent',
+          backgroundColor: backgroundSettings.type === 'color' ? (backgroundSettings.value || '#000000') : 'transparent',
           backgroundImage: backgroundSettings.type === 'image' ? `url(${backgroundSettings.value})` : 'none',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -45,7 +88,7 @@ const StarryBackground = () => {
       
       {/* Stars */}
       <div className="absolute inset-0">
-        {Array.from({ length: backgroundSettings.starCount || 80 }).map((_, i) => (
+        {Array.from({ length: backgroundSettings.starCount || 100 }).map((_, i) => (
           <div
             key={i}
             className="absolute animate-pulse"
