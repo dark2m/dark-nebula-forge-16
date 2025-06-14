@@ -34,18 +34,10 @@ const ProductVideoViewer: React.FC<ProductVideoViewerProps> = ({ videos, product
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="group relative overflow-hidden bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-red-500/20 backdrop-blur-sm border border-purple-500/30 rounded-xl px-4 py-2.5 text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 hover:border-purple-400/50"
+        className="inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 rounded-lg transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-purple-500/50"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        <div className="relative flex items-center gap-2 text-sm font-medium">
-          <div className="relative">
-            <Video className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
-            <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-          </div>
-          <span className="bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent font-semibold">
-            الفيديوهات ({videos.length})
-          </span>
-        </div>
+        <Video className="w-3.5 h-3.5" />
+        <span>الفيديوهات ({videos.length})</span>
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
