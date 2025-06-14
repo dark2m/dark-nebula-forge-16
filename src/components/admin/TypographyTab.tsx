@@ -10,11 +10,19 @@ const TypographyTab = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadedSettings = SettingsService.getSiteSettings();
-    console.log('TypographyTab: Loading settings:', loadedSettings);
-    setSettings(loadedSettings);
+    // Load settings asynchronously
+    const loadSettings = async () => {
+      try {
+        const loadedSettings = await SettingsService.getSiteSettingsAsync();
+        setSettings(loadedSettings);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
 
-    // الاستماع لتحديثات الإعدادات
+    loadSettings();
+
+    // Listen for settings updates
     const handleSettingsUpdate = (event: CustomEvent) => {
       console.log('TypographyTab: Settings updated via event:', event.detail.settings);
       setSettings(event.detail.settings);

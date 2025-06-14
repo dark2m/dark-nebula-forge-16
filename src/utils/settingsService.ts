@@ -1,59 +1,73 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { SiteSettings } from '../types/admin';
+import SupabaseSettingsService from './supabaseSettingsService';
 
-class SupabaseSettingsService {
-  private static SETTINGS_ID = 'main-site-settings';
+class SettingsService {
+  private static cachedSettings: SiteSettings | null = null;
+  private static isLoading = false;
 
-  static async getSiteSettings(): Promise<SiteSettings> {
+  static getSiteSettings(): SiteSettings {
+    // If we have cached settings, return them immediately
+    if (this.cachedSettings) {
+      return this.cachedSettings;
+    }
+
+    // Return default settings immediately for synchronous access
+    const defaultSettings = this.getDefaultSettings();
+    this.cachedSettings = defaultSettings;
+
+    // Load from Supabase in the background
+    if (!this.isLoading) {
+      this.loadSettingsFromSupabase();
+    }
+
+    return defaultSettings;
+  }
+
+  private static async loadSettingsFromSupabase() {
+    this.isLoading = true;
     try {
-      console.log('SupabaseSettingsService: Getting settings from Supabase...');
+      const settings = await SupabaseSettingsService.getSiteSettings();
+      this.cachedSettings = settings;
       
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('settings_data')
-        .eq('id', this.SETTINGS_ID)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching settings:', error);
-        return this.getDefaultSettings();
-      }
-
-      if (!data) {
-        console.log('No settings found, creating defaults...');
-        const defaultSettings = this.getDefaultSettings();
-        await this.saveSiteSettings(defaultSettings);
-        return defaultSettings;
-      }
-
-      console.log('SupabaseSettingsService: Loaded settings from Supabase');
-      return data.settings_data as unknown as SiteSettings;
+      // Dispatch event to notify components of settings update
+      window.dispatchEvent(new CustomEvent('settingsUpdated', {
+        detail: { settings }
+      }));
     } catch (error) {
-      console.error('SupabaseSettingsService: Error loading settings:', error);
+      console.error('Error loading settings from Supabase:', error);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  static async getSiteSettingsAsync(): Promise<SiteSettings> {
+    try {
+      const settings = await SupabaseSettingsService.getSiteSettings();
+      this.cachedSettings = settings;
+      return settings;
+    } catch (error) {
+      console.error('Error loading settings:', error);
       return this.getDefaultSettings();
     }
   }
 
-  static async saveSiteSettings(settings: SiteSettings): Promise<boolean> {
+  static saveSiteSettings(settings: SiteSettings): boolean {
     try {
-      console.log('SupabaseSettingsService: Saving settings to Supabase:', settings);
-
-      const { error } = await supabase
-        .from('site_settings')
-        .upsert({
-          id: this.SETTINGS_ID,
-          settings_data: settings as any
-        });
-
-      if (error) {
-        console.error('Error saving settings:', error);
-        return false;
-      }
-
-      console.log('SupabaseSettingsService: Settings saved successfully');
+      this.cachedSettings = settings;
+      
+      // Save to Supabase in the background
+      SupabaseSettingsService.saveSiteSettings(settings);
+      
+      // Dispatch event to notify components
+      window.dispatchEvent(new CustomEvent('settingsUpdated', {
+        detail: { settings }
+      }));
+      
       return true;
     } catch (error) {
-      console.error('SupabaseSettingsService: Error saving settings:', error);
+      console.error('Error saving settings:', error);
       return false;
     }
   }
@@ -188,6 +202,11 @@ class SupabaseSettingsService {
       }
     };
   }
+
+  // Clear cache method for forcing refresh
+  static clearCache() {
+    this.cachedSettings = null;
+  }
 }
 
-export default SupabaseSettingsService;
+export default SettingsService;

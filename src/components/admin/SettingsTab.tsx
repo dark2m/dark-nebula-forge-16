@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Save, Settings, Palette, Type, Globe } from 'lucide-react';
 import SettingsService from '../../utils/settingsService';
@@ -12,11 +11,20 @@ const SettingsTab = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadedSettings = SettingsService.getSiteSettings();
-    setSettings(loadedSettings);
-    setOriginalSettings(loadedSettings);
+    // Load settings asynchronously
+    const loadSettings = async () => {
+      try {
+        const loadedSettings = await SettingsService.getSiteSettingsAsync();
+        setSettings(loadedSettings);
+        setOriginalSettings(loadedSettings);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
 
-    // الاستماع لتحديثات الإعدادات
+    loadSettings();
+
+    // Listen for settings updates
     const handleSettingsUpdate = (event: CustomEvent) => {
       console.log('SettingsTab: Settings updated via event:', event.detail.settings);
       setSettings(event.detail.settings);
@@ -31,7 +39,7 @@ const SettingsTab = () => {
   }, []);
 
   useEffect(() => {
-    // تحقق من وجود تغييرات
+    // Check for changes
     const changed = JSON.stringify(settings) !== JSON.stringify(originalSettings);
     setHasChanges(changed);
   }, [settings, originalSettings]);
