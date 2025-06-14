@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '../types/admin';
 
@@ -23,9 +24,9 @@ class SupabaseProductService {
         price: Number(item.price),
         category: item.category,
         description: item.description || '',
-        features: Array.isArray(item.features) ? (item.features as any[]).filter((f): f is string => typeof f === 'string') : [],
-        images: Array.isArray(item.images) ? (item.images as any[]).filter((img): img is string => typeof img === 'string') : [],
-        videos: Array.isArray(item.videos) ? (item.videos as any[]).filter((vid): vid is string => typeof vid === 'string') : [],
+        features: Array.isArray(item.features) ? item.features : [],
+        images: Array.isArray(item.images) ? item.images : [],
+        videos: Array.isArray(item.videos) ? item.videos : [],
         textSize: item.text_size as 'small' | 'medium' | 'large' || 'medium',
         titleSize: item.title_size as 'small' | 'medium' | 'large' | 'xl' || 'large'
       }));
@@ -48,9 +49,9 @@ class SupabaseProductService {
         price: product.price,
         category: product.category,
         description: product.description,
-        features: product.features as any,
-        images: product.images as any,
-        videos: product.videos as any,
+        features: product.features,
+        images: product.images,
+        videos: product.videos,
         text_size: product.textSize,
         title_size: product.titleSize
       };
@@ -76,15 +77,14 @@ class SupabaseProductService {
     try {
       console.log('SupabaseProductService: Adding new product:', product);
 
-      // Don't include id when inserting - let the database auto-generate it
       const productData = {
         name: product.name,
         price: product.price,
         category: product.category,
         description: product.description,
-        features: product.features as any,
-        images: product.images as any,
-        videos: product.videos as any,
+        features: product.features,
+        images: product.images,
+        videos: product.videos,
         text_size: product.textSize,
         title_size: product.titleSize
       };
@@ -107,9 +107,9 @@ class SupabaseProductService {
         price: Number(data.price),
         category: data.category,
         description: data.description || '',
-        features: Array.isArray(data.features) ? (data.features as any[]).filter((f): f is string => typeof f === 'string') : [],
-        images: Array.isArray(data.images) ? (data.images as any[]).filter((img): img is string => typeof img === 'string') : [],
-        videos: Array.isArray(data.videos) ? (data.videos as any[]).filter((vid): vid is string => typeof vid === 'string') : [],
+        features: Array.isArray(data.features) ? data.features : [],
+        images: Array.isArray(data.images) ? data.images : [],
+        videos: Array.isArray(data.videos) ? data.videos : [],
         textSize: data.text_size as 'small' | 'medium' | 'large' || 'medium',
         titleSize: data.title_size as 'small' | 'medium' | 'large' | 'xl' || 'large'
       };
@@ -132,9 +132,9 @@ class SupabaseProductService {
       if (updates.price !== undefined) updateData.price = updates.price;
       if (updates.category !== undefined) updateData.category = updates.category;
       if (updates.description !== undefined) updateData.description = updates.description;
-      if (updates.features !== undefined) updateData.features = updates.features as any;
-      if (updates.images !== undefined) updateData.images = updates.images as any;
-      if (updates.videos !== undefined) updateData.videos = updates.videos as any;
+      if (updates.features !== undefined) updateData.features = updates.features;
+      if (updates.images !== undefined) updateData.images = updates.images;
+      if (updates.videos !== undefined) updateData.videos = updates.videos;
       if (updates.textSize !== undefined) updateData.text_size = updates.textSize;
       if (updates.titleSize !== undefined) updateData.title_size = updates.titleSize;
 

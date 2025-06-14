@@ -1,4 +1,3 @@
-
 // Admin system type definitions
 export interface Product {
   id: number;
@@ -139,8 +138,6 @@ export interface SiteSettings {
     visible: boolean;
   }>;
   contactInfo: {
-    telegram: string;
-    discord: string;
     whatsapp: string;
     email: string;
     phone: string;

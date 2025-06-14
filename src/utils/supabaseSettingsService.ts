@@ -28,7 +28,7 @@ class SupabaseSettingsService {
       }
 
       console.log('SupabaseSettingsService: Loaded settings from Supabase');
-      return data.settings_data as unknown as SiteSettings;
+      return data.settings_data as SiteSettings;
     } catch (error) {
       console.error('SupabaseSettingsService: Error loading settings:', error);
       return this.getDefaultSettings();
@@ -43,7 +43,7 @@ class SupabaseSettingsService {
         .from('site_settings')
         .upsert({
           id: this.SETTINGS_ID,
-          settings_data: settings as any
+          settings_data: settings
         });
 
       if (error) {
