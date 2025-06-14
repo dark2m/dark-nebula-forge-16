@@ -34,12 +34,30 @@ const ProductImageViewer: React.FC<ProductImageViewerProps> = ({ images, product
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="group relative inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-blue-400/60 rounded-lg transition-all duration-300 hover:scale-[1.05] focus:outline-none focus:ring-2 focus:ring-blue-500/50 overflow-hidden"
+        className="group relative inline-flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-gradient-to-r from-blue-500/10 via-blue-400/15 to-blue-500/10 hover:from-blue-500/20 hover:via-blue-400/30 hover:to-blue-500/20 text-white border border-blue-400/30 hover:border-blue-300/70 rounded-lg transition-all duration-500 hover:scale-[1.08] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 overflow-hidden transform hover:-translate-y-0.5"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/20 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
-        <Image className="w-3.5 h-3.5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12 relative z-10" />
-        <span className="relative z-10 transition-all duration-300 group-hover:text-blue-200">الصور ({images.length})</span>
-        <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        {/* Animated background waves */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-400/30 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out"></div>
+        <div className="absolute inset-0 bg-gradient-to-l from-cyan-400/0 via-cyan-300/20 to-cyan-400/0 translate-x-[100%] group-hover:translate-x-[-200%] transition-transform duration-1200 ease-in-out delay-100"></div>
+        
+        {/* Floating particles */}
+        <div className="absolute top-1 left-2 w-1 h-1 bg-blue-300 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-500 delay-200"></div>
+        <div className="absolute bottom-1 right-3 w-1 h-1 bg-cyan-300 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-all duration-500 delay-300"></div>
+        <div className="absolute top-2 right-1 w-0.5 h-0.5 bg-blue-200 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-all duration-500 delay-400"></div>
+        
+        <Image className="w-3.5 h-3.5 transition-all duration-500 group-hover:scale-125 group-hover:rotate-[360deg] group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.8)] relative z-10" />
+        <span className="relative z-10 transition-all duration-500 group-hover:text-blue-100 group-hover:font-semibold group-hover:tracking-wide">الصور ({images.length})</span>
+        
+        {/* Pulsing indicator */}
+        <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-pulse opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:animate-ping"></div>
+        
+        {/* Corner sparkles */}
+        <div className="absolute -top-0.5 -left-0.5 w-2 h-2 opacity-0 group-hover:opacity-100 transition-all duration-700 delay-100">
+          <div className="w-full h-full bg-gradient-to-br from-blue-300 to-cyan-300 rounded-full animate-spin"></div>
+        </div>
+        <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 opacity-0 group-hover:opacity-100 transition-all duration-700 delay-200">
+          <div className="w-full h-full bg-gradient-to-br from-cyan-300 to-blue-300 rounded-full animate-spin"></div>
+        </div>
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
