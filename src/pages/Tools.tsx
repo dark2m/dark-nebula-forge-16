@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import SettingsService from '../utils/settingsService';
 import type { SiteSettings, Tool } from '../types/admin';
@@ -29,6 +30,27 @@ const Tools = () => {
       window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
     };
   }, []);
+
+  // إخفاء شريط المهام عند عرض أداة مخصصة
+  useEffect(() => {
+    const navbar = document.querySelector('nav');
+    if (selectedTool && selectedTool.customHtml) {
+      if (navbar) {
+        navbar.style.display = 'none';
+      }
+    } else {
+      if (navbar) {
+        navbar.style.display = 'block';
+      }
+    }
+
+    // تنظيف عند إلغاء التحميل
+    return () => {
+      if (navbar) {
+        navbar.style.display = 'block';
+      }
+    };
+  }, [selectedTool]);
 
   if (loading) {
     return (
@@ -75,20 +97,21 @@ const Tools = () => {
         <StarryBackground />
         
         <div className="relative z-10">
-          {/* شريط علوي للعودة */}
-          <div className="bg-black/50 backdrop-blur-sm border-b border-white/20 p-4">
-            <div className="container mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{selectedTool.icon}</span>
-                <h1 className="text-xl font-bold text-white">{selectedTool.title}</h1>
+          {/* زر العودة الجميل مع الأنيميشن */}
+          <div className="fixed top-6 right-6 z-50">
+            <button
+              onClick={closeCustomTool}
+              className="group relative overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-1 rounded-full hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl"
+            >
+              <div className="bg-black/80 backdrop-blur-sm rounded-full px-6 py-3 flex items-center gap-3 group-hover:bg-black/60 transition-all duration-300">
+                <ArrowLeft className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" />
+                <span className="text-white font-medium group-hover:text-gray-100 transition-colors duration-300">
+                  العودة للأدوات
+                </span>
               </div>
-              <button
-                onClick={closeCustomTool}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
-              >
-                العودة للأدوات
-              </button>
-            </div>
+              {/* تأثير الوميض */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+            </button>
           </div>
 
           {/* عرض الكود المخصص */}

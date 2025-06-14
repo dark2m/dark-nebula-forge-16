@@ -5,19 +5,6 @@ import StarryBackground from '../components/StarryBackground';
 import CustomerAuthService from '../utils/customerAuthService';
 import CustomerChat from '../components/CustomerChat';
 import { useToast } from '@/hooks/use-toast';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import EmailService from '../utils/emailService';
 
 const CustomerSupport = () => {
   const [email, setEmail] = useState('');
@@ -27,10 +14,7 @@ const CustomerSupport = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [otp, setOtp] = useState('');
   const [currentView, setCurrentView] = useState('login'); // 'login' or 'register'
   const [loginField, setLoginField] = useState(''); // للإيميل أو اسم المستخدم
   const { toast } = useToast();
@@ -120,53 +104,26 @@ const CustomerSupport = () => {
 
     setIsLoading(true);
     
-    // توليد كود التحقق البسيط
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
-    setVerificationCode(code);
+    // تسجيل مباشر بدون تحقق
+    const registrationSuccess = CustomerAuthService.registerCustomer(email, password, username);
+    console.log('Registration result:', registrationSuccess);
     
-    console.log('Generated verification code:', code);
-    
-    // عرض نافذة التحقق مباشرة
-    setShowVerificationDialog(true);
-    toast({
-      title: "كود التحقق",
-      description: `كود التحقق الخاص بك هو: ${code}`,
-      duration: 10000
-    });
-    
-    setIsLoading(false);
-  };
-
-  const handleVerifyCode = () => {
-    console.log('Verifying code:', otp, 'Expected:', verificationCode);
-    
-    if (otp === verificationCode) {
-      const registrationSuccess = CustomerAuthService.registerCustomer(email, password, username);
-      console.log('Registration result:', registrationSuccess);
-      
-      if (registrationSuccess) {
-        setIsRegistered(true);
-        setShowChat(true);
-        setShowVerificationDialog(false);
-        setOtp('');
-        toast({
-          title: "تم التسجيل بنجاح",
-          description: "تم إنشاء حسابك بنجاح. يمكنك الآن الدردشة مع فريق الدعم",
-        });
-      } else {
-        toast({
-          title: "خطأ في التسجيل",
-          description: "حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى",
-          variant: "destructive"
-        });
-      }
+    if (registrationSuccess) {
+      setIsRegistered(true);
+      setShowChat(true);
+      toast({
+        title: "تم التسجيل بنجاح",
+        description: "تم إنشاء حسابك بنجاح. يمكنك الآن الدردشة مع فريق الدعم",
+      });
     } else {
       toast({
-        title: "كود التحقق غير صحيح",
-        description: "كود التحقق الذي أدخلته غير صحيح. يرجى التحقق والمحاولة مرة أخرى",
+        title: "خطأ في التسجيل",
+        description: "حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى",
         variant: "destructive"
       });
     }
+    
+    setIsLoading(false);
   };
 
   const handleForgotPassword = () => {
@@ -185,8 +142,6 @@ const CustomerSupport = () => {
     setUsername('');
     setPassword('');
     setLoginField('');
-    setOtp('');
-    setVerificationCode('');
     setCurrentView('login');
     toast({
       title: "تم تسجيل الخروج",
@@ -372,66 +327,6 @@ const CustomerSupport = () => {
           ) : null}
         </div>
       </div>
-
-      {/* نافذة التحقق من الكود */}
-      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
-        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-sm border border-white/30">
-          <DialogHeader>
-            <DialogTitle className="text-white">التحقق من البريد الإلكتروني</DialogTitle>
-            <DialogDescription className="text-gray-300">
-              أدخل رمز التحقق المكون من 4 أرقام.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="text-center">
-              <div className="bg-blue-500/20 border border-blue-500/50 rounded-lg p-4 mb-4">
-                <p className="text-blue-200 text-sm mb-2">كود التحقق الخاص بك:</p>
-                <p className="text-2xl font-bold text-blue-300">{verificationCode}</p>
-              </div>
-              
-              <div className="font-semibold">
-                <InputOTP
-                  maxLength={4}
-                  value={otp}
-                  onChange={setOtp}
-                >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                  </InputOTPGroup>
-                </InputOTP>
-              </div>
-            </div>
-          </div>
-          <button onClick={handleVerifyCode} className="glow-button w-full py-3">
-            تحقق
-          </button>
-        </DialogContent>
-      </Dialog>
-
-      {/* نافذة نسيان كلمة المرور */}
-      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
-        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-sm border border-white/30">
-          <DialogHeader>
-            <DialogTitle className="text-white">إعادة تعيين كلمة المرور</DialogTitle>
-            <DialogDescription className="text-gray-300">
-              أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين كلمة المرور
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <input
-              type="email"
-              placeholder="أدخل بريدك الإلكتروني"
-              className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
-            />
-          </div>
-          <button onClick={handleForgotPassword} className="glow-button w-full py-3">
-            إرسال رابط إعادة التعيين
-          </button>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
