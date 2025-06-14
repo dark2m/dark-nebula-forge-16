@@ -8,7 +8,7 @@ import CustomerChatService, { type ChatMessage, type AdminMessage } from '../uti
 import { useToast } from '@/hooks/use-toast';
 
 interface CustomerChatProps {
-  customerId: number;
+  customerId: string;
   customerEmail: string;
 }
 
@@ -36,9 +36,9 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
   };
 
   const loadMessages = () => {
-    const customerMessages = CustomerChatService.getCustomerMessages(customerId.toString());
+    const customerMessages = CustomerChatService.getCustomerMessages(customerId);
     setMessages(customerMessages);
-    CustomerChatService.markMessagesAsRead(customerId.toString());
+    CustomerChatService.markMessagesAsRead(customerId);
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,7 +170,7 @@ const CustomerChat: React.FC<CustomerChatProps> = ({ customerId, customerEmail }
     }
     
     const success = CustomerChatService.sendCustomerMessage(
-      customerId.toString(), 
+      customerId, 
       customerEmail, 
       messageText, 
       attachments
