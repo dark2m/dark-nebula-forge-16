@@ -43,7 +43,7 @@ const CustomerSupport = () => {
         .ring i {
           position: absolute;
           inset: 0;
-          border: 2px solid #fff;
+          border: none;
           transition: 0.5s;
         }
         
@@ -63,7 +63,7 @@ const CustomerSupport = () => {
         }
         
         .ring:hover i {
-          border: 6px solid var(--clr);
+          border: none;
           filter: drop-shadow(0 0 20px var(--clr));
         }
         
@@ -113,7 +113,7 @@ const CustomerSupport = () => {
           width: 100%;
           padding: 12px 20px;
           background: transparent;
-          border: 2px solid #fff;
+          border: none;
           border-radius: 40px;
           font-size: 1.2em;
           color: #fff;
@@ -126,7 +126,7 @@ const CustomerSupport = () => {
         }
         
         .ring-input:focus {
-          border-color: #0078ff;
+          border: none;
           box-shadow: 0 0 20px rgba(0, 120, 255, 0.3);
         }
         
