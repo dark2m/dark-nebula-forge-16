@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ProductsTab from './ProductsTab';
 import SiteControlTab from './SiteControlTab';
@@ -48,10 +49,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       case 'products':
         return (
           <ProductsTab
-            products={products}
-            addProduct={addProduct}
-            updateProduct={updateProduct}
-            deleteProduct={deleteProduct}
             canAccess={canAccess}
           />
         );

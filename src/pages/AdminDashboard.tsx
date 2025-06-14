@@ -26,7 +26,6 @@ const AdminDashboard = () => {
 
   const { addProduct, updateProduct, deleteProduct } = useProductManagement(
     canAccess,
-    setProducts,
     toast
   );
 

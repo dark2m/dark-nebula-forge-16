@@ -127,6 +127,10 @@ class ProductService {
       window.dispatchEvent(new CustomEvent('productsUpdated', { 
         detail: { products: validProducts } 
       }));
+      
+      // حفظ نسخة احتياطية
+      this.createBackup(validProducts);
+      
     } catch (error) {
       console.error('ProductService: Error saving products:', error);
       
@@ -152,6 +156,39 @@ class ProductService {
         throw new Error('فشل في حفظ البيانات - مساحة التخزين ممتلئة');
       }
     }
+  }
+
+  // إنشاء نسخة احتياطية
+  private static createBackup(products: Product[]) {
+    try {
+      const backup = {
+        timestamp: new Date().toISOString(),
+        products: products,
+        version: '1.0'
+      };
+      localStorage.setItem('products_backup', JSON.stringify(backup));
+      console.log('ProductService: Backup created successfully');
+    } catch (error) {
+      console.error('ProductService: Error creating backup:', error);
+    }
+  }
+
+  // استعادة النسخة الاحتياطية
+  static restoreBackup(): boolean {
+    try {
+      const backup = localStorage.getItem('products_backup');
+      if (backup) {
+        const parsedBackup = JSON.parse(backup);
+        if (parsedBackup.products && Array.isArray(parsedBackup.products)) {
+          this.saveProducts(parsedBackup.products);
+          console.log('ProductService: Backup restored successfully');
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('ProductService: Error restoring backup:', error);
+    }
+    return false;
   }
 
   static addProduct(product: Omit<Product, 'id'>): Product {
@@ -218,6 +255,37 @@ class ProductService {
       };
     } catch (error) {
       return { used: 0, available: 0, percentage: 0 };
+    }
+  }
+
+  // تنظيف وصيانة البيانات
+  static performMaintenance(): void {
+    try {
+      console.log('ProductService: Performing maintenance...');
+      
+      // تنظيف البيانات المكررة
+      const products = this.getProducts();
+      const uniqueProducts = products.filter((product, index, self) => 
+        index === self.findIndex(p => p.id === product.id)
+      );
+      
+      if (uniqueProducts.length !== products.length) {
+        console.log('ProductService: Removed duplicate products');
+        this.saveProducts(uniqueProducts);
+      }
+      
+      // تنظيف البيانات القديمة
+      const oldKeys = ['old_products', 'temp_products', 'draft_products'];
+      oldKeys.forEach(key => {
+        if (localStorage.getItem(key)) {
+          localStorage.removeItem(key);
+          console.log(`ProductService: Removed old key: ${key}`);
+        }
+      });
+      
+      console.log('ProductService: Maintenance completed');
+    } catch (error) {
+      console.error('ProductService: Error during maintenance:', error);
     }
   }
 }

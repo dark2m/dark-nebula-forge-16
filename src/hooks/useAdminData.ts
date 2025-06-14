@@ -23,8 +23,7 @@ export const useAdminData = () => {
     }
     setCurrentUser(user);
     
-    // تنظيف وتحميل المنتجات
-    ProductService.cleanupStorage();
+    // تحميل المنتجات
     setProducts(ProductService.getProducts());
     
     // تحميل الإعدادات
@@ -39,10 +38,18 @@ export const useAdminData = () => {
       setSiteSettings(event.detail.settings);
     };
 
+    // الاستماع لتحديثات المنتجات
+    const handleProductsUpdate = (event: CustomEvent) => {
+      console.log('useAdminData: Products updated via event:', event.detail.products);
+      setProducts(event.detail.products);
+    };
+
     window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    window.addEventListener('productsUpdated', handleProductsUpdate as EventListener);
     
     return () => {
       window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+      window.removeEventListener('productsUpdated', handleProductsUpdate as EventListener);
     };
   }, [navigate]);
 

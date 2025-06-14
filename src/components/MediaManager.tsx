@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Upload, Video } from 'lucide-react';
+import { Plus, X, Upload, Video, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +19,8 @@ const MediaManager: React.FC<MediaManagerProps> = ({
   onVideosChange
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [localImages, setLocalImages] = useState<string[]>(images);
+  const [localVideos, setLocalVideos] = useState<string[]>(videos);
   const { toast } = useToast();
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,13 +57,15 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     }
 
     if (newImages.length > 0) {
-      const updatedImages = [...images, ...newImages];
-      console.log('Calling onImagesChange for product:', productId, 'with images:', updatedImages.length);
+      const updatedImages = [...localImages, ...newImages];
+      setLocalImages(updatedImages);
+      
+      // حفظ فوري
       onImagesChange(productId, updatedImages);
       
       toast({
         title: "تم إضافة الصور",
-        description: `تم إضافة ${newImages.length} صورة بنجاح`
+        description: `تم إضافة ${newImages.length} صورة بنجاح وحفظها`
       });
     }
     
@@ -103,13 +107,15 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     }
 
     if (newVideos.length > 0) {
-      const updatedVideos = [...videos, ...newVideos];
-      console.log('Calling onVideosChange for product:', productId, 'with videos:', updatedVideos.length);
+      const updatedVideos = [...localVideos, ...newVideos];
+      setLocalVideos(updatedVideos);
+      
+      // حفظ فوري
       onVideosChange(productId, updatedVideos);
       
       toast({
         title: "تم إضافة الفيديوهات",
-        description: `تم إضافة ${newVideos.length} فيديو بنجاح`
+        description: `تم إضافة ${newVideos.length} فيديو بنجاح وحفظها`
       });
     }
     
@@ -187,39 +193,58 @@ const MediaManager: React.FC<MediaManagerProps> = ({
   };
 
   const removeImage = (index: number) => {
-    const updatedImages = images.filter((_, i) => i !== index);
-    console.log('Removing image from product:', productId);
+    const updatedImages = localImages.filter((_, i) => i !== index);
+    setLocalImages(updatedImages);
     onImagesChange(productId, updatedImages);
     
     toast({
       title: "تم حذف الصورة",
-      description: "تم حذف الصورة بنجاح"
+      description: "تم حذف الصورة وحفظ التغييرات"
     });
   };
 
   const removeVideo = (index: number) => {
-    const updatedVideos = videos.filter((_, i) => i !== index);
-    console.log('Removing video from product:', productId);
+    const updatedVideos = localVideos.filter((_, i) => i !== index);
+    setLocalVideos(updatedVideos);
     onVideosChange(productId, updatedVideos);
     
     toast({
       title: "تم حذف الفيديو",
-      description: "تم حذف الفيديو بنجاح"
+      description: "تم حذف الفيديو وحفظ التغييرات"
     });
   };
+
+  // تحديث الحالة المحلية عند تغيير الخصائص
+  React.useEffect(() => {
+    setLocalImages(images);
+  }, [images]);
+
+  React.useEffect(() => {
+    setLocalVideos(videos);
+  }, [videos]);
 
   return (
     <div className="space-y-6">
       {/* Images Section */}
       <div>
-        <label className="block text-gray-400 text-sm mb-3">
-          صور المنتج ({images.length})
-        </label>
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-gray-400 text-sm">
+            صور المنتج ({localImages.length})
+          </label>
+          <Button
+            onClick={() => onImagesChange(productId, localImages)}
+            size="sm"
+            className="text-xs"
+          >
+            <Save className="w-3 h-3 mr-1" />
+            حفظ الصور
+          </Button>
+        </div>
         
         {/* Existing Images */}
-        {images.length > 0 && (
+        {localImages.length > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-3 max-h-64 overflow-y-auto">
-            {images.map((image, index) => (
+            {localImages.map((image, index) => (
               <div key={index} className="relative group">
                 <img 
                   src={image} 
@@ -267,14 +292,24 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 
       {/* Videos Section */}
       <div>
-        <label className="block text-gray-400 text-sm mb-3">
-          فيديوهات المنتج ({videos.length})
-        </label>
+        <div className="flex items-center justify-between mb-3">
+          <label className="block text-gray-400 text-sm">
+            فيديوهات المنتج ({localVideos.length})
+          </label>
+          <Button
+            onClick={() => onVideosChange(productId, localVideos)}
+            size="sm"
+            className="text-xs"
+          >
+            <Save className="w-3 h-3 mr-1" />
+            حفظ الفيديوهات
+          </Button>
+        </div>
         
         {/* Existing Videos */}
-        {videos.length > 0 && (
+        {localVideos.length > 0 && (
           <div className="space-y-3 mb-3 max-h-64 overflow-y-auto">
-            {videos.map((video, index) => (
+            {localVideos.map((video, index) => (
               <div key={index} className="relative group border border-white/20 rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -328,9 +363,13 @@ const MediaManager: React.FC<MediaManagerProps> = ({
         </div>
       </div>
 
-      {(images.length > 0 || videos.length > 0) && (
+      {(localImages.length > 0 || localVideos.length > 0) && (
         <div className="text-xs text-gray-500 text-center">
-          إجمالي الملفات: {images.length + videos.length}
+          إجمالي الملفات: {localImages.length + localVideos.length}
+          <br />
+          <span className="text-green-400">
+            ✓ يتم الحفظ التلقائي عند إضافة أو حذف الملفات
+          </span>
         </div>
       )}
     </div>

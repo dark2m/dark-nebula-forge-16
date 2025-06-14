@@ -35,7 +35,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
     const newProduct = addProduct();
     
     if (newProduct) {
-      // تحديث الفئة والاسم للمنتج الجديد
       setTimeout(() => {
         updateProduct(newProduct.id, { 
           category, 
@@ -74,16 +73,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
     }
   };
 
-  const removeBackgroundImage = (productId: number) => {
-    console.log('Removing background image for product:', productId);
-    updateProduct(productId, { backgroundImage: '' });
-    
-    toast({
-      title: "تم حذف صورة الخلفية",
-      description: "تم حذف صورة الخلفية للمنتج بنجاح"
-    });
-  };
-
   const getProductValue = (product: Product, field: string) => {
     const productId = product.id;
     const editedValue = editedProducts[productId]?.[field];
@@ -106,7 +95,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
     return editedProducts[productId] && Object.keys(editedProducts[productId]).length > 0;
   };
 
-  // إنشاء دالة منفصلة لكل منتج لضمان عدم خلط المعرفات
   const createMediaChangeHandler = (productId: number) => {
     return {
       onImagesChange: (receivedProductId: number, images: string[]) => {
@@ -118,6 +106,10 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
         }
         
         updateProduct(receivedProductId, { images });
+        toast({
+          title: "تم حفظ الصور",
+          description: "تم حفظ الصور بنجاح"
+        });
       },
       onVideosChange: (receivedProductId: number, videos: string[]) => {
         console.log(`Videos change handler called for product ${receivedProductId}`);
@@ -128,6 +120,10 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
         }
         
         updateProduct(receivedProductId, { videos });
+        toast({
+          title: "تم حفظ الفيديوهات",
+          description: "تم حفظ الفيديوهات بنجاح"
+        });
       }
     };
   };
@@ -226,7 +222,13 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
 
                 <ProductFeaturesManager
                   features={getProductValue(product, 'features') || []}
-                  onFeaturesChange={(features) => handleProductChange(product.id, 'features', features)}
+                  onFeaturesChange={(features) => {
+                    handleProductChange(product.id, 'features', features);
+                    // حفظ فوري للمميزات
+                    setTimeout(() => {
+                      updateProduct(product.id, { features });
+                    }, 500);
+                  }}
                 />
 
                 <div className="flex justify-between items-center">
