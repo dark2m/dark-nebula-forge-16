@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, Code, Bot, ArrowLeft, User, LogIn } from 'lucide-react';
+import { Shield, Code, Bot, ArrowLeft, User } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage from '../utils/adminStorage';
 import GlobalCart from '../components/GlobalCart';
@@ -63,9 +63,9 @@ const Home = () => {
       <StarryBackground />
       <GlobalCart />
       
-      {/* Auth Section */}
-      <div className="absolute top-6 left-6 z-20">
-        {user ? (
+      {/* Auth Section - Show only dashboard link for logged in users */}
+      {user && (
+        <div className="absolute top-6 left-6 z-20">
           <Link 
             to="/dashboard"
             className="flex items-center space-x-2 space-x-reverse bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-2 text-white hover:bg-white/20 transition-all duration-300"
@@ -73,16 +73,8 @@ const Home = () => {
             <User className="w-5 h-5" />
             <span>لوحة التحكم</span>
           </Link>
-        ) : (
-          <Link 
-            to="/auth"
-            className="flex items-center space-x-2 space-x-reverse bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
-          >
-            <LogIn className="w-5 h-5" />
-            <span>تسجيل الدخول</span>
-          </Link>
-        )}
-      </div>
+        </div>
+      )}
       
       {/* Hero Section */}
       <div className="relative z-10 pt-32 pb-20">
@@ -187,17 +179,6 @@ const Home = () => {
                 </div>
               </div>
             </div>
-            {!user && (
-              <div className="mt-8">
-                <Link 
-                  to="/auth"
-                  className="inline-flex items-center space-x-2 space-x-reverse bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium"
-                >
-                  <LogIn className="w-5 h-5" />
-                  <span>جرب الآن - إنشاء حساب مجاني</span>
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       </div>
