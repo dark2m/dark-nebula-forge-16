@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Play, X, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,15 +32,21 @@ const ProductVideoViewer: React.FC<ProductVideoViewerProps> = ({ videos, product
 
   return (
     <>
-      <Button
+      <button
         onClick={() => setIsOpen(true)}
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2 bg-purple-500/20 border-purple-500/30 text-purple-400 hover:bg-purple-500/30"
+        className="group relative overflow-hidden bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-red-500/20 backdrop-blur-sm border border-purple-500/30 rounded-xl px-4 py-2.5 text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 hover:border-purple-400/50"
       >
-        <Play className="w-4 h-4" />
-        عرض الفيديوهات ({videos.length})
-      </Button>
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="relative flex items-center gap-2 text-sm font-medium">
+          <div className="relative">
+            <Video className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+          </div>
+          <span className="bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent font-semibold">
+            الفيديوهات ({videos.length})
+          </span>
+        </div>
+      </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh]">

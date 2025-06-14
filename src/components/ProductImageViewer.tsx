@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, X, ChevronLeft, ChevronRight, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -32,15 +32,21 @@ const ProductImageViewer: React.FC<ProductImageViewerProps> = ({ images, product
 
   return (
     <>
-      <Button
+      <button
         onClick={() => setIsOpen(true)}
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2 bg-blue-500/20 border-blue-500/30 text-blue-400 hover:bg-blue-500/30"
+        className="group relative overflow-hidden bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl px-4 py-2.5 text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 hover:border-blue-400/50"
       >
-        <Eye className="w-4 h-4" />
-        عرض الصور ({images.length})
-      </Button>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="relative flex items-center gap-2 text-sm font-medium">
+          <div className="relative">
+            <Image className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+          </div>
+          <span className="bg-gradient-to-r from-blue-300 to-cyan-300 bg-clip-text text-transparent font-semibold">
+            الصور ({images.length})
+          </span>
+        </div>
+      </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
