@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { SiteSettings } from '../../types/admin';
 import { 
@@ -236,7 +235,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
                 <div key={session.customerId} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                   <div className="flex items-center gap-3">
                     <div className="bg-blue-500/20 p-2 rounded-full">
-                      <User className="w-4 h-4 text-blue-400" />
+                      <Users className="w-4 h-4 text-blue-400" />
                     </div>
                     <div>
                       <p className="text-white font-medium">{session.customerEmail}</p>
@@ -374,7 +373,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
                             {message.sender === 'support' ? (
                               <UserCheck className="w-4 h-4 text-green-400" />
                             ) : (
-                              <User className="w-4 h-4 text-blue-400" />
+                              <Users className="w-4 h-4 text-blue-400" />
                             )}
                             <span className="text-xs text-gray-400">{message.timestamp}</span>
                           </div>
