@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import SettingsService from '../utils/settingsService';
+import PasswordGenerator from './PasswordGenerator';
 import type { SiteSettings, Tool } from '../types/admin';
 
 const Tools = () => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({} as SiteSettings);
   const [loading, setLoading] = useState(true);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+  const [showPasswordGenerator, setShowPasswordGenerator] = useState(false);
 
   useEffect(() => {
     const loadSettings = () => {
@@ -31,10 +33,10 @@ const Tools = () => {
     };
   }, []);
 
-  // إخفاء شريط المهام عند عرض أداة مخصصة
+  // إخفاء شريط المهام عند عرض أداة مخصصة أو مولد كلمات المرور
   useEffect(() => {
     const navbar = document.querySelector('nav');
-    if (selectedTool && selectedTool.customHtml) {
+    if ((selectedTool && selectedTool.customHtml) || showPasswordGenerator) {
       if (navbar) {
         navbar.style.display = 'none';
       }
@@ -50,7 +52,7 @@ const Tools = () => {
         navbar.style.display = 'block';
       }
     };
-  }, [selectedTool]);
+  }, [selectedTool, showPasswordGenerator]);
 
   if (loading) {
     return (
@@ -68,6 +70,12 @@ const Tools = () => {
   };
 
   const handleToolClick = (tool: Tool) => {
+    // التحقق من نوع الأداة
+    if (tool.title === 'مولد كلمات المرور' || tool.id === 1) {
+      setShowPasswordGenerator(true);
+      return;
+    }
+
     // إذا كانت الأداة تحتوي على كود مخصص، عرضه
     if (tool.customHtml && tool.customHtml.trim()) {
       setSelectedTool(tool);
@@ -89,6 +97,43 @@ const Tools = () => {
   const closeCustomTool = () => {
     setSelectedTool(null);
   };
+
+  const closePasswordGenerator = () => {
+    setShowPasswordGenerator(false);
+  };
+
+  // إذا تم اختيار مولد كلمات المرور
+  if (showPasswordGenerator) {
+    return (
+      <div className="min-h-screen relative">
+        <StarryBackground />
+        
+        <div className="relative z-10">
+          {/* زر العودة الجميل مع الأنيميشن */}
+          <div className="fixed top-6 right-6 z-50">
+            <button
+              onClick={closePasswordGenerator}
+              className="group relative overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-1 rounded-full hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-2xl"
+            >
+              <div className="bg-black/80 backdrop-blur-sm rounded-full px-6 py-3 flex items-center gap-3 group-hover:bg-black/60 transition-all duration-300">
+                <ArrowLeft className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform duration-300" />
+                <span className="text-white font-medium group-hover:text-gray-100 transition-colors duration-300">
+                  العودة للأدوات
+                </span>
+              </div>
+              {/* تأثير الوميض */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+            </button>
+          </div>
+
+          {/* عرض مولد كلمات المرور */}
+          <div className="pt-20">
+            <PasswordGenerator />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // إذا تم اختيار أداة مخصصة، عرض كودها
   if (selectedTool && selectedTool.customHtml) {

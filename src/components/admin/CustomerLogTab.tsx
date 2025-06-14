@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Users, UserCheck, UserX, Eye, Shield, Clock, Ban, LogOut, AlertTriangle, Trash2, Lock, MessageCircle, Send, Reply, Paperclip, Image, Video, X, ExternalLink } from 'lucide-react';
 import CustomerAuthService, { type LoginAttempt, type CustomerUser } from '../../utils/customerAuthService';
@@ -297,6 +298,13 @@ const CustomerLogTab = () => {
 
   const removeAttachment = (index: number) => {
     setAttachments(prevAttachments => prevAttachments.filter((_, i) => i !== index));
+  };
+
+  const triggerFileInput = () => {
+    const fileInput = document.getElementById('attachment-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
   };
 
   return (
@@ -641,14 +649,18 @@ const CustomerLogTab = () => {
                         type="file"
                         id="attachment-input"
                         multiple
+                        accept="image/*,video/*"
                         onChange={handleAttachmentChange}
                         className="hidden"
                       />
-                      <label htmlFor="attachment-input">
-                        <Button variant="secondary" size="icon">
-                          <Paperclip className="w-4 h-4" />
-                        </Button>
-                      </label>
+                      <Button 
+                        variant="secondary" 
+                        size="icon"
+                        onClick={triggerFileInput}
+                        className="shrink-0"
+                      >
+                        <Paperclip className="w-4 h-4" />
+                      </Button>
                       <Button onClick={handleSendMessage}>
                         <Send className="w-4 h-4 mr-2" />
                         إرسال
@@ -704,7 +716,7 @@ const CustomerLogTab = () => {
                   <thead>
                     <tr className="border-white/10">
                       <th className="text-right text-gray-300 p-2">الوقت</th>
-                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
+                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني/اسم المستخدم</th>
                       <th className="text-right text-gray-300 p-2">كلمة المرور</th>
                       <th className="text-right text-gray-300 p-2">النتيجة</th>
                       <th className="text-right text-gray-300 p-2">عنوان IP</th>
