@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Eye, Star } from 'lucide-react';
+import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Eye, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Video, Book, Calendar, Mail, Phone, Search, Settings, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,14 +19,31 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
   const [editForm, setEditForm] = useState<Partial<DownloadItem>>({});
 
   const availableIcons = [
+    { name: 'Download', component: Download, label: 'تنزيل' },
     { name: 'Shield', component: Shield, label: 'درع' },
     { name: 'Package', component: Package, label: 'حزمة' },
     { name: 'FileText', component: FileText, label: 'ملف نصي' },
-    { name: 'Download', component: Download, label: 'تنزيل' },
-    { name: 'Star', component: Star, label: 'نجمة' }
+    { name: 'Star', component: Star, label: 'نجمة' },
+    { name: 'Wrench', component: Wrench, label: 'أدوات' },
+    { name: 'Code', component: Code, label: 'برمجة' },
+    { name: 'Users', component: Users, label: 'مستخدمين' },
+    { name: 'Globe', component: Globe, label: 'موقع' },
+    { name: 'Lock', component: Lock, label: 'قفل' },
+    { name: 'Heart', component: Heart, label: 'قلب' },
+    { name: 'Zap', component: Zap, label: 'برق' },
+    { name: 'Camera', component: Camera, label: 'كاميرا' },
+    { name: 'Music', component: Music, label: 'موسيقى' },
+    { name: 'Video', component: Video, label: 'فيديو' },
+    { name: 'Book', component: Book, label: 'كتاب' },
+    { name: 'Calendar', component: Calendar, label: 'تقويم' },
+    { name: 'Mail', component: Mail, label: 'بريد' },
+    { name: 'Phone', component: Phone, label: 'هاتف' },
+    { name: 'Search', component: Search, label: 'بحث' },
+    { name: 'Settings', component: Settings, label: 'إعدادات' },
+    { name: 'Home', component: Home, label: 'الرئيسية' }
   ];
 
-  const categories = ['ألعاب', 'أدوات', 'تصميم', 'برمجة'];
+  const categories = ['ألعاب', 'أدوات', 'تصميم', 'برمجة', 'موسيقى', 'فيديو', 'كتب', 'أمان'];
   const statusOptions = ['جديد', 'محدث', 'شائع', 'قديم'];
 
   const handleAdd = () => {
@@ -51,7 +68,7 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
       lastUpdate: "الآن",
       features: ["ميزة 1"],
       status: "جديد",
-      icon: 'Package'
+      icon: 'Download'
     };
 
     const updatedDownloads = [...downloads, newDownload];
@@ -116,6 +133,11 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
     }
   };
 
+  const getIconComponent = (iconName: string) => {
+    const iconData = availableIcons.find(icon => icon.name === iconName);
+    return iconData ? iconData.component : Download;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -133,7 +155,7 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
 
       <div className="grid gap-4">
         {downloads.map((download) => {
-          const IconComponent = availableIcons.find(icon => icon.name === download.icon)?.component || Package;
+          const IconComponent = getIconComponent(download.icon);
           const isCurrentlyEditing = isEditing === download.id;
 
           return (
@@ -198,7 +220,7 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
                           className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
                         >
                           {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
+                            <option key={cat} value={cat} className="bg-gray-800">{cat}</option>
                           ))}
                         </select>
                       </div>
@@ -210,7 +232,7 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
                           className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
                         >
                           {statusOptions.map(status => (
-                            <option key={status} value={status}>{status}</option>
+                            <option key={status} value={status} className="bg-gray-800">{status}</option>
                           ))}
                         </select>
                       </div>
@@ -222,9 +244,29 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
                           className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
                         >
                           {availableIcons.map(icon => (
-                            <option key={icon.name} value={icon.name}>{icon.label}</option>
+                            <option key={icon.name} value={icon.name} className="bg-gray-800">{icon.label} ({icon.name})</option>
                           ))}
                         </select>
+                      </div>
+                      <div>
+                        <label className="block text-white text-sm font-medium mb-2">الحجم</label>
+                        <input
+                          type="text"
+                          value={editForm.size || ''}
+                          onChange={(e) => setEditForm({...editForm, size: e.target.value})}
+                          className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                          placeholder="مثال: 15.2 MB"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white text-sm font-medium mb-2">الإصدار</label>
+                        <input
+                          type="text"
+                          value={editForm.version || ''}
+                          onChange={(e) => setEditForm({...editForm, version: e.target.value})}
+                          className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                          placeholder="مثال: 2.0.1"
+                        />
                       </div>
                     </div>
                     
@@ -234,6 +276,17 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
                         value={editForm.description || ''}
                         onChange={(e) => setEditForm({...editForm, description: e.target.value})}
                         className="w-full p-2 bg-white/10 border border-white/20 rounded text-white h-24 resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">الميزات (مفصولة بفاصلة)</label>
+                      <input
+                        type="text"
+                        value={editForm.features?.join(', ') || ''}
+                        onChange={(e) => setEditForm({...editForm, features: e.target.value.split(', ').filter(f => f.trim())})}
+                        className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                        placeholder="ميزة 1, ميزة 2, ميزة 3"
                       />
                     </div>
 
@@ -253,6 +306,21 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
                 ) : (
                   <div className="space-y-3">
                     <p className="text-gray-300">{download.description}</p>
+                    
+                    {/* Features */}
+                    <div className="flex flex-wrap gap-1">
+                      {download.features.slice(0, 3).map((feature, index) => (
+                        <Badge key={index} variant="outline" className="text-xs border-white/20 text-gray-300">
+                          {feature}
+                        </Badge>
+                      ))}
+                      {download.features.length > 3 && (
+                        <Badge variant="outline" className="text-xs border-white/20 text-gray-300">
+                          +{download.features.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+
                     <div className="flex justify-between text-sm text-gray-400">
                       <span>التنزيلات: {download.downloads.toLocaleString()}</span>
                       <span>التقييم: {download.rating}</span>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Download, FileText, Package, Star, Clock, Shield } from 'lucide-react';
+import { Download, FileText, Package, Star, Clock, Shield, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Video, Book, Calendar, Mail, Phone, Search, Settings, Home } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AdminStorage from '../utils/adminStorage';
 import GlobalCart from '../components/GlobalCart';
@@ -40,7 +40,7 @@ const Downloads = () => {
     };
   }, []);
 
-  const categories = ["الكل", "ألعاب", "أدوات", "تصميم", "برمجة"];
+  const categories = ["الكل", "ألعاب", "أدوات", "تصميم", "برمجة", "موسيقى", "فيديو", "كتب", "أمان"];
   const [selectedCategory, setSelectedCategory] = useState("الكل");
 
   const filteredItems = selectedCategory === "الكل" 
@@ -57,14 +57,31 @@ const Downloads = () => {
   };
 
   const getIconComponent = (iconName: string) => {
-    switch (iconName) {
-      case 'Shield': return Shield;
-      case 'Package': return Package;
-      case 'FileText': return FileText;
-      case 'Download': return Download;
-      case 'Star': return Star;
-      default: return Package;
-    }
+    const iconMap: Record<string, any> = {
+      'Download': Download,
+      'Shield': Shield,
+      'Package': Package,
+      'FileText': FileText,
+      'Star': Star,
+      'Wrench': Wrench,
+      'Code': Code,
+      'Users': Users,
+      'Globe': Globe,
+      'Lock': Lock,
+      'Heart': Heart,
+      'Zap': Zap,
+      'Camera': Camera,
+      'Music': Music,
+      'Video': Video,
+      'Book': Book,
+      'Calendar': Calendar,
+      'Mail': Mail,
+      'Phone': Phone,
+      'Search': Search,
+      'Settings': Settings,
+      'Home': Home
+    };
+    return iconMap[iconName] || Download;
   };
 
   return (
@@ -86,7 +103,7 @@ const Downloads = () => {
 
           {/* Categories Filter */}
           <div className="flex justify-center mb-8">
-            <div className="flex gap-2 p-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+            <div className="flex gap-2 p-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex-wrap">
               {categories.map((category) => (
                 <Button
                   key={category}
