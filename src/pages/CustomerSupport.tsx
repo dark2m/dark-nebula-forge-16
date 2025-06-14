@@ -25,64 +25,14 @@ const CustomerSupport = () => {
   }
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative customer-support-page">
       <StarryBackground />
 
       <style>{`
         @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap");
         
-        .ring {
-          position: relative;
-          width: 500px;
-          height: 500px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        
-        .ring i {
-          position: absolute;
-          inset: 0;
-          border: none;
-          transition: 0.5s;
-        }
-        
-        .ring i:nth-child(1) {
-          border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
-          animation: animate 6s linear infinite;
-        }
-        
-        .ring i:nth-child(2) {
-          border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
-          animation: animate 4s linear infinite;
-        }
-        
-        .ring i:nth-child(3) {
-          border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
-          animation: animate2 10s linear infinite;
-        }
-        
-        .ring:hover i {
-          border: none;
-          filter: drop-shadow(0 0 20px var(--clr));
-        }
-        
-        @keyframes animate {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-        
-        @keyframes animate2 {
-          0% {
-            transform: rotate(360deg);
-          }
-          100% {
-            transform: rotate(0deg);
-          }
+        .customer-support-page * {
+          border: none !important;
         }
         
         .login-form {
@@ -113,7 +63,6 @@ const CustomerSupport = () => {
           width: 100%;
           padding: 12px 20px;
           background: transparent;
-          border: none;
           border-radius: 40px;
           font-size: 1.2em;
           color: #fff;
@@ -126,14 +75,12 @@ const CustomerSupport = () => {
         }
         
         .ring-input:focus {
-          border: none;
           box-shadow: 0 0 20px rgba(0, 120, 255, 0.3);
         }
         
         .ring-button {
           width: 100%;
           background: linear-gradient(45deg, #ff357a, #fff172);
-          border: none;
           cursor: pointer;
           padding: 12px 20px;
           border-radius: 40px;
