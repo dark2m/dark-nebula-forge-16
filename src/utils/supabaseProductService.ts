@@ -24,9 +24,9 @@ class SupabaseProductService {
         price: Number(item.price),
         category: item.category,
         description: item.description || '',
-        features: Array.isArray(item.features) ? item.features : [],
-        images: Array.isArray(item.images) ? item.images : [],
-        videos: Array.isArray(item.videos) ? item.videos : [],
+        features: Array.isArray(item.features) ? item.features.filter((f): f is string => typeof f === 'string') : [],
+        images: Array.isArray(item.images) ? item.images.filter((img): img is string => typeof img === 'string') : [],
+        videos: Array.isArray(item.videos) ? item.videos.filter((vid): vid is string => typeof vid === 'string') : [],
         textSize: item.text_size as 'small' | 'medium' | 'large' || 'medium',
         titleSize: item.title_size as 'small' | 'medium' | 'large' | 'xl' || 'large'
       }));
@@ -107,9 +107,9 @@ class SupabaseProductService {
         price: Number(data.price),
         category: data.category,
         description: data.description || '',
-        features: Array.isArray(data.features) ? data.features : [],
-        images: Array.isArray(data.images) ? data.images : [],
-        videos: Array.isArray(data.videos) ? data.videos : [],
+        features: Array.isArray(data.features) ? data.features.filter((f): f is string => typeof f === 'string') : [],
+        images: Array.isArray(data.images) ? data.images.filter((img): img is string => typeof img === 'string') : [],
+        videos: Array.isArray(data.videos) ? data.videos.filter((vid): vid is string => typeof vid === 'string') : [],
         textSize: data.text_size as 'small' | 'medium' | 'large' || 'medium',
         titleSize: data.title_size as 'small' | 'medium' | 'large' | 'xl' || 'large'
       };

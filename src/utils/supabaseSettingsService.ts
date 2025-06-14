@@ -43,7 +43,7 @@ class SupabaseSettingsService {
         .from('site_settings')
         .upsert({
           id: this.SETTINGS_ID,
-          settings_data: settings
+          settings_data: settings as any
         });
 
       if (error) {
