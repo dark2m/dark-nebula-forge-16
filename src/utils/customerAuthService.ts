@@ -140,7 +140,7 @@ class CustomerAuthService {
     return false;
   }
 
-  // دالة محسنة لإضافة عميل من Supabase Auth مع معالجة أفضل للأخطاء
+  // دالة محسنة لإضافة عميل من Supabase Auth
   static addSupabaseCustomer(user: any): CustomerUser {
     // التحقق الشامل من بيانات المستخدم
     if (!user) {
@@ -169,16 +169,12 @@ class CustomerAuthService {
       return existingCustomer;
     }
 
-    // إنشاء username فريد بناءً على النظام الجديد في قاعدة البيانات
-    const baseUsername = user.user_metadata?.username || user.email.split('@')[0];
-    const uniqueUsername = `${baseUsername}_${user.id.substring(0, 8)}`;
-
     // إنشاء عميل جديد
     const newCustomer: CustomerUser = {
       id: Date.now(),
       email: user.email,
       password: '', // لا نحتاج كلمة مرور للمستخدمين من Supabase
-      username: uniqueUsername,
+      username: user.user_metadata?.username || user.email.split('@')[0],
       registrationDate: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       isVerified: user.email_confirmed_at !== null,
@@ -194,27 +190,8 @@ class CustomerAuthService {
     localStorage.setItem(`online_${newCustomer.id}`, 'true');
     localStorage.setItem(`lastSeen_${newCustomer.id}`, new Date().toLocaleString('ar-SA'));
     
-    console.log('CustomerAuthService: New Supabase customer created:', newCustomer.email, 'Username:', uniqueUsername);
+    console.log('CustomerAuthService: New Supabase customer created:', newCustomer.email);
     return newCustomer;
-  }
-
-  // دالة جديدة للتعامل مع حالات الخطأ في التسجيل
-  static handleRegistrationError(error: any): string {
-    console.error('CustomerAuthService: Registration error:', error);
-    
-    if (error?.message?.includes('duplicate key')) {
-      return 'اسم المستخدم موجود بالفعل، سيتم إنشاء اسم فريد تلقائياً';
-    }
-    
-    if (error?.message?.includes('invalid email')) {
-      return 'البريد الإلكتروني غير صحيح';
-    }
-    
-    if (error?.message?.includes('weak password')) {
-      return 'كلمة المرور ضعيفة، يجب أن تكون 6 أحرف على الأقل';
-    }
-    
-    return 'حدث خطأ أثناء التسجيل، يرجى المحاولة مرة أخرى';
   }
 }
 
