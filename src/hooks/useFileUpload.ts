@@ -21,31 +21,24 @@ export const useFileUpload = () => {
 
     setUploading(true);
     try {
-      // Create unique filename with user ID
+      // Create unique filename
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${folder}/${Date.now()}.${fileExt}`;
-
-      console.log('Uploading file to Supabase:', fileName);
 
       const { data, error } = await supabase.storage
         .from('user-files')
         .upload(fileName, file);
 
-      if (error) {
-        console.error('Upload error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('user-files')
         .getPublicUrl(fileName);
 
-      console.log('File uploaded successfully:', publicUrl);
-
       toast({
         title: "تم الرفع",
-        description: "تم رفع الملف بنجاح إلى Supabase"
+        description: "تم رفع الملف بنجاح"
       });
 
       return publicUrl;

@@ -1,15 +1,19 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 interface SiteData {
-  content?: any;
+  id?: string;
+  page_name: string;
+  content: any;
   layout_settings?: any;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export const useSiteData = (pageName: string) => {
+export const useSiteData = (pageName: string = 'default') => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [data, setData] = useState<SiteData | null>(null);
@@ -17,15 +21,13 @@ export const useSiteData = (pageName: string) => {
   const [saving, setSaving] = useState(false);
 
   // Load data from Supabase
-  const loadData = useCallback(async () => {
+  const loadData = async () => {
     if (!user) {
       setLoading(false);
       return;
     }
 
     try {
-      console.log('Loading data for page:', pageName, 'user:', user.id);
-      
       const { data: siteData, error } = await supabase
         .from('site_data')
         .select('*')
@@ -33,59 +35,56 @@ export const useSiteData = (pageName: string) => {
         .eq('page_name', pageName)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error loading site data:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('Loaded site data:', siteData);
-      setData(siteData || { content: {}, layout_settings: {} });
+      setData(siteData || {
+        page_name: pageName,
+        content: {},
+        layout_settings: {}
+      });
     } catch (error) {
-      console.error('Error loading data:', error);
-      setData({ content: {}, layout_settings: {} });
+      console.error('Error loading site data:', error);
+      toast({
+        title: "خطأ في التحميل",
+        description: "حدث خطأ أثناء تحميل البيانات",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
-  }, [user, pageName]);
+  };
 
   // Save data to Supabase
-  const saveData = useCallback(async (newData: SiteData) => {
-    if (!user) {
-      toast({
-        title: "خطأ",
-        description: "يجب تسجيل الدخول أولاً",
-        variant: "destructive"
-      });
-      return;
-    }
+  const saveData = async (newData: Partial<SiteData>) => {
+    if (!user) return;
 
     setSaving(true);
     try {
-      console.log('Saving data to Supabase:', newData);
+      const dataToSave = {
+        user_id: user.id,
+        page_name: pageName,
+        content: newData.content || {},
+        layout_settings: newData.layout_settings || {}
+      };
 
-      const { error } = await supabase
+      const { data: savedData, error } = await supabase
         .from('site_data')
-        .upsert({
-          user_id: user.id,
-          page_name: pageName,
-          content: newData.content || {},
-          layout_settings: newData.layout_settings || {}
-        });
+        .upsert(dataToSave, {
+          onConflict: 'user_id,page_name'
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error('Error saving data:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      setData(newData);
-      console.log('Data saved successfully to Supabase');
+      setData(savedData);
       
       toast({
         title: "تم الحفظ",
-        description: "تم حفظ البيانات بنجاح في Supabase"
+        description: "تم حفظ البيانات بنجاح"
       });
     } catch (error) {
-      console.error('Error saving data:', error);
+      console.error('Error saving site data:', error);
       toast({
         title: "خطأ في الحفظ",
         description: "حدث خطأ أثناء حفظ البيانات",
@@ -94,26 +93,24 @@ export const useSiteData = (pageName: string) => {
     } finally {
       setSaving(false);
     }
-  }, [user, pageName, toast]);
+  };
 
   // Auto-save with debouncing
-  const autoSave = useCallback(async (newData: SiteData) => {
+  const autoSave = async (newData: Partial<SiteData>) => {
     if (!user) return;
-    
+
     // Update local state immediately
-    setData(prev => ({
-      ...prev,
-      ...newData
-    }));
+    setData(prev => prev ? { ...prev, ...newData } : null);
+    
+    // Debounced save to database
+    setTimeout(() => {
+      saveData(newData);
+    }, 1000);
+  };
 
-    // Save to Supabase
-    await saveData(newData);
-  }, [user, saveData]);
-
-  // Load data when user changes
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [user, pageName]);
 
   return {
     data,
