@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteData } from './useSiteData';
@@ -15,9 +14,16 @@ interface SupabaseFeaturesData {
 export const useSupabaseFeatures = (pageName: string = 'default') => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { data, loading, saving, saveData, autoSave } = useSiteData(pageName);
+  const { data, loading, saving, saveData, autoSave, loadData } = useSiteData(pageName);
   const { uploadFile, listUserFiles, uploading } = useFileUpload();
   const [files, setFiles] = useState<any[]>([]);
+
+  // تحميل البيانات عند تسجيل الدخول
+  useEffect(() => {
+    if (user && typeof loadData === 'function') {
+      loadData();
+    }
+  }, [user]);
 
   // تحميل ملفات المستخدم
   useEffect(() => {
