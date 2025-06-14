@@ -11,6 +11,17 @@ export const useSupabaseFeatures = () => {
     saving: false,
     saveData: siteData.refreshData,
     autoSave: false,
-    loadData: siteData.refreshData
+    loadData: siteData.refreshData,
+    // Additional mock properties for compatibility
+    content: '',
+    files: [],
+    isLoading: siteData.loading,
+    isSaving: false,
+    isUploading: false,
+    updateContent: () => {},
+    handleFileUpload: () => {},
+    user: null,
+    isAuthenticated: false,
+    layoutSettings: {}
   };
 };
