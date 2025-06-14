@@ -11,7 +11,7 @@ class CustomerAuthService {
       const stored = localStorage.getItem(this.CUSTOMERS_KEY);
       if (stored) {
         const customers = JSON.parse(stored);
-        console.log('CustomerAuthService: Loaded customers:', customers);
+        console.log('CustomerAuthService: Loaded customers:', customers.length);
         return customers;
       }
     } catch (error) {
@@ -23,9 +23,8 @@ class CustomerAuthService {
 
   static saveCustomers(customers: CustomerUser[]): void {
     try {
-      console.log('CustomerAuthService: Saving customers:', customers);
+      console.log('CustomerAuthService: Saving customers:', customers.length);
       localStorage.setItem(this.CUSTOMERS_KEY, JSON.stringify(customers));
-      console.log('CustomerAuthService: Customers saved successfully');
     } catch (error) {
       console.error('CustomerAuthService: Error saving customers:', error);
       throw new Error('تم تجاوز حد التخزين المسموح');
@@ -33,7 +32,7 @@ class CustomerAuthService {
   }
 
   static addCustomer(customer: Omit<CustomerUser, 'id'>): CustomerUser {
-    console.log('CustomerAuthService: Adding new customer:', customer);
+    console.log('CustomerAuthService: Adding new customer:', customer.email);
     const customers = this.getCustomers();
     const newCustomer: CustomerUser = {
       ...customer,
@@ -46,7 +45,6 @@ class CustomerAuthService {
     };
     customers.push(newCustomer);
     this.saveCustomers(customers);
-    console.log('CustomerAuthService: New customer added:', newCustomer);
     return newCustomer;
   }
 
@@ -61,7 +59,6 @@ class CustomerAuthService {
       ipAddress: 'localhost'
     };
 
-    // سجل محاولة تسجيل الدخول
     this.logLoginAttempt(attempt);
 
     const customers = this.getCustomers();
@@ -69,23 +66,19 @@ class CustomerAuthService {
 
     if (customer) {
       if (customer.isBlocked) {
-        console.log('CustomerAuthService: Customer is blocked:', email);
         return { success: false, error: 'تم حظر هذا الحساب' };
       }
 
       attempt.success = true;
       this.logLoginAttempt(attempt);
       
-      // تحديث حالة الاتصال
       localStorage.setItem(`online_${customer.id}`, 'true');
       localStorage.setItem(`lastSeen_${customer.id}`, new Date().toLocaleString('ar-SA'));
       localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
       
-      console.log('CustomerAuthService: Authentication successful for:', email);
       return { success: true, customer };
     }
 
-    console.log('CustomerAuthService: Authentication failed for:', email);
     return { success: false, error: 'بيانات الدخول غير صحيحة' };
   }
 
@@ -108,7 +101,6 @@ class CustomerAuthService {
       localStorage.setItem(`lastSeen_${currentCustomer.id}`, new Date().toLocaleString('ar-SA'));
     }
     localStorage.removeItem(this.CURRENT_CUSTOMER_KEY);
-    console.log('CustomerAuthService: Customer logged out');
   }
 
   static isAuthenticated(): boolean {
@@ -119,7 +111,6 @@ class CustomerAuthService {
     try {
       const attempts = this.getLoginAttempts();
       attempts.unshift(attempt);
-      // الاحتفاظ بآخر 100 محاولة فقط
       if (attempts.length > 100) {
         attempts.splice(100);
       }
@@ -143,29 +134,42 @@ class CustomerAuthService {
 
   static clearLoginAttempts(): void {
     localStorage.removeItem(this.LOGIN_ATTEMPTS_KEY);
-    console.log('CustomerAuthService: Login attempts cleared');
   }
 
   static isDefaultCustomer(customerId: number): boolean {
     return false;
   }
 
-  // دالة لإضافة عميل من Supabase Auth
+  // دالة محسنة لإضافة عميل من Supabase Auth
   static addSupabaseCustomer(user: any): CustomerUser {
-    // التحقق من وجود المستخدم والبريد الإلكتروني
-    if (!user || !user.email) {
-      console.error('CustomerAuthService: Invalid user object:', user);
-      throw new Error('بيانات المستخدم غير صحيحة');
+    // التحقق الشامل من بيانات المستخدم
+    if (!user) {
+      console.error('CustomerAuthService: User object is null/undefined');
+      throw new Error('بيانات المستخدم غير موجودة');
+    }
+
+    if (!user.email) {
+      console.error('CustomerAuthService: User email is missing:', user);
+      throw new Error('البريد الإلكتروني مطلوب');
+    }
+
+    if (!user.id) {
+      console.error('CustomerAuthService: User ID is missing:', user);
+      throw new Error('معرف المستخدم مطلوب');
     }
 
     const customers = this.getCustomers();
     const existingCustomer = customers.find(c => c.email === user.email);
     
     if (existingCustomer) {
-      console.log('CustomerAuthService: Customer already exists:', existingCustomer);
+      console.log('CustomerAuthService: Customer already exists:', existingCustomer.email);
+      // تحديث حالة الاتصال للعميل الموجود
+      localStorage.setItem(`online_${existingCustomer.id}`, 'true');
+      localStorage.setItem(`lastSeen_${existingCustomer.id}`, new Date().toLocaleString('ar-SA'));
       return existingCustomer;
     }
 
+    // إنشاء عميل جديد
     const newCustomer: CustomerUser = {
       id: Date.now(),
       email: user.email,
@@ -186,7 +190,7 @@ class CustomerAuthService {
     localStorage.setItem(`online_${newCustomer.id}`, 'true');
     localStorage.setItem(`lastSeen_${newCustomer.id}`, new Date().toLocaleString('ar-SA'));
     
-    console.log('CustomerAuthService: Supabase customer added:', newCustomer);
+    console.log('CustomerAuthService: New Supabase customer created:', newCustomer.email);
     return newCustomer;
   }
 }
