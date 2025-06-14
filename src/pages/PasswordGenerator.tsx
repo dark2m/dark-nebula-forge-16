@@ -149,7 +149,7 @@ const PasswordGenerator = () => {
   };
 
   return (
-    <>
+    <div>
       <style>{`
         :root {
           --main-color: #48ff00;
@@ -612,21 +612,23 @@ const PasswordGenerator = () => {
                 <i className="fab fa-discord"></i>
               </a>
               <a href="https://wa.me/971566252595" target="_blank" rel="noopener noreferrer">
-                <a href="https://t.me/Ghaly333" target="_blank" rel="noopener noreferrer">
-                  <i className="fab fa-telegram"></i>
-                </a>
-                <a href="https://guns.lol/Darky_dv" target="_blank" rel="noopener noreferrer">
-                  <i className="fas fa-globe"></i>
-                </a>
-              </div>
-              <div className="footer">
-                تطوير بواسطة <a href="https://guns.lol/Darky_dv" target="_blank" rel="noopener noreferrer">DARK</a>
-              </div>
+                <i className="fab fa-whatsapp"></i>
+              </a>
+              <a href="https://t.me/Ghaly333" target="_blank" rel="noopener noreferrer">
+                <i className="fab fa-telegram"></i>
+              </a>
+              <a href="https://guns.lol/Darky_dv" target="_blank" rel="noopener noreferrer">
+                <i className="fas fa-globe"></i>
+              </a>
             </div>
-          </main>
-        </div>
-      </>
-    );
-  };
+            <div className="footer">
+              تطوير بواسطة <a href="https://guns.lol/Darky_dv" target="_blank" rel="noopener noreferrer">DARK</a>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+};
 
-  export default PasswordGenerator;
+export default PasswordGenerator;
