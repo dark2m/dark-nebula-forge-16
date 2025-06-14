@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 const PasswordGenerator = () => {
@@ -625,6 +624,14 @@ const PasswordGenerator = () => {
                 {copyButtonText}
               </button>
             </div>
+
+            <button
+              onClick={handleBackToTools}
+              className="btn btn-secondary"
+              style={{ marginTop: '10px' }}
+            >
+              العودة للأدوات
+            </button>
 
             <div className="social-icons">
               <a href="https://discord.gg/FtprtXweuZ" target="_blank" rel="noopener noreferrer">
