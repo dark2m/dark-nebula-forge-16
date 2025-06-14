@@ -15,6 +15,7 @@ const EmailVerification = () => {
   useEffect(() => {
     const token = searchParams.get('token');
     const email = searchParams.get('email');
+    const type = searchParams.get('type');
 
     if (!token || !email) {
       setVerificationStatus('error');
@@ -49,20 +50,20 @@ const EmailVerification = () => {
         return;
       }
 
-      // تم التحقق بنجاح - سيتم التعامل مع التسجيل عبر Supabase Auth
+      // تم التحقق بنجاح
       localStorage.removeItem('pendingVerification');
       
       setVerificationStatus('success');
-      setMessage('تم تأكيد بريدك الإلكتروني بنجاح! سيتم توجيهك إلى خدمة العملاء...');
+      setMessage('تم تأكيد بريدك الإلكتروني بنجاح! سيتم توجيهك إلى صفحة تسجيل الدخول...');
       
       toast({
         title: "تم التحقق بنجاح",
         description: "تم تأكيد بريدك الإلكتروني بنجاح",
       });
 
-      // التوجه إلى صفحة دعم العملاء بعد 3 ثوان
+      // التوجه إلى صفحة دعم العملاء مع معاملات التحقق بعد 3 ثوان
       setTimeout(() => {
-        navigate('/sport');
+        navigate(`/sport?token=${token}&type=signup&email=${email}`);
       }, 3000);
     } catch (error) {
       console.error('Error parsing verification data:', error);
