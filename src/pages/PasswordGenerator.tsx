@@ -529,10 +529,6 @@ const PasswordGenerator = () => {
         }
       `}</style>
 
-      <a href="#" onClick={handleBackToTools} className="back-button">
-        ← العودة للأدوات
-      </a>
-
       <div className="password-generator-container">
         <main className="main-content">
           <div className="card">
@@ -624,14 +620,6 @@ const PasswordGenerator = () => {
                 {copyButtonText}
               </button>
             </div>
-
-            <button
-              onClick={handleBackToTools}
-              className="btn btn-secondary"
-              style={{ marginTop: '10px' }}
-            >
-              العودة للأدوات
-            </button>
 
             <div className="social-icons">
               <a href="https://discord.gg/FtprtXweuZ" target="_blank" rel="noopener noreferrer">
