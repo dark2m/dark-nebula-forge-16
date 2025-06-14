@@ -11,6 +11,13 @@ import SettingsService from '../utils/settingsService';
 import { useAdminData } from '../hooks/useAdminData';
 import { useProductManagement } from '../hooks/useProductManagement';
 
+interface AdminUser {
+  id: number;
+  username: string;
+  role: string;
+  password?: string; // Make password optional
+}
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -80,19 +87,27 @@ const AdminDashboard = () => {
     );
   }
 
+  // Create a compatible AdminUser for components that expect the password field
+  const compatibleUser: AdminUser | null = currentUser ? {
+    id: currentUser.id,
+    username: currentUser.username,
+    role: currentUser.role,
+    password: '' // Provide empty string as default
+  } : null;
+
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
       
       <div className="relative z-10">
-        <AdminHeader currentUser={currentUser} onLogout={handleLogout} />
+        <AdminHeader currentUser={compatibleUser} onLogout={handleLogout} />
 
         <div className="container mx-auto px-6 py-8">
           <div className="grid lg:grid-cols-4 gap-8">
             <AdminSidebar 
               activeTab={activeTab}
               setActiveTab={setActiveTab}
-              currentUser={currentUser}
+              currentUser={compatibleUser}
               canAccess={canAccess}
             />
 

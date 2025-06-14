@@ -1,181 +1,140 @@
 
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, ExternalLink, MessageCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AdminStorage from '../utils/adminStorage';
+import { ShoppingCart, X, Minus, Plus } from 'lucide-react';
+import { useCart } from '../hooks/useCart';
+import SettingsService from '../utils/settingsService';
+import type { SiteSettings } from '../types/admin';
 
 const GlobalCart = () => {
-  const [cartItems, setCartItems] = useState<{[key: string]: Array<{id: number, name: string, price: string, category: string}>}>({});
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+  const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
+  const [isOpen, setIsOpen] = useState(false);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    const loadCarts = () => {
-      const categories = ['pubg', 'web', 'discord'];
-      const newCartItems: {[key: string]: any[]} = {};
-      
-      categories.forEach(category => {
-        const cartData = AdminStorage.getCart(category);
-        newCartItems[category] = Array.isArray(cartData) ? cartData : [];
-      });
-      
-      setCartItems(newCartItems);
+    const loadSettings = async () => {
+      try {
+        const loadedSettings = await SettingsService.getSiteSettings();
+        setSettings(loadedSettings);
+      } catch (error) {
+        console.error('GlobalCart: Error loading settings:', error);
+      }
     };
-    
-    loadCarts();
-    const interval = setInterval(loadCarts, 1000);
-    
-    return () => clearInterval(interval);
+
+    loadSettings();
   }, []);
 
-  useEffect(() => {
-    setSiteSettings(AdminStorage.getSiteSettings());
-  }, []);
+  const handlePurchase = () => {
+    if (!settings || cartItems.length === 0) return;
 
-  const removeFromCart = (id: number, category: string) => {
-    AdminStorage.removeFromCart(id, category);
-    const updatedCart = AdminStorage.getCart(category);
-    setCartItems(prev => ({
-      ...prev,
-      [category]: Array.isArray(updatedCart) ? updatedCart : []
-    }));
-  };
-
-  const handleDiscordPurchase = () => {
-    window.open('https://discord.gg/CaQW7RWuG8', '_blank');
-  };
-
-  const handleWhatsAppPurchase = () => {
-    const whatsappNumber = "971566252595";
-    const cartText = Object.entries(cartItems)
-      .filter(([_, items]) => items.length > 0)
-      .map(([category, items]) => {
-        const categoryName = category === 'pubg' ? 'هكر ببجي' : 
-                           category === 'web' ? 'برمجة مواقع' : 'بوتات ديسكورد';
-        return `${categoryName}: ${items.map(item => item.name).join(', ')}`;
-      }).join('\n');
+    const message = `مرحبا، أريد شراء هذه المنتجات:\n\n${cartItems.map(item => 
+      `• ${item.name} - الكمية: ${item.quantity} - السعر: $${item.price * item.quantity}`
+    ).join('\n')}\n\nالمجموع الكلي: $${getTotalPrice()}`;
     
-    const whatsappMessage = encodeURIComponent(`مرحباً، أريد شراء:\n${cartText}`);
-    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
-    window.open(whatsappLink, '_blank');
+    const whatsappUrl = `https://wa.me/${settings.contactInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
-  const cartTexts = siteSettings.pageTexts.cart;
-  const totalItems = Object.values(cartItems).reduce((total, items) => total + items.length, 0);
-
-  const categoryNames = {
-    pubg: 'هكر ببجي',
-    web: 'برمجة مواقع', 
-    discord: 'بوتات ديسكورد'
-  };
+  if (!settings) return null;
 
   return (
     <>
-      {/* Cart Button - Positioned at bottom right for mobile and tablets */}
-      <div className="fixed bottom-6 right-6 z-50 md:top-20 md:bottom-auto">
-        <Button
-          onClick={() => setIsCartOpen(true)}
-          className="glow-button relative"
-        >
-          <ShoppingCart className="w-5 h-5" />
-          {totalItems > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
-              {totalItems}
-            </span>
-          )}
-        </Button>
-      </div>
+      {/* Cart Button */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed top-4 right-4 z-50 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2"
+      >
+        <ShoppingCart className="w-5 h-5" />
+        {cartItems.length > 0 && (
+          <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+          </span>
+        )}
+      </button>
 
-      {/* Cart Dialog */}
-      <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">{cartTexts.cartTitle}</DialogTitle>
-          </DialogHeader>
-          
-          {totalItems === 0 ? (
-            <p className="text-gray-500 text-center py-8">{cartTexts.emptyCartMessage}</p>
-          ) : (
-            <Tabs defaultValue="pubg" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
-                {Object.entries(categoryNames).map(([key, name]) => (
-                  <TabsTrigger key={key} value={key} className="relative">
-                    {name}
-                    {cartItems[key]?.length > 0 && (
-                      <span className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">
-                        {cartItems[key].length}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+      {/* Cart Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">
+                {settings.pageTexts.cart.cartTitle}
+              </h2>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
-              {Object.entries(categoryNames).map(([category, name]) => (
-                <TabsContent key={category} value={category} className="space-y-4">
-                  <h3 className="text-lg font-semibold text-center">{name}</h3>
-                  {cartItems[category]?.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">لا توجد منتجات في هذا القسم</p>
-                  ) : (
-                    <>
-                      {cartItems[category]?.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-                          <div>
-                            <h4 className="font-semibold">{item.name}</h4>
-                            <p className="text-blue-400">{item.price}</p>
-                          </div>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => removeFromCart(item.id, category)}
-                          >
-                            {cartTexts.removeButton}
-                          </Button>
-                        </div>
-                      ))}
-                      
-                      {/* Payment Methods */}
-                      <div className="space-y-3 pt-4 border-t border-gray-700">
-                        <h4 className="text-center font-semibold text-green-400">طرق الدفع</h4>
-                        
-                        <Button
-                          onClick={handleDiscordPurchase}
-                          className="w-full bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center gap-2"
+            {cartItems.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">
+                {settings.pageTexts.cart.emptyCartMessage}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="bg-white/5 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-white font-semibold">{item.name}</h3>
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          className="text-gray-400 hover:text-white"
                         >
-                          <ExternalLink className="w-4 h-4" />
-                          شراء عبر الديسكورد
-                        </Button>
-                        
-                        <Button
-                          onClick={handleWhatsAppPurchase}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="text-white bg-white/10 px-2 py-1 rounded">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="text-gray-400 hover:text-white"
                         >
-                          <MessageCircle className="w-4 h-4" />
-                          شراء عبر الواتساب
-                        </Button>
+                          <Plus className="w-4 h-4" />
+                        </button>
                       </div>
-                    </>
-                  )}
-                </TabsContent>
-              ))}
-              
-              {totalItems > 0 && (
-                <div className="pt-4 border-t border-gray-700">
+                      
+                      <span className="text-green-400 font-bold">
+                        ${item.price * item.quantity}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                
+                <div className="border-t border-white/20 pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-lg font-bold text-white">المجموع:</span>
+                    <span className="text-xl font-bold text-green-400">
+                      ${getTotalPrice()}
+                    </span>
+                  </div>
+                  
+                  <button
+                    onClick={handlePurchase}
+                    className="w-full glow-button mb-3"
+                  >
+                    {settings.pageTexts.cart.purchaseButton}
+                  </button>
+                  
                   <p className="text-xs text-gray-400 text-center">
-                    اختر طريقة الدفع المناسبة لك لإتمام الشراء
+                    {settings.pageTexts.cart.purchaseNote}
                   </p>
                 </div>
-              )}
-            </Tabs>
-          )}
-        </DialogContent>
-      </Dialog>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 };
