@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, X, Upload, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface MediaManagerProps {
   productId: number;
@@ -18,6 +19,7 @@ const MediaManager: React.FC<MediaManagerProps> = ({
   onVideosChange
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -30,10 +32,25 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 
     for (const file of Array.from(files)) {
       try {
+        // التحقق من حجم الملف (أقل من 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          toast({
+            title: "ملف كبير جداً",
+            description: `الملف ${file.name} كبير جداً. يرجى اختيار ملف أصغر من 2MB`,
+            variant: "destructive"
+          });
+          continue;
+        }
+
         const compressedImage = await compressImage(file, 0.7);
         newImages.push(compressedImage);
       } catch (error) {
         console.error('Error processing image:', error);
+        toast({
+          title: "خطأ في معالجة الصورة",
+          description: `فشل في معالجة ${file.name}`,
+          variant: "destructive"
+        });
       }
     }
 
@@ -41,6 +58,11 @@ const MediaManager: React.FC<MediaManagerProps> = ({
       const updatedImages = [...images, ...newImages];
       console.log('Calling onImagesChange for product:', productId, 'with images:', updatedImages.length);
       onImagesChange(productId, updatedImages);
+      
+      toast({
+        title: "تم إضافة الصور",
+        description: `تم إضافة ${newImages.length} صورة بنجاح`
+      });
     }
     
     setIsUploading(false);
@@ -58,10 +80,25 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 
     for (const file of Array.from(files)) {
       try {
-        const compressedVideo = await compressVideo(file, 0.6);
-        newVideos.push(compressedVideo);
+        // التحقق من حجم الملف (أقل من 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          toast({
+            title: "ملف كبير جداً",
+            description: `الفيديو ${file.name} كبير جداً. يرجى اختيار ملف أصغر من 10MB`,
+            variant: "destructive"
+          });
+          continue;
+        }
+
+        const videoThumbnail = await createVideoThumbnail(file);
+        newVideos.push(videoThumbnail);
       } catch (error) {
         console.error('Error processing video:', error);
+        toast({
+          title: "خطأ في معالجة الفيديو",
+          description: `فشل في معالجة ${file.name}`,
+          variant: "destructive"
+        });
       }
     }
 
@@ -69,13 +106,18 @@ const MediaManager: React.FC<MediaManagerProps> = ({
       const updatedVideos = [...videos, ...newVideos];
       console.log('Calling onVideosChange for product:', productId, 'with videos:', updatedVideos.length);
       onVideosChange(productId, updatedVideos);
+      
+      toast({
+        title: "تم إضافة الفيديوهات",
+        description: `تم إضافة ${newVideos.length} فيديو بنجاح`
+      });
     }
     
     setIsUploading(false);
     event.target.value = '';
   };
 
-  // دالة ضغط الصور
+  // دالة ضغط الصور محسنة
   const compressImage = (file: File, quality: number): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
@@ -112,40 +154,32 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     });
   };
 
-  // دالة ضغط الفيديوهات (تحويل لـ base64 مع تقليل الجودة)
-  const compressVideo = (file: File, quality: number): Promise<string> => {
+  // دالة إنشاء صورة مصغرة للفيديو
+  const createVideoThumbnail = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
       video.onloadedmetadata = () => {
-        canvas.width = Math.min(video.videoWidth, 640);
-        canvas.height = Math.min(video.videoHeight, 480);
+        canvas.width = Math.min(video.videoWidth, 480);
+        canvas.height = Math.min(video.videoHeight, 360);
         
-        video.currentTime = 0;
+        video.currentTime = 1; // الثانية الأولى
         video.onseeked = () => {
           if (ctx) {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            // نأخذ إطار واحد فقط كصورة مصغرة
-            const thumbnailDataUrl = canvas.toDataURL('image/jpeg', quality);
+            // إنشاء صورة مصغرة من الفيديو
+            const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.8);
             resolve(thumbnailDataUrl);
           } else {
-            // إذا فشل في إنشاء المعاينة، نستخدم الفيديو الأصلي
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target?.result as string);
-            reader.onerror = () => reject(new Error('Failed to read video'));
-            reader.readAsDataURL(file);
+            reject(new Error('Failed to get canvas context'));
           }
         };
       };
 
       video.onerror = () => {
-        // في حالة فشل معالجة الفيديو، نستخدم FileReader
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target?.result as string);
-        reader.onerror = () => reject(new Error('Failed to read video'));
-        reader.readAsDataURL(file);
+        reject(new Error('Failed to process video'));
       };
 
       video.src = URL.createObjectURL(file);
@@ -156,12 +190,22 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     const updatedImages = images.filter((_, i) => i !== index);
     console.log('Removing image from product:', productId);
     onImagesChange(productId, updatedImages);
+    
+    toast({
+      title: "تم حذف الصورة",
+      description: "تم حذف الصورة بنجاح"
+    });
   };
 
   const removeVideo = (index: number) => {
     const updatedVideos = videos.filter((_, i) => i !== index);
     console.log('Removing video from product:', productId);
     onVideosChange(productId, updatedVideos);
+    
+    toast({
+      title: "تم حذف الفيديو",
+      description: "تم حذف الفيديو بنجاح"
+    });
   };
 
   return (
@@ -204,11 +248,11 @@ const MediaManager: React.FC<MediaManagerProps> = ({
             multiple
             onChange={handleImageUpload}
             className="hidden"
-            id="images-upload"
+            id={`images-upload-${productId}`}
             disabled={isUploading}
           />
           <label
-            htmlFor="images-upload"
+            htmlFor={`images-upload-${productId}`}
             className={`flex items-center justify-center w-full p-3 border border-white/20 rounded-lg cursor-pointer transition-colors ${
               isUploading ? 'bg-gray-600 cursor-not-allowed' : 'hover:bg-white/10'
             }`}
@@ -248,19 +292,11 @@ const MediaManager: React.FC<MediaManagerProps> = ({
                   </Button>
                 </div>
                 <div className="mt-2">
-                  {video.startsWith('data:video/') ? (
-                    <video 
-                      src={video} 
-                      className="w-full h-32 object-cover rounded"
-                      controls
-                    />
-                  ) : (
-                    <img 
-                      src={video} 
-                      alt={`Video thumbnail ${index + 1}`}
-                      className="w-full h-32 object-cover rounded"
-                    />
-                  )}
+                  <img 
+                    src={video} 
+                    alt={`Video thumbnail ${index + 1}`}
+                    className="w-full h-32 object-cover rounded"
+                  />
                 </div>
               </div>
             ))}
@@ -275,11 +311,11 @@ const MediaManager: React.FC<MediaManagerProps> = ({
             multiple
             onChange={handleVideoUpload}
             className="hidden"
-            id="videos-upload"
+            id={`videos-upload-${productId}`}
             disabled={isUploading}
           />
           <label
-            htmlFor="videos-upload"
+            htmlFor={`videos-upload-${productId}`}
             className={`flex items-center justify-center w-full p-3 border border-white/20 rounded-lg cursor-pointer transition-colors ${
               isUploading ? 'bg-gray-600 cursor-not-allowed' : 'hover:bg-white/10'
             }`}

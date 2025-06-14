@@ -1,27 +1,20 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, X } from 'lucide-react';
 import ProductFeaturesManager from '../ProductFeaturesManager';
 import MediaManager from '../MediaManager';
 import { useToast } from '@/hooks/use-toast';
+import { useProductManagement } from '@/hooks/useProductManagement';
 import type { Product } from '../../types/admin';
 
 interface ProductsTabProps {
-  products: Product[];
-  addProduct: () => void;
-  updateProduct: (id: number, updates: Partial<Product>) => void;
-  deleteProduct: (id: number) => void;
   canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
 }
 
-const ProductsTab: React.FC<ProductsTabProps> = ({ 
-  products, 
-  addProduct, 
-  updateProduct, 
-  deleteProduct 
-}) => {
-  const [editedProducts, setEditedProducts] = useState<{[key: number]: Partial<Product>}>({});
+const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
   const { toast } = useToast();
+  const { products, addProduct, updateProduct, deleteProduct } = useProductManagement(canAccess, toast);
+  const [editedProducts, setEditedProducts] = useState<{[key: number]: Partial<Product>}>({});
 
   const categories = [
     { value: 'pubg', label: 'هكر ببجي موبايل' },
@@ -39,22 +32,17 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
     };
 
     console.log('Adding product with category:', category);
-    addProduct();
+    const newProduct = addProduct();
     
-    setTimeout(() => {
-      const storedProducts = JSON.parse(localStorage.getItem('admin_products') || '[]');
-      console.log('Products after adding:', storedProducts);
-      
-      if (storedProducts.length > 0) {
-        const lastProduct = storedProducts[storedProducts.length - 1];
-        console.log('Updating last product:', lastProduct);
-        
-        updateProduct(lastProduct.id, { 
+    if (newProduct) {
+      // تحديث الفئة والاسم للمنتج الجديد
+      setTimeout(() => {
+        updateProduct(newProduct.id, { 
           category, 
           name: `${categoryLabels[category]} جديد` 
         });
-      }
-    }, 200);
+      }, 100);
+    }
   };
 
   const handleProductChange = (productId: number, field: string, value: any) => {
@@ -88,9 +76,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
 
   const removeBackgroundImage = (productId: number) => {
     console.log('Removing background image for product:', productId);
-    handleProductChange(productId, 'backgroundImage', '');
-    
-    // حفظ التغيير فوراً
     updateProduct(productId, { backgroundImage: '' });
     
     toast({
@@ -125,68 +110,24 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
   const createMediaChangeHandler = (productId: number) => {
     return {
       onImagesChange: (receivedProductId: number, images: string[]) => {
-        console.log(`Images change handler called for product ${receivedProductId} (expected: ${productId})`);
+        console.log(`Images change handler called for product ${receivedProductId}`);
         
         if (receivedProductId !== productId) {
           console.error('Product ID mismatch!', { received: receivedProductId, expected: productId });
           return;
         }
         
-        // البحث عن المنتج باستخدام المعرف الصحيح الذي تم استلامه
-        const product = products.find(p => p.id === receivedProductId);
-        if (!product) {
-          console.error('Product not found:', receivedProductId);
-          return;
-        }
-        
-        try {
-          console.log(`Updating images for product ${receivedProductId}:`, images.length, 'items');
-          updateProduct(receivedProductId, { images });
-          
-          toast({
-            title: "تم حفظ الصور",
-            description: `تم حفظ الصور للمنتج "${product.name}" بنجاح`,
-          });
-        } catch (error) {
-          console.error('Error updating images:', error);
-          toast({
-            title: "خطأ في الحفظ",
-            description: "حدث خطأ أثناء حفظ الصور",
-            variant: "destructive"
-          });
-        }
+        updateProduct(receivedProductId, { images });
       },
       onVideosChange: (receivedProductId: number, videos: string[]) => {
-        console.log(`Videos change handler called for product ${receivedProductId} (expected: ${productId})`);
+        console.log(`Videos change handler called for product ${receivedProductId}`);
         
         if (receivedProductId !== productId) {
           console.error('Product ID mismatch!', { received: receivedProductId, expected: productId });
           return;
         }
         
-        // البحث عن المنتج باستخدام المعرف الصحيح الذي تم استلامه
-        const product = products.find(p => p.id === receivedProductId);
-        if (!product) {
-          console.error('Product not found:', receivedProductId);
-          return;
-        }
-        
-        try {
-          console.log(`Updating videos for product ${receivedProductId}:`, videos.length, 'items');
-          updateProduct(receivedProductId, { videos });
-          
-          toast({
-            title: "تم حفظ الفيديوهات",
-            description: `تم حفظ الفيديوهات للمنتج "${product.name}" بنجاح`,
-          });
-        } catch (error) {
-          console.error('Error updating videos:', error);
-          toast({
-            title: "خطأ في الحفظ",
-            description: "حدث خطأ أثناء حفظ الفيديوهات",
-            variant: "destructive"
-          });
-        }
+        updateProduct(receivedProductId, { videos });
       }
     };
   };
@@ -272,71 +213,6 @@ const ProductsTab: React.FC<ProductsTabProps> = ({
                       onChange={(e) => handleProductChange(product.id, 'price', Number(e.target.value))}
                       className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                     />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2">حجم النص</label>
-                    <select
-                      value={getProductValue(product, 'textSize') || 'medium'}
-                      onChange={(e) => handleProductChange(product.id, 'textSize', e.target.value)}
-                      className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                    >
-                      <option value="small">صغير</option>
-                      <option value="medium">متوسط</option>
-                      <option value="large">كبير</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2">لون الخلفية</label>
-                    <input
-                      type="color"
-                      value={getProductValue(product, 'backgroundColor') || '#000000'}
-                      onChange={(e) => handleProductChange(product.id, 'backgroundColor', e.target.value)}
-                      className="w-full h-10 rounded border border-white/20"
-                    />
-                  </div>
-                  
-                  <div className="lg:col-span-2">
-                    <label className="block text-gray-400 text-sm mb-2">صورة الخلفية</label>
-                    <div className="flex gap-2 items-center">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              handleProductChange(product.id, 'backgroundImage', event.target?.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="flex-1 bg-white/10 text-white border border-white/20 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400"
-                      />
-                      {getProductValue(product, 'backgroundImage') && (
-                        <button
-                          onClick={() => removeBackgroundImage(product.id)}
-                          className="px-2 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 rounded transition-colors flex items-center gap-1 text-xs"
-                          title="إزالة صورة الخلفية"
-                        >
-                          <X className="w-3 h-3" />
-                          <span className="hidden sm:inline">إزالة</span>
-                        </button>
-                      )}
-                    </div>
-                    {getProductValue(product, 'backgroundImage') && (
-                      <div className="mt-2">
-                        <img
-                          src={getProductValue(product, 'backgroundImage')}
-                          alt="معاينة صورة الخلفية"
-                          className="w-full h-16 object-cover rounded border border-white/20"
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
 
