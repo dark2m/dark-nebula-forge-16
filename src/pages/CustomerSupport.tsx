@@ -214,6 +214,177 @@ const CustomerSupport = () => {
     <div className="min-h-screen relative">
       <StarryBackground />
 
+      <style jsx>{`
+        @import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap");
+        
+        .ring {
+          position: relative;
+          width: 500px;
+          height: 500px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        
+        .ring i {
+          position: absolute;
+          inset: 0;
+          border: 2px solid #fff;
+          transition: 0.5s;
+        }
+        
+        .ring i:nth-child(1) {
+          border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+          animation: animate 6s linear infinite;
+        }
+        
+        .ring i:nth-child(2) {
+          border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
+          animation: animate 4s linear infinite;
+        }
+        
+        .ring i:nth-child(3) {
+          border-radius: 41% 44% 56% 59%/38% 62% 63% 37%;
+          animation: animate2 10s linear infinite;
+        }
+        
+        .ring:hover i {
+          border: 6px solid var(--clr);
+          filter: drop-shadow(0 0 20px var(--clr));
+        }
+        
+        @keyframes animate {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+        
+        @keyframes animate2 {
+          0% {
+            transform: rotate(360deg);
+          }
+          100% {
+            transform: rotate(0deg);
+          }
+        }
+        
+        .login-form {
+          position: absolute;
+          width: 300px;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+          gap: 20px;
+          font-family: "Quicksand", sans-serif;
+        }
+        
+        .login-form h2 {
+          font-size: 2em;
+          color: #fff;
+          margin-bottom: 10px;
+        }
+        
+        .input-container {
+          position: relative;
+          width: 100%;
+        }
+        
+        .ring-input {
+          position: relative;
+          width: 100%;
+          padding: 12px 20px;
+          background: transparent;
+          border: 2px solid #fff;
+          border-radius: 40px;
+          font-size: 1.2em;
+          color: #fff;
+          box-shadow: none;
+          outline: none;
+        }
+        
+        .ring-input::placeholder {
+          color: rgba(255, 255, 255, 0.75);
+        }
+        
+        .ring-input:focus {
+          border-color: #0078ff;
+          box-shadow: 0 0 20px rgba(0, 120, 255, 0.3);
+        }
+        
+        .ring-button {
+          width: 100%;
+          background: linear-gradient(45deg, #ff357a, #fff172);
+          border: none;
+          cursor: pointer;
+          padding: 12px 20px;
+          border-radius: 40px;
+          font-size: 1.2em;
+          color: #fff;
+          font-weight: bold;
+          transition: all 0.3s ease;
+        }
+        
+        .ring-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(255, 53, 122, 0.4);
+        }
+        
+        .ring-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        
+        .links {
+          position: relative;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 20px;
+        }
+        
+        .links a {
+          color: #fff;
+          text-decoration: none;
+          cursor: pointer;
+          transition: color 0.3s ease;
+        }
+        
+        .links a:hover {
+          color: #0078ff;
+        }
+        
+        .verification-code-input {
+          text-align: center;
+          font-size: 2rem;
+          letter-spacing: 0.5rem;
+          font-weight: bold;
+        }
+        
+        .ring-icon {
+          position: absolute;
+          right: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(255, 255, 255, 0.7);
+          cursor: pointer;
+        }
+        
+        .ring-icon-left {
+          position: absolute;
+          left: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(255, 255, 255, 0.7);
+          cursor: pointer;
+        }
+      `}</style>
+
       <div className="relative z-10">
         <div className="container mx-auto px-6 py-20">
           <div className="text-center mb-12">
@@ -226,224 +397,217 @@ const CustomerSupport = () => {
           </div>
 
           {!isRegistered && !showChat ? (
-            <div className="max-w-md mx-auto bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl p-8">
+            <div className="flex justify-center items-center min-h-[600px]">
               {!showLoginForm && !showRegisterForm ? (
-                // اختيار تسجيل دخول أو إنشاء حساب جديد
-                <>
-                  <h2 className="text-2xl font-bold text-white text-center mb-6">
-                    خدمة العملاء
-                  </h2>
-                  <div className="space-y-4">
-                    <button
-                      onClick={() => setShowLoginForm(true)}
-                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2 space-x-reverse"
-                    >
-                      <LogIn className="w-5 h-5" />
-                      <span>تسجيل الدخول</span>
-                    </button>
-                    <button
-                      onClick={() => setShowRegisterForm(true)}
-                      className="glow-button w-full py-3"
-                    >
-                      إنشاء حساب جديد
-                    </button>
-                  </div>
-                </>
-              ) : showLoginForm ? (
-                // نموذج تسجيل الدخول
-                <>
-                  <h2 className="text-2xl font-bold text-white text-center mb-6">
-                    تسجيل الدخول
-                  </h2>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-white text-sm font-medium mb-2">
-                        البريد الإلكتروني أو اسم المستخدم
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="text"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="أدخل بريدك الإلكتروني أو اسم المستخدم"
-                          className="w-full pl-4 pr-12 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-white text-sm font-medium mb-2">
-                        كلمة المرور
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="أدخل كلمة المرور"
-                          className="w-full pl-12 pr-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
-                        />
-                        <button
-                          type="button"
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                          onClick={togglePasswordVisibility}
-                        >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
+                // الشاشة الرئيسية لاختيار تسجيل دخول أو إنشاء حساب
+                <div className="ring">
+                  <i style={{'--clr': '#00ff0a'}}></i>
+                  <i style={{'--clr': '#ff0057'}}></i>
+                  <i style={{'--clr': '#fffd44'}}></i>
+                  <div className="login-form">
+                    <h2>خدمة العملاء</h2>
+                    <div className="input-container">
                       <button
-                        onClick={handleLogin}
-                        className="glow-button w-full py-3"
+                        onClick={() => setShowLoginForm(true)}
+                        className="ring-button"
+                        style={{marginBottom: '15px'}}
                       >
                         تسجيل الدخول
                       </button>
+                    </div>
+                    <div className="input-container">
                       <button
-                        onClick={() => {
-                          setShowLoginForm(false);
-                          setEmail('');
-                          setPassword('');
-                        }}
-                        className="w-full py-2 text-gray-400 hover:text-white text-sm"
+                        onClick={() => setShowRegisterForm(true)}
+                        className="ring-button"
                       >
-                        العودة
+                        إنشاء حساب جديد
                       </button>
                     </div>
                   </div>
-                </>
+                </div>
+              ) : showLoginForm ? (
+                // نموذج تسجيل الدخول
+                <div className="ring">
+                  <i style={{'--clr': '#00ff0a'}}></i>
+                  <i style={{'--clr': '#ff0057'}}></i>
+                  <i style={{'--clr': '#fffd44'}}></i>
+                  <div className="login-form">
+                    <h2>تسجيل الدخول</h2>
+                    <div className="input-container">
+                      <input
+                        type="text"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="البريد الإلكتروني أو اسم المستخدم"
+                        className="ring-input"
+                        style={{paddingRight: '45px'}}
+                      />
+                      <Mail className="ring-icon" size={20} />
+                    </div>
+                    <div className="input-container">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="كلمة المرور"
+                        className="ring-input"
+                        style={{paddingLeft: '45px'}}
+                      />
+                      <button
+                        type="button"
+                        className="ring-icon-left"
+                        onClick={togglePasswordVisibility}
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
+                    </div>
+                    <div className="input-container">
+                      <button
+                        onClick={handleLogin}
+                        className="ring-button"
+                      >
+                        دخول
+                      </button>
+                    </div>
+                    <div className="links">
+                      <a onClick={() => {
+                        setShowLoginForm(false);
+                        setEmail('');
+                        setPassword('');
+                      }}>
+                        العودة
+                      </a>
+                      <a onClick={() => {
+                        setShowLoginForm(false);
+                        setShowRegisterForm(true);
+                      }}>
+                        إنشاء حساب
+                      </a>
+                    </div>
+                  </div>
+                </div>
               ) : showRegisterForm && !isVerificationSent ? (
                 // نموذج التسجيل
-                <>
-                  <h2 className="text-2xl font-bold text-white text-center mb-6">
-                    التسجيل في خدمة العملاء
-                  </h2>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-white text-sm font-medium mb-2">
-                        اسم المستخدم
-                      </label>
-                      <div className="relative">
-                        <User className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="text"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          placeholder="أدخل اسم المستخدم"
-                          className="w-full pl-4 pr-12 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
-                        />
-                      </div>
+                <div className="ring">
+                  <i style={{'--clr': '#00ff0a'}}></i>
+                  <i style={{'--clr': '#ff0057'}}></i>
+                  <i style={{'--clr': '#fffd44'}}></i>
+                  <div className="login-form">
+                    <h2>تسجيل جديد</h2>
+                    <div className="input-container">
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="اسم المستخدم"
+                        className="ring-input"
+                        style={{paddingRight: '45px'}}
+                      />
+                      <User className="ring-icon" size={20} />
                     </div>
-                    <div>
-                      <label className="block text-white text-sm font-medium mb-2">
-                        البريد الإلكتروني
-                      </label>
-                      <div className="relative">
-                        <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="أدخل بريدك الإلكتروني"
-                          className="w-full pl-4 pr-12 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
-                        />
-                      </div>
+                    <div className="input-container">
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="البريد الإلكتروني"
+                        className="ring-input"
+                        style={{paddingRight: '45px'}}
+                      />
+                      <Mail className="ring-icon" size={20} />
                     </div>
-                    <div>
-                      <label className="block text-white text-sm font-medium mb-2">
-                        كلمة المرور (6 أحرف على الأقل)
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="أدخل كلمة المرور"
-                          className="w-full pl-12 pr-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors"
-                        />
-                        <button
-                          type="button"
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                          onClick={togglePasswordVisibility}
-                        >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
+                    <div className="input-container">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="كلمة المرور (6 أحرف على الأقل)"
+                        className="ring-input"
+                        style={{paddingLeft: '45px'}}
+                      />
+                      <button
+                        type="button"
+                        className="ring-icon-left"
+                        onClick={togglePasswordVisibility}
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </button>
                     </div>
-                    <div className="space-y-3">
+                    <div className="input-container">
                       <button
                         onClick={handleSendVerification}
                         disabled={isLoading}
-                        className="glow-button w-full py-3"
+                        className="ring-button"
                       >
                         {isLoading ? "جاري الإرسال..." : "إرسال كود التحقق"}
                       </button>
-                      <button
-                        onClick={() => {
-                          setShowRegisterForm(false);
-                          setEmail('');
-                          setUsername('');
-                          setPassword('');
-                        }}
-                        className="w-full py-2 text-gray-400 hover:text-white text-sm"
-                      >
+                    </div>
+                    <div className="links">
+                      <a onClick={() => {
+                        setShowRegisterForm(false);
+                        setEmail('');
+                        setUsername('');
+                        setPassword('');
+                      }}>
                         العودة
-                      </button>
+                      </a>
+                      <a onClick={() => {
+                        setShowRegisterForm(false);
+                        setShowLoginForm(true);
+                      }}>
+                        لديك حساب؟
+                      </a>
                     </div>
                   </div>
-                </>
+                </div>
               ) : (
                 // نموذج إدخال كود التحقق
-                <>
-                  <h2 className="text-2xl font-bold text-white text-center mb-6">
-                    تأكيد البريد الإلكتروني
-                  </h2>
-                  <div className="text-center mb-6">
-                    <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                    <p className="text-gray-300 mb-2">
-                      تم إرسال كود التحقق إلى:
-                    </p>
-                    <p className="text-blue-400 font-medium">{email}</p>
-                  </div>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-white text-sm font-medium mb-2">
-                        كود التحقق
-                      </label>
+                <div className="ring">
+                  <i style={{'--clr': '#00ff0a'}}></i>
+                  <i style={{'--clr': '#ff0057'}}></i>
+                  <i style={{'--clr': '#fffd44'}}></i>
+                  <div className="login-form">
+                    <h2>تأكيد البريد</h2>
+                    <div className="text-center mb-6">
+                      <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                      <p className="text-gray-300 mb-2">
+                        تم إرسال كود التحقق إلى:
+                      </p>
+                      <p className="text-blue-400 font-medium">{email}</p>
+                    </div>
+                    <div className="input-container">
                       <input
                         type="text"
                         value={enteredCode}
                         onChange={(e) => setEnteredCode(e.target.value)}
-                        placeholder="أدخل كود التحقق"
+                        placeholder="كود التحقق"
                         maxLength={4}
-                        className="w-full px-4 py-3 bg-transparent text-white placeholder-gray-300 border border-white/30 rounded-lg outline-none focus:border-blue-500 transition-colors text-center text-2xl tracking-widest"
+                        className="ring-input verification-code-input"
                       />
                     </div>
-                    <div>
+                    <div className="input-container">
                       <button
                         onClick={handleVerifyCode}
                         disabled={!enteredCode || enteredCode.length !== 4}
-                        className="glow-button w-full py-3 mb-3"
+                        className="ring-button"
                       >
                         تأكيد الكود
                       </button>
-                      <button
-                        onClick={handleResendCode}
-                        disabled={isLoading}
-                        className="w-full py-2 text-blue-400 hover:text-blue-300 text-sm"
-                      >
-                        إعادة إرسال الكود
-                      </button>
+                    </div>
+                    <div className="links">
+                      <a onClick={handleResendCode} disabled={isLoading}>
+                        إعادة إرسال
+                      </a>
+                      <a onClick={() => {
+                        setIsVerificationSent(false);
+                        setEnteredCode('');
+                      }}>
+                        تعديل البيانات
+                      </a>
                     </div>
                   </div>
-                </>
+                </div>
               )}
-
-              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <p className="text-blue-300 text-sm text-center">
-                  ℹ️ ستحصل على رسالة تأكيد في بريدك الإلكتروني قبل الوصول لفريق الدعم
-                </p>
-              </div>
             </div>
           ) : showChat ? (
             <div className="max-w-4xl mx-auto">
