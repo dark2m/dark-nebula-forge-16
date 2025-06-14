@@ -1,18 +1,19 @@
 
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import StarryBackground from '../StarryBackground';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AuthPage = () => {
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, loading, signIn, signUp, resendConfirmation } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false);
 
   if (loading) {
     return (
@@ -29,15 +30,25 @@ const AuthPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setShowResendConfirmation(false);
 
     try {
       if (isLogin) {
-        await signIn(email, password);
+        const { error } = await signIn(email, password);
+        if (error && error.message.includes('Email not confirmed')) {
+          setShowResendConfirmation(true);
+        }
       } else {
         await signUp(email, password, username);
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (email) {
+      await resendConfirmation(email);
     }
   };
 
@@ -106,6 +117,7 @@ const AuthPage = () => {
                   className="w-full bg-white/10 border border-white/20 rounded-lg pl-12 pr-12 py-3 text-white focus:outline-none focus:border-blue-400"
                   placeholder="أدخل كلمة المرور"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -115,6 +127,11 @@ const AuthPage = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {!isLogin && (
+                <p className="text-xs text-gray-400 mt-1">
+                  كلمة المرور يجب أن تكون 6 أحرف على الأقل
+                </p>
+              )}
             </div>
 
             <button
@@ -124,19 +141,46 @@ const AuthPage = () => {
             >
               {isSubmitting ? 'جاري المعالجة...' : (isLogin ? 'تسجيل الدخول' : 'إنشاء الحساب')}
             </button>
+
+            {showResendConfirmation && (
+              <div className="text-center">
+                <p className="text-red-400 text-sm mb-3">
+                  يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResendConfirmation}
+                  className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm font-medium"
+                >
+                  <RefreshCw className="w-4 h-4 ml-2" />
+                  إعادة إرسال رسالة التحقق
+                </button>
+              </div>
+            )}
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
               {isLogin ? 'ليس لديك حساب؟' : 'لديك حساب بالفعل؟'}
               <button
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setShowResendConfirmation(false);
+                }}
                 className="text-blue-400 hover:text-blue-300 ml-2 font-medium"
               >
                 {isLogin ? 'إنشاء حساب جديد' : 'تسجيل الدخول'}
               </button>
             </p>
           </div>
+
+          {!isLogin && (
+            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <p className="text-yellow-300 text-sm text-center">
+                ⚠️ بعد التسجيل، ستحتاج لتأكيد بريدك الإلكتروني قبل تسجيل الدخول
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

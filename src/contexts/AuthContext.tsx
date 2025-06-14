@@ -12,6 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  resendConfirmation: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,6 +43,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Show confirmation message when email is confirmed
+        if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
+          toast({
+            title: "تم التحقق من البريد الإلكتروني",
+            description: "تم تفعيل حسابك بنجاح، مرحباً بك!"
+          });
+        }
       }
     );
 
@@ -53,7 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   const signUp = async (email: string, password: string, username?: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -70,15 +79,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     if (error) {
+      let errorMessage = error.message;
+      
+      // Translate common error messages to Arabic
+      if (error.message.includes('already registered')) {
+        errorMessage = 'هذا البريد الإلكتروني مسجل مسبقاً';
+      } else if (error.message.includes('Invalid email')) {
+        errorMessage = 'عنوان البريد الإلكتروني غير صحيح';
+      } else if (error.message.includes('Password should be')) {
+        errorMessage = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+      }
+
       toast({
         title: "خطأ في التسجيل",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } else {
       toast({
         title: "تم إنشاء الحساب",
-        description: "تحقق من بريدك الإلكتروني لتفعيل الحساب"
+        description: "تم إرسال رسالة تحقق إلى بريدك الإلكتروني. يرجى فتح الرسالة والنقر على رابط التحقق لتفعيل حسابك.",
+        duration: 10000 // Show for 10 seconds
       });
     }
 
@@ -92,9 +113,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     if (error) {
+      let errorMessage = error.message;
+      
+      // Translate common error messages to Arabic
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'بيانات تسجيل الدخول غير صحيحة';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول';
+      } else if (error.message.includes('Invalid email')) {
+        errorMessage = 'عنوان البريد الإلكتروني غير صحيح';
+      }
+
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } else {
@@ -144,6 +176,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return { error };
   };
 
+  const resendConfirmation = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`
+      }
+    });
+
+    if (error) {
+      toast({
+        title: "خطأ",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "تم إعادة الإرسال",
+        description: "تم إرسال رسالة التحقق مرة أخرى إلى بريدك الإلكتروني"
+      });
+    }
+
+    return { error };
+  };
+
   const value = {
     user,
     session,
@@ -151,7 +208,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
     signIn,
     signOut,
-    resetPassword
+    resetPassword,
+    resendConfirmation
   };
 
   return (
