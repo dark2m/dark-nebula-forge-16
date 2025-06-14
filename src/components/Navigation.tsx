@@ -3,52 +3,63 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench, MessageCircle } from 'lucide-react';
 import { useIsMobile } from '../hooks/use-mobile';
-import AdminStorage from '../utils/adminStorage';
 import SettingsService from '../utils/settingsService';
-import { getTextContent } from '../utils/textUtils';
+import { SiteSettings } from '../types/admin';
 
 const Navigation = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const [siteSettings, setSiteSettings] = useState(SettingsService.getSiteSettings());
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [navigationKey, setNavigationKey] = useState(0); // للإجبار على إعادة التحديث
+  const [navigationKey, setNavigationKey] = useState(0);
   
   useEffect(() => {
     // تحميل الإعدادات عند التحميل
-    const loadSettings = () => {
-      const settings = SettingsService.getSiteSettings();
-      console.log('Navigation: Loading fresh settings:', settings);
-      setSiteSettings(settings);
+    const loadSettings = async () => {
+      try {
+        const settings = await SettingsService.getSiteSettings();
+        console.log('Navigation: Loading fresh settings:', settings);
+        setSiteSettings(settings);
+      } catch (error) {
+        console.error('Navigation: Error loading settings:', error);
+      }
     };
 
     loadSettings();
 
     // الاستماع لتحديثات الإعدادات
-    const handleSettingsUpdate = (event: CustomEvent) => {
+    const handleSettingsUpdate = async (event: CustomEvent) => {
       console.log('Navigation: Settings updated via event:', event.detail.settings);
       setSiteSettings(event.detail.settings);
-      setNavigationKey(prev => prev + 1); // إجبار إعادة التحديث
+      setNavigationKey(prev => prev + 1);
     };
 
     // الاستماع لتحديثات التنقل المحددة
-    const handleNavigationUpdate = (event: CustomEvent) => {
+    const handleNavigationUpdate = async (event: CustomEvent) => {
       console.log('Navigation: Navigation updated via event:', event.detail.navigation);
-      const currentSettings = SettingsService.getSiteSettings();
-      setSiteSettings(currentSettings);
-      setNavigationKey(prev => prev + 1);
+      try {
+        const currentSettings = await SettingsService.getSiteSettings();
+        setSiteSettings(currentSettings);
+        setNavigationKey(prev => prev + 1);
+      } catch (error) {
+        console.error('Navigation: Error loading updated settings:', error);
+      }
     };
 
     window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
     window.addEventListener('navigationUpdated', handleNavigationUpdate as EventListener);
     
     // تحديث دوري للتأكد من عدم فقدان التغييرات
-    const intervalUpdate = setInterval(() => {
-      const freshSettings = SettingsService.getSiteSettings();
-      if (JSON.stringify(freshSettings.navigation) !== JSON.stringify(siteSettings.navigation)) {
-        console.log('Navigation: Detected navigation changes via interval update');
-        setSiteSettings(freshSettings);
-        setNavigationKey(prev => prev + 1);
+    const intervalUpdate = setInterval(async () => {
+      try {
+        const freshSettings = await SettingsService.getSiteSettings();
+        if (siteSettings && JSON.stringify(freshSettings.navigation) !== JSON.stringify(siteSettings.navigation)) {
+          console.log('Navigation: Detected navigation changes via interval update');
+          setSiteSettings(freshSettings);
+          setNavigationKey(prev => prev + 1);
+        }
+      } catch (error) {
+        console.error('Navigation: Error in interval update:', error);
       }
     }, 2000);
     
@@ -57,11 +68,11 @@ const Navigation = () => {
       window.removeEventListener('navigationUpdated', handleNavigationUpdate as EventListener);
       clearInterval(intervalUpdate);
     };
-  }, [siteSettings.navigation]);
+  }, [siteSettings]);
 
   // إنشاء قائمة التنقل من إعدادات الموقع
   const getNavigationItems = () => {
-    if (!siteSettings.navigation || siteSettings.navigation.length === 0) {
+    if (!siteSettings?.navigation || siteSettings.navigation.length === 0) {
       console.log('Navigation: No navigation items found in settings');
       return [];
     }
@@ -101,6 +112,24 @@ const Navigation = () => {
     console.log('Navigation: Generated navigation items:', items);
     return items;
   };
+
+  // عرض loading إذا لم تحمل الإعدادات بعد
+  if (!siteSettings) {
+    return (
+      <nav className="fixed top-0 left-0 right-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-foreground">
+              <span className="bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+                DARK
+              </span>
+            </div>
+            <div className="animate-pulse w-4 h-4 bg-gray-500 rounded"></div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   const navItems = getNavigationItems();
 

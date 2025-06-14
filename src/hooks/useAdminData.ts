@@ -15,7 +15,7 @@ interface AdminUser {
 export const useAdminData = () => {
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>({} as SiteSettings);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 

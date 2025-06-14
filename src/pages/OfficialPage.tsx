@@ -3,17 +3,26 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Mail, Phone, MapPin, Users, Star, Shield } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import AdminStorage from '../utils/adminStorage';
+import SettingsService from '../utils/settingsService';
 import TranslationService from '../utils/translationService';
 import GlobalCart from '../components/GlobalCart';
+import { SiteSettings } from '../types/admin';
 
 const OfficialPage = () => {
   const navigate = useNavigate();
-  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    const loadedSettings = AdminStorage.getSiteSettings();
-    setSiteSettings(loadedSettings);
+    const loadSettings = async () => {
+      try {
+        const loadedSettings = await SettingsService.getSiteSettings();
+        setSiteSettings(loadedSettings);
+      } catch (error) {
+        console.error('OfficialPage: Error loading settings:', error);
+      }
+    };
+
+    loadSettings();
   }, []);
 
   // Helper function to generate contact links
@@ -40,6 +49,19 @@ const OfficialPage = () => {
       window.open(link, '_blank');
     }
   };
+
+  // عرض loading إذا لم تحمل الإعدادات بعد
+  if (!siteSettings) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center">
+        <StarryBackground />
+        <div className="relative z-10 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white">جاري تحميل الإعدادات...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative">
