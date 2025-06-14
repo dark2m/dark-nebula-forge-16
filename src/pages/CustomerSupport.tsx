@@ -1,12 +1,17 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import StarryBackground from '../components/StarryBackground';
 import CustomerAuthForm from '../components/customer/CustomerAuthForm';
 import CustomerChatInterface from '../components/customer/CustomerChatInterface';
 
 const CustomerSupport = () => {
   const { user, loading } = useAuth();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   if (loading) {
     return (
@@ -203,7 +208,7 @@ const CustomerSupport = () => {
               <CustomerAuthForm onAuthSuccess={() => {}} />
             </div>
           ) : (
-            <CustomerChatInterface />
+            <CustomerChatInterface user={user} onLogout={handleLogout} />
           )}
         </div>
       </div>

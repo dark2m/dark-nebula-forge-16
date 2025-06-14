@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import CustomerAuthService from '../utils/customerAuthService';
 import { useToast } from '@/hooks/use-toast';
 
 const EmailVerification = () => {
@@ -50,36 +49,21 @@ const EmailVerification = () => {
         return;
       }
 
-      // تسجيل العميل
-      const registrationSuccess = CustomerAuthService.registerCustomer(
-        verificationData.email,
-        verificationData.password,
-        verificationData.username
-      );
+      // تم التحقق بنجاح - سيتم التعامل مع التسجيل عبر Supabase Auth
+      localStorage.removeItem('pendingVerification');
+      
+      setVerificationStatus('success');
+      setMessage('تم تأكيد بريدك الإلكتروني بنجاح! سيتم توجيهك إلى خدمة العملاء...');
+      
+      toast({
+        title: "تم التحقق بنجاح",
+        description: "تم تأكيد بريدك الإلكتروني بنجاح",
+      });
 
-      if (registrationSuccess) {
-        // تسجيل الدخول التلقائي
-        CustomerAuthService.authenticateCustomer(verificationData.email, verificationData.password);
-        
-        // إزالة بيانات التحقق المؤقتة
-        localStorage.removeItem('pendingVerification');
-        
-        setVerificationStatus('success');
-        setMessage('تم تأكيد بريدك الإلكتروني بنجاح! سيتم توجيهك إلى خدمة العملاء...');
-        
-        toast({
-          title: "تم التحقق بنجاح",
-          description: "تم تأكيد بريدك الإلكتروني وإنشاء حسابك بنجاح",
-        });
-
-        // التوجه إلى صفحة دعم العملاء بعد 3 ثوان
-        setTimeout(() => {
-          navigate('/sport');
-        }, 3000);
-      } else {
-        setVerificationStatus('error');
-        setMessage('حدث خطأ أثناء إنشاء الحساب');
-      }
+      // التوجه إلى صفحة دعم العملاء بعد 3 ثوان
+      setTimeout(() => {
+        navigate('/sport');
+      }, 3000);
     } catch (error) {
       console.error('Error parsing verification data:', error);
       setVerificationStatus('error');
