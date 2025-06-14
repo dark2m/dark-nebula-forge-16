@@ -50,6 +50,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             title: "تم التحقق من البريد الإلكتروني",
             description: "تم تفعيل حسابك بنجاح، مرحباً بك!"
           });
+
+          // حفظ نسخة احتياطية من بيانات المستخدم المهمة
+          try {
+            const { UserDataPersistence } = await import('@/utils/userDataPersistence');
+            UserDataPersistence.createUserBackup({
+              userId: session.user.id,
+              email: session.user.email,
+              lastLogin: new Date().toISOString()
+            });
+          } catch (error) {
+            console.error('Error creating backup:', error);
+          }
         }
       }
     );
