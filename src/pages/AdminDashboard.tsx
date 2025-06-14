@@ -63,12 +63,14 @@ const AdminDashboard = () => {
       return {
         id: admin.id || 1,
         username: admin.username || 'admin',
+        password: admin.password || 'admin', // Provide default password
         role: admin.role || 'مشرف'
       };
     }
     return {
       id: 1,
       username: 'admin',
+      password: 'admin', // Provide default password
       role: 'مشرف'
     };
   };
