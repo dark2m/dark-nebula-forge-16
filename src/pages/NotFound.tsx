@@ -61,6 +61,11 @@ const NotFound = () => {
                     برمجة مواقع
                   </Button>
                 </Link>
+                <Link to="/download">
+                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
+                    التنزيلات
+                  </Button>
+                </Link>
                 <Link to="/tool">
                   <Button variant="outline" className="border-white/30 text-white hover:bg-white/10">
                     الأدوات

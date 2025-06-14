@@ -17,6 +17,7 @@ import WebDevelopment from "./pages/WebDevelopment";
 import DiscordBots from "./pages/DiscordBots";
 import Tools from "./pages/Tools";
 import CustomerSupport from "./pages/CustomerSupport";
+import Downloads from "./pages/Downloads";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -83,6 +84,12 @@ const App = () => (
                 <>
                   <Navigation />
                   <CustomerSupport />
+                </>
+              } />
+              <Route path="/download" element={
+                <>
+                  <Navigation />
+                  <Downloads />
                 </>
               } />
               
