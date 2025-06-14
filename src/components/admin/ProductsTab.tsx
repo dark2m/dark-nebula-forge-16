@@ -1,18 +1,79 @@
-
-import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-import ProductFeaturesManager from '../ProductFeaturesManager';
-import MediaManager from '../MediaManager';
+import React, { useState, useEffect } from 'react';
+import { Plus, Edit, Trash2, Package, DollarSign, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useProductManagement } from '@/hooks/useProductManagement';
+import type { Product } from '../../types/admin';
 
 interface ProductsTabProps {
-  canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
+  products: Product[];
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (id: number, product: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: number) => Promise<void>;
+  canAccess: (permission: string) => boolean;
 }
 
-const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
+const ProductsTab: React.FC<ProductsTabProps> = ({
+  products,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  canAccess
+}) => {
   const { toast } = useToast();
-  const { products, addProduct, updateProduct, deleteProduct } = useProductManagement(canAccess, toast);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleEditProduct = async (productData: Partial<Product>) => {
+    if (!editingProduct) return;
+    
+    setIsLoading(true);
+    try {
+      await updateProduct(editingProduct.id, productData);
+      setEditingProduct(null);
+      toast({
+        title: "تم تحديث المنتج",
+        description: "تم تحديث المنتج بنجاح"
+      });
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast({
+        title: "خطأ في التحديث",
+        description: "حدث خطأ أثناء تحديث المنتج",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (product: Product) => {
+    if (!window.confirm(`هل أنت متأكد من حذف المنتج "${product.name}"؟`)) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await deleteProduct(product.id);
+      toast({
+        title: "تم حذف المنتج",
+        description: "تم حذف المنتج بنجاح"
+      });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast({
+        title: "خطأ في الحذف",
+        description: "حدث خطأ أثناء حذف المنتج",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const categories = [
     { value: 'pubg', label: 'هكر ببجي موبايل' },

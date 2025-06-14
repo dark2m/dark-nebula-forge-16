@@ -1,22 +1,26 @@
 
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, X, Minus, Plus } from 'lucide-react';
-import { useCart } from '../hooks/useCart';
+import { useCartWithQuantity } from '../hooks/useCartWithQuantity';
 import SettingsService from '../utils/settingsService';
 import type { SiteSettings } from '../types/admin';
 
 const GlobalCart = () => {
-  const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCartWithQuantity();
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
+        setIsLoading(true);
         const loadedSettings = await SettingsService.getSiteSettings();
         setSettings(loadedSettings);
       } catch (error) {
         console.error('GlobalCart: Error loading settings:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -27,14 +31,14 @@ const GlobalCart = () => {
     if (!settings || cartItems.length === 0) return;
 
     const message = `مرحبا، أريد شراء هذه المنتجات:\n\n${cartItems.map(item => 
-      `• ${item.name} - الكمية: ${item.quantity} - السعر: $${item.price * item.quantity}`
+      `• ${item.name} - الكمية: ${item.quantity} - السعر: $${(typeof item.price === 'string' ? parseFloat(item.price) : item.price) * item.quantity}`
     ).join('\n')}\n\nالمجموع الكلي: $${getTotalPrice()}`;
     
     const whatsappUrl = `https://wa.me/${settings.contactInfo.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
-  if (!settings) return null;
+  if (isLoading || !settings) return null;
 
   return (
     <>
@@ -105,7 +109,7 @@ const GlobalCart = () => {
                       </div>
                       
                       <span className="text-green-400 font-bold">
-                        ${item.price * item.quantity}
+                        ${((typeof item.price === 'string' ? parseFloat(item.price) : item.price) * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   </div>
