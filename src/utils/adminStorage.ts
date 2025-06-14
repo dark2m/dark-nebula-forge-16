@@ -1,212 +1,165 @@
-import { Product, SiteSettings, AdminUser } from '../types/admin';
+// Main AdminStorage class that combines all services
 import AuthService from './auth';
-import SettingsService from './settingsService';
+import CartService from './cartService';
 import ProductService from './productService';
+import UserService from './userService';
+import SettingsService from './settingsService';
 
-export class AdminStorage {
-  private static STORAGE_KEYS = {
-    PRODUCTS: 'admin_products',
-    SETTINGS: 'admin_settings',
-    USERS: 'admin_users',
-    BACKUP_PREFIX: 'admin_backup_'
-  };
+// Re-export types for backward compatibility
+export type { Product, AdminUser, SiteSettings, PageTexts, CartItem } from '../types/admin';
 
-  // Products Management
-  static async getProducts(): Promise<Product[]> {
-    try {
-      return await ProductService.getProducts();
-    } catch (error) {
-      console.error('AdminStorage: Error getting products:', error);
-      return [];
-    }
+class AdminStorage {
+  // Authentication methods
+  static authenticateAdmin = AuthService.authenticateAdmin;
+  static getCurrentUser = AuthService.getCurrentUser;
+  static isAdminAuthenticated = AuthService.isAdminAuthenticated;
+  static hasPermission = AuthService.hasPermission;
+
+  // Cart methods - محدثة لدعم الفئات المنفصلة
+  static getCart(category?: string) {
+    return CartService.getCart(category);
+  }
+  
+  static addToCart = CartService.addToCart;
+  
+  static removeFromCart(id: number, category: string) {
+    return CartService.removeFromCart(id, category);
+  }
+  
+  static clearCart = CartService.clearCart;
+  
+  static getCartCount(category?: string) {
+    return CartService.getCartCount(category);
   }
 
-  static async saveProducts(products: Product[]): Promise<void> {
-    try {
-      await ProductService.saveProducts(products);
-    } catch (error) {
-      console.error('AdminStorage: Error saving products:', error);
-      throw error;
+  // Product methods
+  static getProducts = ProductService.getProducts;
+  static saveProducts = ProductService.saveProducts;
+  static addProduct = ProductService.addProduct;
+  static updateProduct = ProductService.updateProduct;
+  static deleteProduct = ProductService.deleteProduct;
+
+  // User methods
+  static getAdminUsers = UserService.getAdminUsers;
+  static saveAdminUsers = UserService.saveAdminUsers;
+  static updateAdminUser = UserService.updateAdminUser;
+  static addAdminUser = UserService.addAdminUser;
+  static deleteAdminUser = UserService.deleteAdminUser;
+
+  // Settings methods - مع ضمان إرجاع إعدادات افتراضية
+  static getSiteSettings() {
+    const settings = SettingsService.getSiteSettings();
+    // التأكد من وجود جميع الخصائص المطلوبة
+    if (!settings || !settings.pageTexts || !settings.backgroundSettings) {
+      return this.getDefaultSiteSettings();
     }
+    return settings;
   }
+  
+  static saveSiteSettings = SettingsService.saveSiteSettings;
 
-  // Settings Management
-  static async getSettings(): Promise<SiteSettings> {
-    try {
-      return await SettingsService.getSiteSettings();
-    } catch (error) {
-      console.error('AdminStorage: Error getting settings:', error);
-      throw error;
-    }
-  }
-
-  static async saveSettings(settings: SiteSettings): Promise<void> {
-    try {
-      await SettingsService.saveSiteSettings(settings);
-    } catch (error) {
-      console.error('AdminStorage: Error saving settings:', error);
-      throw error;
-    }
-  }
-
-  // Backup and Restore
-  static async createBackup(): Promise<string> {
-    try {
-      const timestamp = new Date().toISOString();
-      const backupKey = `${this.STORAGE_KEYS.BACKUP_PREFIX}${timestamp}`;
-      
-      const products = await this.getProducts();
-      const settings = await this.getSettings();
-      
-      const backupData = {
-        timestamp,
-        products,
-        settings
-      };
-
-      localStorage.setItem(backupKey, JSON.stringify(backupData));
-      
-      // Keep only last 10 backups
-      this.cleanupOldBackups();
-      
-      return backupKey;
-    } catch (error) {
-      console.error('AdminStorage: Error creating backup:', error);
-      throw error;
-    }
-  }
-
-  static getBackups(): Array<{key: string, timestamp: string, data: any}> {
-    const backups: Array<{key: string, timestamp: string, data: any}> = [];
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(this.STORAGE_KEYS.BACKUP_PREFIX)) {
-        try {
-          const data = JSON.parse(localStorage.getItem(key) || '{}');
-          backups.push({ key, timestamp: data.timestamp, data });
-        } catch (error) {
-          console.error('AdminStorage: Error parsing backup:', error);
+  // إضافة method للحصول على الإعدادات الافتراضية
+  static getDefaultSiteSettings() {
+    const defaultSettings = {
+      title: 'DARK',
+      titleSize: 'xl' as const,
+      description: 'موقع DARK للخدمات التقنية',
+      colors: { primary: '#3b82f6', secondary: '#8b5cf6', accent: '#06b6d4' },
+      globalTextSize: 'medium' as const,
+      backgroundSettings: { 
+        type: 'color' as const, 
+        value: '#000000',
+        starCount: 80,
+        starSize: 'medium' as const,
+        starOpacity: 0.8,
+        meteorCount: 10,
+        meteorSize: 'medium' as const,
+        meteorOpacity: 0.7,
+        meteorDirection: 'down' as const,
+        meteorColors: ['#4ecdc4', '#45b7d1', '#ffeaa7', '#fd79a8', '#a8e6cf', '#81ecec'],
+        animationSpeed: 'normal' as const
+      },
+      navigation: [],
+      contactInfo: {
+        telegram: '',
+        discord: '',
+        whatsapp: '',
+        email: '',
+        phone: '',
+        address: ''
+      },
+      homePage: {
+        heroTitle: 'مرحباً بك في DARK',
+        heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
+        featuresTitle: 'لماذا تختار DARK؟',
+        features: []
+      },
+      typography: {
+        fontFamily: 'system' as const,
+        headingWeight: 'bold' as const,
+        bodyWeight: 'normal' as const,
+        lineHeight: 'normal' as const
+      },
+      design: {
+        borderRadius: 'medium' as const,
+        shadows: 'medium' as const,
+        spacing: 'normal' as const,
+        animations: true
+      },
+      pageTexts: {
+        home: {
+          heroTitle: 'مرحباً بك في DARK',
+          heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
+          featuresTitle: 'لماذا تختار DARK؟',
+          features: []
+        },
+        official: {
+          pageTitle: 'الصفحة الرئيسية',
+          pageSubtitle: 'تعرف على فريق DARK واحصل على جميع طرق التواصل معنا',
+          aboutTitle: 'من نحن',
+          aboutContent: [],
+          whyChooseTitle: 'لماذا تختارنا',
+          whyChooseItems: [],
+          contactTitle: 'تواصل معنا'
+        },
+        pubgHacks: {
+          pageTitle: 'هكر ببجي موبايل',
+          pageSubtitle: 'أحدث الهاكات والأدوات المتقدمة لببجي موبايل مع ضمان الأمان والجودة',
+          safetyTitle: 'ضمان الأمان 100%',
+          safetyDescription: 'جميع هاكاتنا مطورة بأحدث التقنيات لتجنب الكشف والحظر. نضمن لك تجربة آمنة ومميزة.'
+        },
+        webDevelopment: {
+          pageTitle: 'برمجة مواقع',
+          pageSubtitle: 'خدمات تطوير مواقع احترافية ومتقدمة',
+          servicesTitle: 'خدماتنا'
+        },
+        discordBots: {
+          pageTitle: 'برمجة بوتات ديسكورد',
+          pageSubtitle: 'بوتات ديسكورد مخصصة ومتطورة',
+          featuresTitle: 'مميزات بوتاتنا'
+        },
+        navigation: {
+          homeTitle: 'الرئيسية',
+          pubgTitle: 'هكر ببجي موبايل',
+          webTitle: 'برمجة مواقع',
+          discordTitle: 'برمجة بوتات ديسكورد',
+          officialTitle: 'الصفحة الرئيسية',
+          adminTitle: 'الإدارة'
+        },
+        cart: {
+          cartTitle: 'السلة',
+          emptyCartMessage: 'السلة فارغة',
+          purchaseButton: 'شراء عبر الديسكورد',
+          purchaseNote: 'سيتم توجيهك إلى الديسكورد لإتمام الشراء',
+          addToCartButton: 'أضف للسلة',
+          removeButton: 'حذف'
         }
       }
-    }
-    
-    return backups.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }
+    };
 
-  static async restoreBackup(backupKey: string): Promise<void> {
-    try {
-      const backupData = localStorage.getItem(backupKey);
-      if (!backupData) {
-        throw new Error('Backup not found');
-      }
-
-      const { products, settings } = JSON.parse(backupData);
-      
-      if (products) {
-        await this.saveProducts(products);
-      }
-      
-      if (settings) {
-        await this.saveSettings(settings);
-      }
-    } catch (error) {
-      console.error('AdminStorage: Error restoring backup:', error);
-      throw error;
-    }
-  }
-
-  static deleteBackup(backupKey: string): void {
-    localStorage.removeItem(backupKey);
-  }
-
-  private static cleanupOldBackups(): void {
-    const backups = this.getBackups();
-    const maxBackups = 10;
-    
-    if (backups.length > maxBackups) {
-      const oldBackups = backups.slice(maxBackups);
-      oldBackups.forEach(backup => {
-        localStorage.removeItem(backup.key);
-      });
-    }
-  }
-
-  // Users Management
-  static getUsers(): AdminUser[] {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEYS.USERS);
-      return stored ? JSON.parse(stored) : [];
-    } catch (error) {
-      console.error('AdminStorage: Error getting users:', error);
-      return [];
-    }
-  }
-
-  static saveUsers(users: AdminUser[]): void {
-    try {
-      localStorage.setItem(this.STORAGE_KEYS.USERS, JSON.stringify(users));
-    } catch (error) {
-      console.error('AdminStorage: Error saving users:', error);
-      throw error;
-    }
-  }
-
-  // Export/Import functionality
-  static exportData(): string {
-    try {
-      const exportData = {
-        timestamp: new Date().toISOString(),
-        products: this.getProducts(),
-        settings: this.getSettings(),
-        users: this.getUsers()
-      };
-      
-      return JSON.stringify(exportData, null, 2);
-    } catch (error) {
-      console.error('AdminStorage: Error exporting data:', error);
-      throw error;
-    }
-  }
-
-  static async importData(jsonData: string): Promise<void> {
-    try {
-      const data = JSON.parse(jsonData);
-      
-      if (data.products) {
-        await this.saveProducts(data.products);
-      }
-      
-      if (data.settings) {
-        await this.saveSettings(data.settings);
-      }
-      
-      if (data.users) {
-        this.saveUsers(data.users);
-      }
-    } catch (error) {
-      console.error('AdminStorage: Error importing data:', error);
-      throw error;
-    }
-  }
-
-  // Clear all data
-  static async clearAllData(): Promise<void> {
-    try {
-      await this.saveProducts([]);
-      
-      const defaultSettings = await SettingsService.getSiteSettings();
-      await this.saveSettings(defaultSettings);
-      
-      this.saveUsers([]);
-      
-      // Clear backups
-      const backups = this.getBackups();
-      backups.forEach(backup => this.deleteBackup(backup.key));
-    } catch (error) {
-      console.error('AdminStorage: Error clearing data:', error);
-      throw error;
-    }
+    // حفظ الإعدادات الافتراضية إذا لم تكن موجودة
+    SettingsService.saveSiteSettings(defaultSettings);
+    return defaultSettings;
   }
 }
 

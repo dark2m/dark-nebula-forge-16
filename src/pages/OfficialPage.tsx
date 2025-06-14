@@ -3,26 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Mail, Phone, MapPin, Users, Star, Shield } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import SettingsService from '../utils/settingsService';
+import AdminStorage from '../utils/adminStorage';
 import TranslationService from '../utils/translationService';
 import GlobalCart from '../components/GlobalCart';
-import { SiteSettings } from '../types/admin';
 
 const OfficialPage = () => {
   const navigate = useNavigate();
-  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
+  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const loadedSettings = await SettingsService.getSiteSettings();
-        setSiteSettings(loadedSettings);
-      } catch (error) {
-        console.error('OfficialPage: Error loading settings:', error);
-      }
-    };
-
-    loadSettings();
+    const loadedSettings = AdminStorage.getSiteSettings();
+    setSiteSettings(loadedSettings);
   }, []);
 
   // Helper function to generate contact links
@@ -48,27 +39,6 @@ const OfficialPage = () => {
     } else {
       window.open(link, '_blank');
     }
-  };
-
-  // عرض loading إذا لم تحمل الإعدادات بعد
-  if (!siteSettings) {
-    return (
-      <div className="min-h-screen relative flex items-center justify-center">
-        <StarryBackground />
-        <div className="relative z-10 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">جاري تحميل الإعدادات...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Add safe access to contactInfo with fallbacks
-  const contactInfo = siteSettings?.contactInfo || {
-    whatsapp: '+1234567890',
-    email: 'info@dark.com',
-    phone: '+1234567890',
-    address: 'الرياض، المملكة العربية السعودية'
   };
 
   return (
@@ -147,50 +117,50 @@ const OfficialPage = () => {
               
               {/* WhatsApp */}
               <button
-                onClick={() => handleContactClick('whatsapp', contactInfo.whatsapp)}
+                onClick={() => handleContactClick('whatsapp', siteSettings.contactInfo.whatsapp)}
                 className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-green-500/20 transition-colors cursor-pointer"
               >
                 <Phone className="w-6 h-6 sm:w-8 sm:h-8 text-green-400 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                   {TranslationService.translate('contact.whatsapp')}
                 </h3>
-                <p className="text-green-400 text-sm sm:text-base break-all">{contactInfo.whatsapp}</p>
+                <p className="text-green-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.whatsapp}</p>
               </button>
 
               {/* Email */}
               <button
-                onClick={() => handleContactClick('email', contactInfo.email)}
+                onClick={() => handleContactClick('email', siteSettings.contactInfo.email)}
                 className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-red-500/20 transition-colors cursor-pointer"
               >
                 <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-red-400 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                   {TranslationService.translate('contact.email')}
                 </h3>
-                <p className="text-red-400 text-sm sm:text-base break-all">{contactInfo.email}</p>
+                <p className="text-red-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.email}</p>
               </button>
 
               {/* Phone */}
               <button
-                onClick={() => handleContactClick('phone', contactInfo.phone)}
+                onClick={() => handleContactClick('phone', siteSettings.contactInfo.phone)}
                 className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-blue-500/20 transition-colors cursor-pointer"
               >
                 <Phone className="w-6 h-6 sm:w-8 sm:h-8 text-blue-400 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                   {TranslationService.translate('contact.phone')}
                 </h3>
-                <p className="text-blue-400 text-sm sm:text-base break-all">{contactInfo.phone}</p>
+                <p className="text-blue-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.phone}</p>
               </button>
 
               {/* Address */}
               <button
-                onClick={() => handleContactClick('address', contactInfo.address)}
+                onClick={() => handleContactClick('address', siteSettings.contactInfo.address)}
                 className="bg-gray-500/10 border border-gray-500/30 rounded-lg p-4 sm:p-6 text-center hover:bg-gray-500/20 transition-colors cursor-pointer"
               >
                 <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-base sm:text-lg font-bold text-white mb-2">
                   {TranslationService.translate('contact.address')}
                 </h3>
-                <p className="text-gray-400 text-sm sm:text-base break-all">{contactInfo.address}</p>
+                <p className="text-gray-400 text-sm sm:text-base break-all">{siteSettings.contactInfo.address}</p>
               </button>
 
             </div>

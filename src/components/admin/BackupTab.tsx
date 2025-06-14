@@ -1,348 +1,243 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Download, Upload, Trash2, AlertTriangle, Clock, CheckCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import React, { useState } from 'react';
+import { Download, Upload, Save, RotateCcw, Database, AlertTriangle } from 'lucide-react';
+import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
-import AdminStorage from '../../utils/adminStorage';
-import type { SiteSettings, Product } from '../../types/admin';
+import ProductService from '../../utils/productService';
+import SettingsService from '../../utils/settingsService';
 
 interface BackupTabProps {
   siteSettings: SiteSettings;
   setSiteSettings: (settings: SiteSettings) => void;
-  saveSiteSettings: () => void;
 }
 
-const BackupTab: React.FC<BackupTabProps> = ({
-  siteSettings,
-  setSiteSettings,
-  saveSiteSettings
-}) => {
-  const { toast } = useToast();
-  const [backups, setBackups] = useState<Array<{key: string, timestamp: string, data: any}>>([]);
+const BackupTab: React.FC<BackupTabProps> = ({ siteSettings, setSiteSettings }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    loadBackups();
-    loadProducts();
-  }, []);
-
-  const loadBackups = () => {
+  const createFullBackup = () => {
     try {
-      const availableBackups = AdminStorage.getBackups();
-      setBackups(availableBackups);
-    } catch (error) {
-      console.error('Error loading backups:', error);
-      toast({
-        title: "خطأ في تحميل النسخ الاحتياطية",
-        description: "حدث خطأ أثناء تحميل النسخ الاحتياطية",
-        variant: "destructive"
-      });
-    }
-  };
+      const backup = {
+        timestamp: new Date().toISOString(),
+        version: '1.0',
+        data: {
+          siteSettings,
+          products: ProductService.getProducts(),
+          adminUsers: JSON.parse(localStorage.getItem('admin_users') || '[]')
+        }
+      };
 
-  const loadProducts = async () => {
-    try {
-      const loadedProducts = await AdminStorage.getProducts();
-      setProducts(loadedProducts);
-    } catch (error) {
-      console.error('Error loading products:', error);
-      setProducts([]);
-    }
-  };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dark-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
 
-  const createBackup = async () => {
-    setIsLoading(true);
-    try {
-      const backupKey = await AdminStorage.createBackup();
-      
       toast({
         title: "تم إنشاء النسخة الاحتياطية",
-        description: `تم إنشاء نسخة احتياطية بنجاح: ${backupKey}`
-      });
-      
-      loadBackups();
-    } catch (error) {
-      console.error('Error creating backup:', error);
-      toast({
-        title: "خطأ في إنشاء النسخة الاحتياطية",
-        description: "حدث خطأ أثناء إنشاء النسخة الاحتياطية",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const restoreBackup = async (backupKey: string) => {
-    setIsLoading(true);
-    try {
-      await AdminStorage.restoreBackup(backupKey);
-      
-      // Reload data after restoration
-      const restoredSettings = await AdminStorage.getSettings();
-      setSiteSettings(restoredSettings);
-      await loadProducts();
-      
-      toast({
-        title: "تم استعادة النسخة الاحتياطية",
-        description: "تم استعادة النسخة الاحتياطية بنجاح"
-      });
-    } catch (error) {
-      console.error('Error restoring backup:', error);
-      toast({
-        title: "خطأ في استعادة النسخة الاحتياطية",
-        description: "حدث خطأ أثناء استعادة النسخة الاحتياطية",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const deleteBackup = (backupKey: string) => {
-    try {
-      AdminStorage.deleteBackup(backupKey);
-      loadBackups();
-      
-      toast({
-        title: "تم حذف النسخة الاحتياطية",
-        description: "تم حذف النسخة الاحتياطية بنجاح"
-      });
-    } catch (error) {
-      console.error('Error deleting backup:', error);
-      toast({
-        title: "خطأ في حذف النسخة الاحتياطية",
-        description: "حدث خطأ أثناء حذف النسخة الاحتياطية",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const exportData = async () => {
-    try {
-      const exportedData = await AdminStorage.exportData();
-      const blob = new Blob([exportedData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `dark-admin-export-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "تم تصدير البيانات",
         description: "تم تصدير جميع البيانات بنجاح"
       });
     } catch (error) {
-      console.error('Error exporting data:', error);
       toast({
-        title: "خطأ في تصدير البيانات",
-        description: "حدث خطأ أثناء تصدير البيانات",
+        title: "خطأ في النسخ الاحتياطي",
+        description: "حدث خطأ أثناء إنشاء النسخة الاحتياطية",
         variant: "destructive"
       });
     }
   };
 
-  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const restoreFromBackup = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    try {
-      const text = await file.text();
-      await AdminStorage.importData(text);
-      
-      // Reload all data after import
-      const importedSettings = await AdminStorage.getSettings();
-      setSiteSettings(importedSettings);
-      await loadProducts();
-      loadBackups();
-      
-      toast({
-        title: "تم استيراد البيانات",
-        description: "تم استيراد جميع البيانات بنجاح"
-      });
-    } catch (error) {
-      console.error('Error importing data:', error);
-      toast({
-        title: "خطأ في استيراد البيانات",
-        description: "حدث خطأ أثناء استيراد البيانات. تأكد من صحة الملف.",
-        variant: "destructive"
-      });
-    }
-    
-    // Reset file input
-    event.target.value = '';
-  };
-
-  const clearAllData = async () => {
-    if (!window.confirm('هل أنت متأكد من حذف جميع البيانات؟ هذا الإجراء لا يمكن التراجع عنه!')) {
-      return;
-    }
-
     setIsLoading(true);
-    try {
-      await AdminStorage.clearAllData();
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        const backup = JSON.parse(e.target?.result as string);
+        
+        if (backup.data) {
+          // استعادة الإعدادات
+          if (backup.data.siteSettings) {
+            SettingsService.saveSiteSettings(backup.data.siteSettings);
+            setSiteSettings(backup.data.siteSettings);
+          }
+          
+          // استعادة المنتجات
+          if (backup.data.products) {
+            ProductService.saveProducts(backup.data.products);
+          }
+          
+          // استعادة المستخدمين
+          if (backup.data.adminUsers) {
+            localStorage.setItem('admin_users', JSON.stringify(backup.data.adminUsers));
+          }
+
+          toast({
+            title: "تم استعادة النسخة الاحتياطية",
+            description: "تم استعادة جميع البيانات بنجاح"
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "خطأ في الاستعادة",
+          description: "تأكد من صحة ملف النسخة الاحتياطية",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+
+  const resetToDefaults = () => {
+    if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات إلى الوضع الافتراضي؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+      // حذف جميع البيانات المحفوظة
+      localStorage.removeItem('site_settings');
+      localStorage.removeItem('products');
+      localStorage.removeItem('cart_pubg');
+      localStorage.removeItem('cart_web');
+      localStorage.removeItem('cart_discord');
       
-      // Reload default data
-      const defaultSettings = await AdminStorage.getSettings();
-      setSiteSettings(defaultSettings);
-      setProducts([]);
-      loadBackups();
-      
-      toast({
-        title: "تم حذف جميع البيانات",
-        description: "تم حذف جميع البيانات وإعادة تعيين الإعدادات الافتراضية"
-      });
-    } catch (error) {
-      console.error('Error clearing data:', error);
-      toast({
-        title: "خطأ في حذف البيانات",
-        description: "حدث خطأ أثناء حذف البيانات",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+      // إعادة تحميل الصفحة لتطبيق الإعدادات الافتراضية
+      window.location.reload();
     }
   };
 
-  const formatDate = (timestamp: string) => {
-    try {
-      return new Date(timestamp).toLocaleString('ar-SA');
-    } catch {
-      return timestamp;
-    }
+  const exportSettings = () => {
+    const settingsBlob = new Blob([JSON.stringify(siteSettings, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(settingsBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `settings-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "تم تصدير الإعدادات",
+      description: "تم تصدير إعدادات الموقع فقط"
+    });
+  };
+
+  const exportProducts = () => {
+    const products = ProductService.getProducts();
+    const productsBlob = new Blob([JSON.stringify(products, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(productsBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `products-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "تم تصدير المنتجات",
+      description: "تم تصدير جميع المنتجات بنجاح"
+    });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-white">النسخ الاحتياطية والتصدير</h2>
-          <p className="text-gray-400">إدارة النسخ الاحتياطية وتصدير/استيراد البيانات</p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={createBackup} disabled={isLoading} className="glow-button">
-            {isLoading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-            إنشاء نسخة احتياطية
-          </Button>
-          <Button onClick={saveSiteSettings} className="glow-button">
-            <Save className="w-4 h-4 mr-2" />
-            حفظ الإعدادات الحالية
-          </Button>
+      <h2 className="text-3xl font-bold text-white">النسخ الاحتياطي والاستعادة</h2>
+      
+      {/* نسخة احتياطية كاملة */}
+      <div className="admin-card rounded-xl p-6">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Database className="w-5 h-5" />
+          نسخة احتياطية كاملة
+        </h3>
+        <p className="text-gray-300 mb-4">
+          إنشاء نسخة احتياطية شاملة تتضمن جميع الإعدادات والمنتجات والمستخدمين
+        </p>
+        <div className="flex flex-wrap gap-4">
+          <button
+            onClick={createFullBackup}
+            className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
+          >
+            <Download className="w-4 h-4" />
+            <span>إنشاء نسخة احتياطية كاملة</span>
+          </button>
+          
+          <label className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg cursor-pointer transition-colors">
+            <Upload className="w-4 h-4" />
+            <span>استعادة من نسخة احتياطية</span>
+            <input
+              type="file"
+              accept=".json"
+              onChange={restoreFromBackup}
+              className="hidden"
+              disabled={isLoading}
+            />
+          </label>
         </div>
       </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-white/20 backdrop-blur-sm border-white/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-300">عدد النسخ الاحتياطية</p>
-                <p className="text-2xl font-bold text-white">{backups.length}</p>
-              </div>
-              <Clock className="w-8 h-8 text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white/20 backdrop-blur-sm border-white/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-300">عدد المنتجات</p>
-                <p className="text-2xl font-bold text-white">{products.length}</p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-white/20 backdrop-blur-sm border-white/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-300">حالة البيانات</p>
-                <p className="text-lg font-bold text-green-400">محفوظة</p>
-              </div>
-              <Save className="w-8 h-8 text-green-400" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* تصدير منفصل */}
+      <div className="admin-card rounded-xl p-6">
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Save className="w-5 h-5" />
+          تصدير منفصل
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button
+            onClick={exportSettings}
+            className="flex items-center justify-center space-x-2 rtl:space-x-reverse px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            <span>تصدير الإعدادات فقط</span>
+          </button>
+          
+          <button
+            onClick={exportProducts}
+            className="flex items-center justify-center space-x-2 rtl:space-x-reverse px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            <span>تصدير المنتجات فقط</span>
+          </button>
+        </div>
       </div>
 
-      {/* Backup List */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-white">النسخ الاحتياطية المتوفرة</h3>
-        {backups.length === 0 ? (
-          <div className="bg-white/10 p-4 rounded-lg text-center text-gray-400">
-            لا توجد نسخ احتياطية متوفرة.
+      {/* إعادة تعيين */}
+      <div className="admin-card rounded-xl p-6 border border-red-500/30">
+        <h3 className="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5" />
+          منطقة خطر
+        </h3>
+        <p className="text-gray-300 mb-4">
+          إعادة تعيين جميع البيانات إلى الوضع الافتراضي. هذا الإجراء لا يمكن التراجع عنه.
+        </p>
+        <button
+          onClick={resetToDefaults}
+          className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+        >
+          <RotateCcw className="w-4 h-4" />
+          <span>إعادة تعيين كاملة</span>
+        </button>
+      </div>
+
+      {/* معلومات التخزين */}
+      <div className="admin-card rounded-xl p-6">
+        <h3 className="text-xl font-bold text-white mb-4">معلومات التخزين</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 bg-white/5 rounded-lg">
+            <h4 className="text-blue-400 font-semibold mb-2">المنتجات</h4>
+            <p className="text-white">{ProductService.getProducts().length} منتج</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {backups.map((backup) => (
-              <Card key={backup.key} className="bg-white/20 backdrop-blur-sm border-white/30">
-                <CardHeader>
-                  <CardTitle className="text-white">
-                    {formatDate(backup.timestamp)}
-                  </CardTitle>
-                  <CardDescription className="text-gray-300">
-                    تاريخ الإنشاء: {formatDate(backup.timestamp)}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex justify-between">
-                    <Button onClick={() => restoreBackup(backup.key)} variant="secondary" className="w-1/2 mr-1">
-                      <Upload className="w-4 h-4 mr-2" />
-                      استعادة
-                    </Button>
-                    <Button onClick={() => deleteBackup(backup.key)} variant="destructive" className="w-1/2 ml-1">
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      حذف
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          
+          <div className="p-4 bg-white/5 rounded-lg">
+            <h4 className="text-green-400 font-semibold mb-2">عناصر التنقل</h4>
+            <p className="text-white">{siteSettings.navigation?.length || 0} عنصر</p>
           </div>
-        )}
-      </div>
-
-      {/* Export/Import */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-white">تصدير واستيراد البيانات</h3>
-        <p className="text-gray-400">تصدير جميع البيانات إلى ملف أو استيرادها من ملف</p>
-        <div className="flex gap-4">
-          <Button onClick={exportData} className="glow-button">
-            <Download className="w-4 h-4 mr-2" />
-            تصدير البيانات
-          </Button>
-          <Input
-            type="file"
-            id="import-data"
-            className="hidden"
-            onChange={handleImportData}
-          />
-          <Label htmlFor="import-data" className="glow-button cursor-pointer flex items-center justify-center">
-            <Upload className="w-4 h-4 mr-2" />
-            استيراد البيانات
-          </Label>
+          
+          <div className="p-4 bg-white/5 rounded-lg">
+            <h4 className="text-purple-400 font-semibold mb-2">المميزات</h4>
+            <p className="text-white">{siteSettings.pageTexts?.home?.features?.length || 0} ميزة</p>
+          </div>
         </div>
-      </div>
-
-      {/* Clear Data */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-white">إعادة تعيين البيانات</h3>
-        <p className="text-gray-400">حذف جميع البيانات وإعادة تعيين الإعدادات الافتراضية</p>
-        <Button onClick={clearAllData} variant="destructive" disabled={isLoading} className="glow-button">
-          {isLoading ? <AlertTriangle className="w-4 h-4 mr-2 animate-pulse" /> : <AlertTriangle className="w-4 h-4 mr-2" />}
-          حذف جميع البيانات
-        </Button>
       </div>
     </div>
   );

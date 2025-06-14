@@ -1,45 +1,24 @@
 
-import { useState, useEffect } from 'react';
-import { Product } from '../types/admin';
+import { useState, useCallback, useEffect } from 'react';
 import ProductService from '../utils/productService';
+import type { Product } from '../types/admin';
 
 export const useProductManagement = (
   canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean,
   toast: any
 ) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // تحميل المنتجات عند بدء التطبيق
+  // تحميل المنتجات عند بداية الـ hook
   useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
-    try {
-      setIsLoading(true);
-      const loadedProducts = await ProductService.getProducts();
-      setProducts(loadedProducts);
-      console.log('useProductManagement: Products loaded:', loadedProducts.length);
-    } catch (error) {
-      console.error('useProductManagement: Error loading products:', error);
-      toast({
-        title: "خطأ في تحميل المنتجات",
-        description: "حدث خطأ أثناء تحميل المنتجات من الخادم",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // الاستماع لتحديثات المنتجات
-  useEffect(() => {
+    const loadedProducts = ProductService.getProducts();
+    console.log('useProductManagement: Initial products loaded:', loadedProducts.length);
+    setProducts(loadedProducts);
+    
+    // الاستماع لتحديثات المنتجات
     const handleProductsUpdate = (event: CustomEvent) => {
-      if (event.detail?.products) {
-        setProducts(event.detail.products);
-        console.log('useProductManagement: Products updated via event');
-      }
+      console.log('useProductManagement: Products updated via event:', event.detail.products);
+      setProducts(event.detail.products);
     };
 
     window.addEventListener('productsUpdated', handleProductsUpdate as EventListener);
@@ -49,42 +28,44 @@ export const useProductManagement = (
     };
   }, []);
 
-  const addProduct = async (): Promise<Product | null> => {
-    if (!canAccess('مشرف')) {
+  const refreshProducts = useCallback(() => {
+    const updatedProducts = ProductService.getProducts();
+    console.log('useProductManagement: Refreshing products:', updatedProducts.length);
+    setProducts(updatedProducts);
+  }, []);
+
+  const addProduct = useCallback(() => {
+    if (!canAccess('مبرمج')) {
       toast({
-        title: "غير مصرح",
-        description: "ليس لديك صلاحية لإضافة منتجات",
+        title: "غير مسموح",
+        description: "ليس لديك صلاحية لإضافة المنتجات",
         variant: "destructive"
       });
       return null;
     }
-
+    
     try {
-      const newProduct = await ProductService.addProduct({
+      const newProduct = ProductService.addProduct({
         name: 'منتج جديد',
         price: 0,
         category: 'pubg',
-        description: '',
-        features: [],
         images: [],
         videos: [],
+        description: 'وصف المنتج',
+        features: [],
         textSize: 'medium',
         titleSize: 'large'
       });
-
-      if (newProduct) {
-        toast({
-          title: "تم إضافة المنتج",
-          description: "تم إضافة منتج جديد بنجاح"
-        });
-        
-        // تحديث القائمة المحلية
-        await loadProducts();
-      }
+      
+      toast({
+        title: "تم إضافة المنتج",
+        description: "تم إضافة منتج جديد بنجاح",
+        variant: "default"
+      });
       
       return newProduct;
     } catch (error) {
-      console.error('useProductManagement: Error adding product:', error);
+      console.error('Error adding product:', error);
       toast({
         title: "خطأ في الإضافة",
         description: "حدث خطأ أثناء إضافة المنتج",
@@ -92,77 +73,70 @@ export const useProductManagement = (
       });
       return null;
     }
-  };
+  }, [canAccess, toast]);
 
-  const updateProduct = async (id: number, updates: Partial<Product>): Promise<void> => {
-    if (!canAccess('مشرف')) {
+  const updateProduct = useCallback((id: number, updates: Partial<Product>) => {
+    if (!canAccess('مبرمج')) {
       toast({
-        title: "غير مصرح",
+        title: "غير مسموح",
         description: "ليس لديك صلاحية لتعديل المنتجات",
         variant: "destructive"
       });
       return;
     }
-
+    
     try {
-      await ProductService.updateProduct(id, updates);
+      console.log('useProductManagement: Updating product:', id, updates);
+      ProductService.updateProduct(id, updates);
       
-      // تحديث القائمة المحلية
-      setProducts(prevProducts => 
-        prevProducts.map(product => 
-          product.id === id ? { ...product, ...updates } : product
-        )
-      );
-      
-      console.log('useProductManagement: Product updated:', id);
-    } catch (error) {
-      console.error('useProductManagement: Error updating product:', error);
       toast({
-        title: "خطأ في التحديث",
-        description: "حدث خطأ أثناء تحديث المنتج",
+        title: "تم حفظ التعديل",
+        description: "تم حفظ تعديلات المنتج بنجاح",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast({
+        title: "خطأ في الحفظ",
+        description: "حدث خطأ أثناء حفظ المنتج",
         variant: "destructive"
       });
     }
-  };
+  }, [canAccess, toast]);
 
-  const deleteProduct = async (id: number): Promise<void> => {
-    if (!canAccess('مدير عام')) {
+  const deleteProduct = useCallback((id: number) => {
+    if (!canAccess('مبرمج')) {
       toast({
-        title: "غير مصرح",
+        title: "غير مسموح",
         description: "ليس لديك صلاحية لحذف المنتجات",
         variant: "destructive"
       });
       return;
     }
-
+    
     try {
-      await ProductService.deleteProduct(id);
-      
-      // تحديث القائمة المحلية
-      setProducts(prevProducts => prevProducts.filter(product => product.id !== id));
+      ProductService.deleteProduct(id);
       
       toast({
         title: "تم حذف المنتج",
-        description: "تم حذف المنتج بنجاح"
+        description: "تم حذف المنتج بنجاح",
+        variant: "default"
       });
-      
-      console.log('useProductManagement: Product deleted:', id);
     } catch (error) {
-      console.error('useProductManagement: Error deleting product:', error);
+      console.error('Error deleting product:', error);
       toast({
         title: "خطأ في الحذف",
         description: "حدث خطأ أثناء حذف المنتج",
         variant: "destructive"
       });
     }
-  };
+  }, [canAccess, toast]);
 
   return {
     products,
-    isLoading,
     addProduct,
     updateProduct,
     deleteProduct,
-    loadProducts
+    refreshProducts
   };
 };

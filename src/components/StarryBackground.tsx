@@ -1,138 +1,118 @@
 
 import React, { useEffect, useState } from 'react';
-import SettingsService from '../utils/settingsService';
-import type { SiteSettings } from '../types/admin';
+import AdminStorage from '../utils/adminStorage';
 
 const StarryBackground = () => {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [stars, setStars] = useState<Array<{ id: number; left: number; top: number; size: number }>>([]);
+  const [backgroundSettings, setBackgroundSettings] = useState(AdminStorage.getSiteSettings().backgroundSettings);
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        setIsLoading(true);
-        const loadedSettings = await SettingsService.getSiteSettings();
-        console.log('StarryBackground: Loaded settings:', loadedSettings);
-        setSettings(loadedSettings);
-      } catch (error) {
-        console.error('StarryBackground: Error loading settings:', error);
-        // Use default settings if loading fails
-        setSettings({
-          backgroundSettings: {
-            type: 'color',
-            value: '#000000',
-            starCount: 100,
-            meteorCount: 5,
-            animationSpeed: 'normal',
-            starOpacity: 0.8,
-            meteorOpacity: 0.9,
-            starSize: 'medium',
-            meteorSize: 'medium',
-            meteorDirection: 'down',
-            meteorColors: ['#ffffff', '#3b82f6', '#8b5cf6']
-          }
-        } as any);
-      } finally {
-        setIsLoading(false);
+    const settings = AdminStorage.getSiteSettings().backgroundSettings;
+    setBackgroundSettings(settings);
+
+    const generateStars = () => {
+      const starArray = [];
+      const starCount = settings.starCount || 80;
+      const starSizeMultiplier = settings.starSize === 'small' ? 0.5 : settings.starSize === 'large' ? 1.5 : 1;
+      
+      for (let i = 0; i < starCount; i++) {
+        starArray.push({
+          id: i,
+          left: Math.random() * 100,
+          top: Math.random() * 100,
+          size: (Math.random() * 2 + 0.5) * starSizeMultiplier
+        });
       }
+      setStars(starArray);
     };
 
-    loadSettings();
-
-    // Listen for settings updates
-    const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('StarryBackground: Settings updated via event');
-      setSettings(event.detail.settings);
-    };
-
-    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    };
+    generateStars();
   }, []);
 
-  // Don't render anything while loading or if no settings
-  if (isLoading) {
-    return null;
+  const getAnimationDuration = () => {
+    switch (backgroundSettings.animationSpeed) {
+      case 'slow': return '6s';
+      case 'fast': return '3s';
+      default: return '4s';
+    }
+  };
+
+  const getMeteorSize = () => {
+    switch (backgroundSettings.meteorSize) {
+      case 'small': return { width: '1px', height: '8px' };
+      case 'large': return { width: '3px', height: '18px' };
+      default: return { width: '2px', height: '12px' };
+    }
+  };
+
+  const meteorCount = backgroundSettings.meteorCount || 10;
+  const meteorOpacity = backgroundSettings.meteorOpacity || 0.7;
+  const starOpacity = backgroundSettings.starOpacity || 0.8;
+  const meteorSize = getMeteorSize();
+  const meteorDirection = backgroundSettings.meteorDirection || 'down';
+  const meteorColors = backgroundSettings.meteorColors || ['#4ecdc4', '#45b7d1', '#ffeaa7', '#fd79a8', '#a8e6cf', '#81ecec'];
+
+  const backgroundStyle: React.CSSProperties = {};
+  if (backgroundSettings.type === 'image' && backgroundSettings.value && backgroundSettings.value.startsWith('data:')) {
+    backgroundStyle.backgroundImage = `url(${backgroundSettings.value})`;
+    backgroundStyle.backgroundSize = 'cover';
+    backgroundStyle.backgroundPosition = 'center';
+    backgroundStyle.backgroundRepeat = 'no-repeat';
+  } else {
+    backgroundStyle.background = `linear-gradient(180deg, ${backgroundSettings.value || '#0a0a0a'} 0%, #1a1a2e 50%, #16213e 100%)`;
   }
 
-  // Use default background settings if not available
-  const backgroundSettings = settings?.backgroundSettings || {
-    type: 'color',
-    value: '#000000',
-    starCount: 100,
-    meteorCount: 5,
-    animationSpeed: 'normal',
-    starOpacity: 0.8,
-    meteorOpacity: 0.9,
-    starSize: 'medium',
-    meteorSize: 'medium',
-    meteorDirection: 'down',
-    meteorColors: ['#ffffff', '#3b82f6', '#8b5cf6']
+  const getMeteorAnimation = (index: number) => {
+    if (meteorDirection === 'up') {
+      return 'meteor-fall-up';
+    } else if (meteorDirection === 'mixed') {
+      return index % 2 === 0 ? 'meteor-fall-down' : 'meteor-fall-up';
+    }
+    return 'meteor-fall-down';
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none">
-      {/* Background Color or Image */}
-      <div 
-        className="absolute inset-0"
-        style={{ 
-          backgroundColor: backgroundSettings.type === 'color' ? (backgroundSettings.value || '#000000') : 'transparent',
-          backgroundImage: backgroundSettings.type === 'image' ? `url(${backgroundSettings.value})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      />
+    <div className="starry-background" style={backgroundStyle}>
+      <div className="stars">
+        {stars.map((star) => (
+          <div
+            key={star.id}
+            className="star"
+            style={{
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              opacity: starOpacity,
+            }}
+          />
+        ))}
+      </div>
       
-      {/* Stars */}
-      <div className="absolute inset-0">
-        {Array.from({ length: backgroundSettings.starCount || 100 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute animate-pulse"
+      {/* Colored meteors */}
+      {Array.from({ length: meteorCount }, (_, i) => {
+        const colorIndex = i % meteorColors.length;
+        const color = meteorColors[colorIndex];
+        
+        return (
+          <div 
+            key={`meteor-${i}`} 
+            className={`meteor-colored ${getMeteorAnimation(i)}`}
             style={{
+              animationDelay: `${Math.random() * 8}s`,
+              animationDuration: getAnimationDuration(),
               left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: backgroundSettings.starSize === 'small' ? '1px' : 
-                     backgroundSettings.starSize === 'large' ? '3px' : '2px',
-              height: backgroundSettings.starSize === 'small' ? '1px' : 
-                      backgroundSettings.starSize === 'large' ? '3px' : '2px',
-              backgroundColor: '#ffffff',
-              opacity: backgroundSettings.starOpacity || 0.8,
-              borderRadius: '50%',
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: backgroundSettings.animationSpeed === 'slow' ? '4s' :
-                                backgroundSettings.animationSpeed === 'fast' ? '1s' : '2s'
+              top: meteorDirection === 'up' ? `${90 + Math.random() * 10}%` : `-${Math.random() * 10}%`,
+              opacity: meteorOpacity,
+              width: meteorSize.width,
+              height: meteorSize.height,
+              background: `linear-gradient(180deg, transparent 0%, ${color} 50%, ${color}dd 100%)`,
+              boxShadow: `0 0 8px ${color}80`,
+              borderRadius: '50px',
             }}
           />
-        ))}
-      </div>
-
-      {/* Meteors */}
-      <div className="absolute inset-0">
-        {Array.from({ length: backgroundSettings.meteorCount || 5 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute animate-ping"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: backgroundSettings.meteorSize === 'small' ? '2px' : 
-                     backgroundSettings.meteorSize === 'large' ? '6px' : '4px',
-              height: backgroundSettings.meteorSize === 'small' ? '2px' : 
-                      backgroundSettings.meteorSize === 'large' ? '6px' : '4px',
-              backgroundColor: backgroundSettings.meteorColors?.[i % (backgroundSettings.meteorColors?.length || 1)] || '#ffffff',
-              opacity: backgroundSettings.meteorOpacity || 0.9,
-              borderRadius: '50%',
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: backgroundSettings.animationSpeed === 'slow' ? '6s' :
-                                backgroundSettings.animationSpeed === 'fast' ? '2s' : '3s'
-            }}
-          />
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };

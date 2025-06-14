@@ -17,20 +17,8 @@ const DiscordBots = () => {
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const allProducts = await ProductService.getProducts();
-        const discordProducts = allProducts.filter(p => p.category === 'discord');
-        setProducts(discordProducts);
-        
-        const loadedSettings = await SettingsService.getSiteSettings();
-        setSettings(loadedSettings);
-      } catch (error) {
-        console.error('DiscordBots: Error loading data:', error);
-      }
-    };
-
-    loadData();
+    setProducts(ProductService.getProducts().filter(p => p.category === 'discord'));
+    setSettings(SettingsService.getSiteSettings());
   }, []);
 
   if (!settings) return null;

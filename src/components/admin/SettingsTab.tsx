@@ -6,23 +6,15 @@ import { SiteSettings } from '../../types/admin';
 import { useToast } from '@/hooks/use-toast';
 
 const SettingsTab = () => {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [settings, setSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
   const [hasChanges, setHasChanges] = useState(false);
-  const [originalSettings, setOriginalSettings] = useState<SiteSettings | null>(null);
+  const [originalSettings, setOriginalSettings] = useState<SiteSettings>(SettingsService.getSiteSettings());
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const loadedSettings = await SettingsService.getSiteSettings();
-        setSettings(loadedSettings);
-        setOriginalSettings(loadedSettings);
-      } catch (error) {
-        console.error('SettingsTab: Error loading settings:', error);
-      }
-    };
-
-    loadSettings();
+    const loadedSettings = SettingsService.getSiteSettings();
+    setSettings(loadedSettings);
+    setOriginalSettings(loadedSettings);
 
     // الاستماع لتحديثات الإعدادات
     const handleSettingsUpdate = (event: CustomEvent) => {
@@ -40,18 +32,14 @@ const SettingsTab = () => {
 
   useEffect(() => {
     // تحقق من وجود تغييرات
-    if (settings && originalSettings) {
-      const changed = JSON.stringify(settings) !== JSON.stringify(originalSettings);
-      setHasChanges(changed);
-    }
+    const changed = JSON.stringify(settings) !== JSON.stringify(originalSettings);
+    setHasChanges(changed);
   }, [settings, originalSettings]);
 
-  const saveSettings = async () => {
-    if (!settings) return;
-
+  const saveSettings = () => {
     try {
       console.log('SettingsTab: Saving settings:', settings);
-      await SettingsService.saveSiteSettings(settings);
+      SettingsService.saveSiteSettings(settings);
       setOriginalSettings(settings);
       setHasChanges(false);
       toast({
@@ -69,25 +57,13 @@ const SettingsTab = () => {
   };
 
   const resetSettings = () => {
-    if (originalSettings) {
-      setSettings(originalSettings);
-      setHasChanges(false);
-      toast({
-        title: "تم إلغاء التغييرات",
-        description: "تم إرجاع الإعدادات إلى آخر حفظ"
-      });
-    }
+    setSettings(originalSettings);
+    setHasChanges(false);
+    toast({
+      title: "تم إلغاء التغييرات",
+      description: "تم إرجاع الإعدادات إلى آخر حفظ"
+    });
   };
-
-  // عرض loading إذا لم تحمل الإعدادات بعد
-  if (!settings) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <span className="ml-3 text-white">جاري تحميل الإعدادات...</span>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

@@ -18,19 +18,13 @@ const PubgHacks = () => {
 
   useEffect(() => {
     // تحميل المنتجات والإعدادات
-    const loadData = async () => {
-      try {
-        console.log('PubgHacks: Loading products and settings...');
-        const allProducts = await ProductService.getProducts();
-        const pubgProducts = allProducts.filter(p => p.category === 'pubg');
-        console.log('PubgHacks: PUBG products found:', pubgProducts.length);
-        setProducts(pubgProducts);
-        
-        const loadedSettings = await SettingsService.getSiteSettings();
-        setSettings(loadedSettings);
-      } catch (error) {
-        console.error('PubgHacks: Error loading data:', error);
-      }
+    const loadData = () => {
+      console.log('PubgHacks: Loading products and settings...');
+      const allProducts = ProductService.getProducts();
+      const pubgProducts = allProducts.filter(p => p.category === 'pubg');
+      console.log('PubgHacks: PUBG products found:', pubgProducts.length);
+      setProducts(pubgProducts);
+      setSettings(SettingsService.getSiteSettings());
     };
 
     loadData();

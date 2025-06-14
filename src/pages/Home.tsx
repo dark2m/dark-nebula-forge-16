@@ -3,29 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Code, Bot, ArrowLeft, User } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import SettingsService from '../utils/settingsService';
+import AdminStorage from '../utils/adminStorage';
 import GlobalCart from '../components/GlobalCart';
 import TranslationService from '../utils/translationService';
 import { getTextContent } from '../utils/textUtils';
 import { useAuth } from '@/contexts/AuthContext';
-import { SiteSettings } from '../types/admin';
 
 const Home = () => {
   const { user } = useAuth();
-  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
+  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const loadedSettings = await SettingsService.getSiteSettings();
-        setSiteSettings(loadedSettings);
-        console.log('Home: Loaded settings:', loadedSettings);
-      } catch (error) {
-        console.error('Home: Error loading settings:', error);
-      }
-    };
-
-    loadSettings();
+    const loadedSettings = AdminStorage.getSiteSettings();
+    setSiteSettings(loadedSettings);
+    console.log('Home: Loaded settings:', loadedSettings);
 
     // الاستماع لتحديثات الإعدادات
     const handleSettingsUpdate = (event: CustomEvent) => {
@@ -40,36 +31,23 @@ const Home = () => {
     };
   }, []);
 
-  // عرض loading إذا لم تحمل الإعدادات بعد
-  if (!siteSettings) {
-    return (
-      <div className="min-h-screen relative flex items-center justify-center">
-        <StarryBackground />
-        <div className="relative z-10 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-white">جاري تحميل الإعدادات...</p>
-        </div>
-      </div>
-    );
-  }
-
   const services = [
     {
-      title: getTextContent(siteSettings?.pageTexts?.navigation?.pubgTitle || 'هكر ببجي'),
+      title: getTextContent(siteSettings.pageTexts.navigation.pubgTitle),
       description: 'أحدث الهاكات والأدوات لببجي موبايل',
       icon: Shield,
       path: '/pubg-hacks',
       gradient: 'from-red-500 to-pink-600'
     },
     {
-      title: getTextContent(siteSettings?.pageTexts?.navigation?.webTitle || 'برمجة مواقع'),
+      title: getTextContent(siteSettings.pageTexts.navigation.webTitle),
       description: 'تطوير مواقع احترافية ومتقدمة',
       icon: Code,
       path: '/web-development',
       gradient: 'from-blue-500 to-cyan-600'
     },
     {
-      title: getTextContent(siteSettings?.pageTexts?.navigation?.discordTitle || 'بوتات ديسكورد'),
+      title: getTextContent(siteSettings.pageTexts.navigation.discordTitle),
       description: 'بوتات ديسكورد مخصصة ومتطورة',
       icon: Bot,
       path: '/discord-bots',
@@ -77,15 +55,8 @@ const Home = () => {
     }
   ];
 
-  // Add safe access to pageTexts.home with fallbacks
-  const homeTexts = siteSettings?.pageTexts?.home || {
-    heroTitle: 'مرحباً بك في DARK',
-    heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
-    featuresTitle: 'خدماتنا',
-    features: []
-  };
-  
-  const visibleFeatures = homeTexts.features?.filter(feature => feature.visible) || [];
+  const homeTexts = siteSettings.pageTexts.home;
+  const visibleFeatures = homeTexts.features.filter(feature => feature.visible);
 
   return (
     <div className="min-h-screen relative">
