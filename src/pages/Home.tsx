@@ -77,8 +77,15 @@ const Home = () => {
     }
   ];
 
-  const homeTexts = siteSettings.pageTexts.home;
-  const visibleFeatures = homeTexts.features.filter(feature => feature.visible);
+  // Add safe access to pageTexts.home with fallbacks
+  const homeTexts = siteSettings?.pageTexts?.home || {
+    heroTitle: 'مرحباً بك في DARK',
+    heroSubtitle: 'نوفر لك أفضل الخدمات في مجال التقنية والبرمجة مع جودة عالية وأسعار منافسة',
+    featuresTitle: 'خدماتنا',
+    features: []
+  };
+  
+  const visibleFeatures = homeTexts.features?.filter(feature => feature.visible) || [];
 
   return (
     <div className="min-h-screen relative">

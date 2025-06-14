@@ -215,7 +215,12 @@ const AdminDashboard = () => {
         <AdminSidebar
           activeTab={activeTab}
           setActiveTab={handleTabChange}
-          currentUser={currentUser}
+          currentUser={{
+            id: currentAdmin.id,
+            username: currentAdmin.username,
+            password: currentAdmin.password,
+            role: currentAdmin.role
+          }}
           canAccess={canAccess}
         />
 
