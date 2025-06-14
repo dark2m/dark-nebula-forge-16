@@ -57,7 +57,7 @@ const AuthPage = () => {
       <StarryBackground />
       
       <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 w-full max-w-md">
+        <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">
               {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
