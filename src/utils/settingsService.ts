@@ -1,64 +1,31 @@
-
 import { SiteSettings } from '../types/admin';
+import SupabaseSettingsService from './supabaseSettingsService';
 import PersistenceService from './persistenceService';
 
 class SettingsService {
-  private static SETTINGS_KEY = 'site_settings';
-
-  static getSiteSettings(): SiteSettings {
-    const stored = localStorage.getItem(this.SETTINGS_KEY);
-    if (stored) {
-      try {
-        const settings = JSON.parse(stored);
-        console.log('SettingsService: Loaded settings from storage:', settings);
-        
-        // التأكد من وجود navigation array
-        if (!settings.navigation) {
-          settings.navigation = this.getDefaultSettings().navigation;
-        }
-        
-        return settings;
-      } catch (error) {
-        console.error('Error parsing settings:', error);
-        return this.getDefaultSettings();
-      }
+  static async getSiteSettings(): Promise<SiteSettings> {
+    try {
+      return await SupabaseSettingsService.getSiteSettings();
+    } catch (error) {
+      console.error('SettingsService: Error loading settings:', error);
+      return this.getDefaultSettings();
     }
-    
-    console.log('SettingsService: No settings found, using defaults');
-    return this.getDefaultSettings();
   }
 
-  static saveSiteSettings(settings: SiteSettings): void {
+  static async saveSiteSettings(settings: SiteSettings): Promise<void> {
     try {
-      console.log('SettingsService: Saving settings with persistence check:', settings);
+      console.log('SettingsService: Saving settings to Supabase:', settings);
       
-      // التأكد من أن navigation موجود ومُهيكل بشكل صحيح
-      const settingsToSave = {
-        ...settings,
-        navigation: settings.navigation || []
-      };
+      const success = await SupabaseSettingsService.saveSiteSettings(settings);
       
-      // حفظ مع تأكيد إضافي
-      const jsonString = JSON.stringify(settingsToSave, null, 2);
-      localStorage.setItem(this.SETTINGS_KEY, jsonString);
-      
-      // التحقق من الحفظ
-      const verification = localStorage.getItem(this.SETTINGS_KEY);
-      if (!verification) {
-        throw new Error('Failed to save to localStorage');
+      if (success) {
+        // تسجيل التغيير كمعلق
+        PersistenceService.setPendingChanges('settings', true);
+        
+        console.log('SettingsService: Settings saved successfully');
+      } else {
+        throw new Error('Failed to save settings to Supabase');
       }
-      
-      // تسجيل التغيير كمعلق
-      PersistenceService.setPendingChanges('settings', true);
-      
-      // إطلاق حدث التحديث
-      const event = new CustomEvent('settingsUpdated', {
-        detail: { settings: settingsToSave }
-      });
-      window.dispatchEvent(event);
-      
-      console.log('SettingsService: Settings saved successfully and verified');
-      console.log('SettingsService: Navigation items count:', settingsToSave.navigation?.length || 0);
       
     } catch (error) {
       console.error('SettingsService: Error saving settings:', error);
@@ -106,7 +73,7 @@ class SettingsService {
     };
   }
 
-  private static getDefaultSettings(): SiteSettings {
+  static getDefaultSettings(): SiteSettings {
     const defaultSettings: SiteSettings = {
       title: 'DARK',
       titleSize: 'xl',
@@ -285,6 +252,14 @@ class SettingsService {
     };
 
     return defaultSettings;
+  }
+
+  static async initializeSettings(): Promise<void> {
+    try {
+      await SupabaseSettingsService.initializeDefaultSettings();
+    } catch (error) {
+      console.error('SettingsService: Error initializing settings:', error);
+    }
   }
 }
 

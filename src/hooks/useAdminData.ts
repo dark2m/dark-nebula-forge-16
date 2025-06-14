@@ -1,74 +1,101 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import ProductService from '../utils/productService';
-import SettingsService from '../utils/settingsService';
-import AuthService from '../utils/auth';
+import { Product, SiteSettings } from '../types/admin';
 import { useToast } from '@/hooks/use-toast';
-import type { Product, AdminUser, SiteSettings } from '../types/admin';
+import AuthService from '../utils/auth';
+import SettingsService from '../utils/settingsService';
+import ProductService from '../utils/productService';
+
+interface AdminUser {
+  id: number;
+  username: string;
+  role: string;
+}
 
 export const useAdminData = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({} as SiteSettings);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Load data on component mount
+  // تحميل البيانات عند بدء التطبيق
   useEffect(() => {
-    const user = AuthService.getCurrentUser();
-    if (!user) {
-      navigate('/admin/login');
-      return;
-    }
-    setCurrentUser(user);
-    
-    // تحميل المنتجات
-    setProducts(ProductService.getProducts());
-    
-    // تحميل الإعدادات
-    console.log('useAdminData: Loading settings...');
-    const loadedSettings = SettingsService.getSiteSettings();
-    console.log('useAdminData: Loaded settings:', loadedSettings);
-    setSiteSettings(loadedSettings);
+    loadAdminData();
+  }, []);
 
-    // الاستماع لتحديثات الإعدادات
-    const handleSettingsUpdate = (event: CustomEvent) => {
-      console.log('useAdminData: Settings updated via event:', event.detail.settings);
-      setSiteSettings(event.detail.settings);
-    };
-
-    // الاستماع لتحديثات المنتجات
-    const handleProductsUpdate = (event: CustomEvent) => {
-      console.log('useAdminData: Products updated via event:', event.detail.products);
-      setProducts(event.detail.products);
-    };
-
-    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    window.addEventListener('productsUpdated', handleProductsUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-      window.removeEventListener('productsUpdated', handleProductsUpdate as EventListener);
-    };
-  }, [navigate]);
-
-  // تحديث setSiteSettings لحفظ التغييرات تلقائياً
-  const updateSiteSettings = (newSettings: SiteSettings) => {
-    console.log('useAdminData: Updating settings:', newSettings);
-    setSiteSettings(newSettings);
-    
-    // حفظ فوري عند التحديث
+  const loadAdminData = async () => {
     try {
-      SettingsService.saveSiteSettings(newSettings);
-      console.log('useAdminData: Settings saved successfully');
+      setIsLoading(true);
+      
+      // تحميل المستخدم الحالي
+      const user = AuthService.getCurrentUser();
+      setCurrentUser(user);
+      
+      // تحميل المنتجات من Supabase
+      const loadedProducts = await ProductService.getProducts();
+      setProducts(loadedProducts);
+      
+      // تحميل الإعدادات من Supabase
+      const loadedSettings = await SettingsService.getSiteSettings();
+      setSiteSettings(loadedSettings);
+      
+      console.log('useAdminData: All data loaded successfully');
     } catch (error) {
-      console.error('useAdminData: Error saving settings:', error);
+      console.error('useAdminData: Error loading data:', error);
+      toast({
+        title: "خطأ في تحميل البيانات",
+        description: "حدث خطأ أثناء تحميل البيانات من الخادم",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const canAccess = (requiredRole: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean => {
-    return AuthService.hasPermission(requiredRole);
+  // الاستماع لتحديثات المنتجات
+  useEffect(() => {
+    const handleProductsUpdate = async (event: CustomEvent) => {
+      console.log('useAdminData: Products updated event received');
+      const updatedProducts = await ProductService.getProducts();
+      setProducts(updatedProducts);
+    };
+
+    window.addEventListener('productsUpdated', handleProductsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('productsUpdated', handleProductsUpdate as EventListener);
+    };
+  }, []);
+
+  // الاستماع لتحديثات الإعدادات
+  useEffect(() => {
+    const handleSettingsUpdate = async (event: CustomEvent) => {
+      console.log('useAdminData: Settings updated event received');
+      const updatedSettings = await SettingsService.getSiteSettings();
+      setSiteSettings(updatedSettings);
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
+    };
+  }, []);
+
+  const canAccess = (role: 'مدير عام' | 'مبرمج' | 'مشرف'): boolean => {
+    if (!currentUser) return false;
+    
+    const roleHierarchy = {
+      'مدير عام': 3,
+      'مبرمج': 2,
+      'مشرف': 1
+    };
+    
+    const userLevel = roleHierarchy[currentUser.role as keyof typeof roleHierarchy] || 0;
+    const requiredLevel = roleHierarchy[role];
+    
+    return userLevel >= requiredLevel;
   };
 
   return {
@@ -76,8 +103,10 @@ export const useAdminData = () => {
     products,
     setProducts,
     siteSettings,
-    setSiteSettings: updateSiteSettings,
+    setSiteSettings,
+    isLoading,
     canAccess,
-    toast
+    toast,
+    loadAdminData
   };
 };

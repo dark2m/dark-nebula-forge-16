@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StarryBackground from '../components/StarryBackground';
 import AdminSidebar from '../components/admin/AdminSidebar';
@@ -22,7 +22,8 @@ const AdminDashboard = () => {
     siteSettings,
     setSiteSettings,
     canAccess,
-    toast
+    toast,
+    isLoading
   } = useAdminData();
 
   const { addProduct, updateProduct, deleteProduct } = useProductManagement(
@@ -30,34 +31,54 @@ const AdminDashboard = () => {
     toast
   );
 
+  // تهيئة الإعدادات عند بدء التطبيق
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        await SettingsService.initializeSettings();
+      } catch (error) {
+        console.error('AdminDashboard: Error initializing data:', error);
+      }
+    };
+
+    initializeData();
+  }, []);
+
   const handleLogout = () => {
     AuthService.logout();
     navigate('/admin/login');
   };
 
-  const saveSiteSettings = () => {
+  const saveSiteSettings = async () => {
     try {
-      console.log('AdminDashboard: Force saving settings:', siteSettings);
-      SettingsService.saveSiteSettings(siteSettings);
-      
-      // إطلاق حدث لتحديث جميع المكونات
-      window.dispatchEvent(new CustomEvent('settingsUpdated', {
-        detail: { settings: siteSettings }
-      }));
+      console.log('AdminDashboard: Saving settings to Supabase:', siteSettings);
+      await SettingsService.saveSiteSettings(siteSettings);
       
       toast({
         title: "تم حفظ الإعدادات",
-        description: "تم حفظ إعدادات الموقع بنجاح وتطبيقها على الموقع"
+        description: "تم حفظ إعدادات الموقع بنجاح في Supabase"
       });
     } catch (error) {
       console.error('Error saving settings:', error);
       toast({
         title: "خطأ في الحفظ",
-        description: "حدث خطأ أثناء حفظ الإعدادات",
+        description: "حدث خطأ أثناء حفظ الإعدادات في Supabase",
         variant: "destructive"
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center">
+        <StarryBackground />
+        <div className="relative z-10 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white">جاري تحميل البيانات من Supabase...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative">
