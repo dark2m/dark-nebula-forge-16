@@ -33,6 +33,36 @@ export type Database = {
         }
         Relationships: []
       }
+      site_data: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          layout_settings: Json | null
+          page_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          layout_settings?: Json | null
+          page_name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          layout_settings?: Json | null
+          page_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
