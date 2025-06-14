@@ -84,6 +84,11 @@ const UserSessionManager = () => {
     }
   };
 
+  const handleRememberMeChange = (checked: boolean | "indeterminate") => {
+    // Handle the CheckedState type properly
+    setRememberMe(checked === true);
+  };
+
   if (user) {
     return (
       <Card className="w-full max-w-md mx-auto">
@@ -166,7 +171,7 @@ const UserSessionManager = () => {
           <Checkbox
             id="remember"
             checked={rememberMe}
-            onCheckedChange={setRememberMe}
+            onCheckedChange={handleRememberMeChange}
           />
           <label htmlFor="remember" className="text-sm text-gray-300">
             تذكر معلومات تسجيل الدخول

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,7 +52,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           // حفظ نسخة احتياطية من بيانات المستخدم المهمة
           try {
-            const { UserDataPersistence } = await import('@/utils/userDataPersistence');
+            const UserDataPersistence = (await import('@/utils/userDataPersistence')).default;
             UserDataPersistence.createUserBackup({
               userId: session.user.id,
               email: session.user.email,
