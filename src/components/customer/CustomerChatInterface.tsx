@@ -13,9 +13,14 @@ const CustomerChatInterface: React.FC<CustomerChatInterfaceProps> = ({ user, onL
   const [customerData, setCustomerData] = useState<any>(null);
 
   useEffect(() => {
-    // إضافة/تحديث بيانات العميل في النظام المحلي
-    const customer = CustomerAuthService.addSupabaseCustomer(user);
-    setCustomerData(customer);
+    // تأكد من وجود المستخدم قبل إضافته
+    if (user && user.email) {
+      console.log('Adding Supabase customer:', user);
+      const customer = CustomerAuthService.addSupabaseCustomer(user);
+      setCustomerData(customer);
+    } else {
+      console.log('User or user email is missing:', user);
+    }
   }, [user]);
 
   if (!customerData) {

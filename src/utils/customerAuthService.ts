@@ -18,7 +18,6 @@ class CustomerAuthService {
       console.error('CustomerAuthService: Error loading customers:', error);
     }
     
-    // لا نريد إنشاء عملاء افتراضيين - سيتم إنشاؤهم عبر Supabase Auth
     return [];
   }
 
@@ -148,16 +147,22 @@ class CustomerAuthService {
   }
 
   static isDefaultCustomer(customerId: number): boolean {
-    // لا يوجد عملاء افتراضيون الآن
     return false;
   }
 
   // دالة لإضافة عميل من Supabase Auth
   static addSupabaseCustomer(user: any): CustomerUser {
+    // التحقق من وجود المستخدم والبريد الإلكتروني
+    if (!user || !user.email) {
+      console.error('CustomerAuthService: Invalid user object:', user);
+      throw new Error('بيانات المستخدم غير صحيحة');
+    }
+
     const customers = this.getCustomers();
     const existingCustomer = customers.find(c => c.email === user.email);
     
     if (existingCustomer) {
+      console.log('CustomerAuthService: Customer already exists:', existingCustomer);
       return existingCustomer;
     }
 
