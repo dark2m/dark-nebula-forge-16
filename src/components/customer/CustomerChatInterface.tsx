@@ -1,49 +1,47 @@
 
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { useEffect, useState } from 'react';
+import { User } from '@supabase/supabase-js';
 import CustomerChat from '../CustomerChat';
-import { useToast } from '@/hooks/use-toast';
+import CustomerAuthService from '../../utils/customerAuthService';
 
-const CustomerChatInterface: React.FC = () => {
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
+interface CustomerChatInterfaceProps {
+  user: User;
+  onLogout: () => void;
+}
 
-  const handleLogout = async () => {
-    await signOut();
-    toast({
-      title: "تم تسجيل الخروج",
-      description: "تم تسجيل الخروج بنجاح",
-    });
-  };
+const CustomerChatInterface: React.FC<CustomerChatInterfaceProps> = ({ user, onLogout }) => {
+  const [customerData, setCustomerData] = useState<any>(null);
 
-  if (!user) {
-    return null;
+  useEffect(() => {
+    // إضافة/تحديث بيانات العميل في النظام المحلي
+    const customer = CustomerAuthService.addSupabaseCustomer(user);
+    setCustomerData(customer);
+  }, [user]);
+
+  if (!customerData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-white">جاري التحميل...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-4 text-center">
-        <h3 className="text-xl text-white mb-2">
-          مرحباً {user.user_metadata?.username || user.email?.split('@')[0]}
-        </h3>
-        <p className="text-gray-400 text-sm">
-          {user.email}
-        </p>
-      </div>
-      
-      <CustomerChat 
-        customerId={user.id} 
-        customerEmail={user.email || ''} 
-      />
-      
-      <div className="mt-4 text-center">
-        <button 
-          onClick={handleLogout} 
-          className="text-red-400 hover:underline"
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">مرحباً {user.email}</h2>
+        <button
+          onClick={onLogout}
+          className="bg-red-500/20 text-red-400 px-4 py-2 rounded-md hover:bg-red-500/30 transition-colors"
         >
           تسجيل الخروج
         </button>
       </div>
+      
+      <CustomerChat 
+        customerId={customerData.id.toString()}
+        customerEmail={user.email || ''}
+      />
     </div>
   );
 };

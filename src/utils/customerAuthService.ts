@@ -1,210 +1,190 @@
-import { CustomerUser, LoginAttempt } from '../types/customer';
 
-// Re-export types for easier importing
-export type { CustomerUser, LoginAttempt };
+import type { CustomerUser, LoginAttempt } from '../types/customer';
 
 class CustomerAuthService {
-  private static STORAGE_KEY = 'customer_users';
+  private static CUSTOMERS_KEY = 'customers';
   private static LOGIN_ATTEMPTS_KEY = 'customer_login_attempts';
   private static CURRENT_CUSTOMER_KEY = 'current_customer';
 
   static getCustomers(): CustomerUser[] {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      const stored = localStorage.getItem(this.CUSTOMERS_KEY);
+      if (stored) {
+        const customers = JSON.parse(stored);
+        console.log('CustomerAuthService: Loaded customers:', customers);
+        return customers;
+      }
     } catch (error) {
-      console.error('CustomerAuthService: Error getting customers:', error);
-      return [];
+      console.error('CustomerAuthService: Error loading customers:', error);
     }
+    
+    // لا نريد إنشاء عملاء افتراضيين - سيتم إنشاؤهم عبر Supabase Auth
+    return [];
   }
 
   static saveCustomers(customers: CustomerUser[]): void {
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(customers));
-      console.log('CustomerAuthService: Customers saved:', customers);
+      console.log('CustomerAuthService: Saving customers:', customers);
+      localStorage.setItem(this.CUSTOMERS_KEY, JSON.stringify(customers));
+      console.log('CustomerAuthService: Customers saved successfully');
     } catch (error) {
       console.error('CustomerAuthService: Error saving customers:', error);
+      throw new Error('تم تجاوز حد التخزين المسموح');
     }
   }
 
-  static getCustomerById(id: number): CustomerUser | undefined {
+  static addCustomer(customer: Omit<CustomerUser, 'id'>): CustomerUser {
+    console.log('CustomerAuthService: Adding new customer:', customer);
     const customers = this.getCustomers();
-    return customers.find(customer => customer.id === id);
-  }
-
-  static registerCustomer(email: string, password: string, username?: string): boolean {
-    const customers = this.getCustomers();
-    
-    if (customers.find(c => c.email === email || (username && c.username === username))) {
-      console.log('CustomerAuthService: Registration failed - email or username already exists');
-      return false;
-    }
-    
     const newCustomer: CustomerUser = {
+      ...customer,
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      isVerified: true,
+      isBlocked: false,
+      isOnline: false,
+      lastSeen: new Date().toLocaleString('ar-SA')
+    };
+    customers.push(newCustomer);
+    this.saveCustomers(customers);
+    console.log('CustomerAuthService: New customer added:', newCustomer);
+    return newCustomer;
+  }
+
+  static authenticate(email: string, password: string): { success: boolean; customer?: CustomerUser; error?: string } {
+    console.log('CustomerAuthService: Attempting authentication for:', email);
+    const attempt: LoginAttempt = {
       id: Date.now(),
       email,
       password,
-      username,
-      registrationDate: new Date().toLocaleDateString('ar-SA'),
-      createdAt: new Date().toLocaleDateString('ar-SA'),
-      isVerified: true
+      timestamp: new Date().toLocaleString('ar-SA'),
+      success: false,
+      ipAddress: 'localhost'
     };
-    
-    customers.push(newCustomer);
-    this.saveCustomers(customers);
-    console.log('CustomerAuthService: Registration successful for:', email);
-    return true;
+
+    // سجل محاولة تسجيل الدخول
+    this.logLoginAttempt(attempt);
+
+    const customers = this.getCustomers();
+    const customer = customers.find(c => c.email === email && c.password === password);
+
+    if (customer) {
+      if (customer.isBlocked) {
+        console.log('CustomerAuthService: Customer is blocked:', email);
+        return { success: false, error: 'تم حظر هذا الحساب' };
+      }
+
+      attempt.success = true;
+      this.logLoginAttempt(attempt);
+      
+      // تحديث حالة الاتصال
+      localStorage.setItem(`online_${customer.id}`, 'true');
+      localStorage.setItem(`lastSeen_${customer.id}`, new Date().toLocaleString('ar-SA'));
+      localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
+      
+      console.log('CustomerAuthService: Authentication successful for:', email);
+      return { success: true, customer };
+    }
+
+    console.log('CustomerAuthService: Authentication failed for:', email);
+    return { success: false, error: 'بيانات الدخول غير صحيحة' };
   }
 
-  static updateCustomer(id: number, updates: Partial<CustomerUser>): void {
-    const customers = this.getCustomers();
-    const index = customers.findIndex(customer => customer.id === id);
-    
-    if (index !== -1) {
-      customers[index] = { ...customers[index], ...updates };
-      this.saveCustomers(customers);
-      console.log('CustomerAuthService: Customer updated successfully');
-    } else {
-      console.log('CustomerAuthService: Customer not found for update');
+  static getCurrentCustomer(): CustomerUser | null {
+    try {
+      const stored = localStorage.getItem(this.CURRENT_CUSTOMER_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('CustomerAuthService: Error loading current customer:', error);
+    }
+    return null;
+  }
+
+  static logout(): void {
+    const currentCustomer = this.getCurrentCustomer();
+    if (currentCustomer) {
+      localStorage.removeItem(`online_${currentCustomer.id}`);
+      localStorage.setItem(`lastSeen_${currentCustomer.id}`, new Date().toLocaleString('ar-SA'));
+    }
+    localStorage.removeItem(this.CURRENT_CUSTOMER_KEY);
+    console.log('CustomerAuthService: Customer logged out');
+  }
+
+  static isAuthenticated(): boolean {
+    return this.getCurrentCustomer() !== null;
+  }
+
+  static logLoginAttempt(attempt: LoginAttempt): void {
+    try {
+      const attempts = this.getLoginAttempts();
+      attempts.unshift(attempt);
+      // الاحتفاظ بآخر 100 محاولة فقط
+      if (attempts.length > 100) {
+        attempts.splice(100);
+      }
+      localStorage.setItem(this.LOGIN_ATTEMPTS_KEY, JSON.stringify(attempts));
+    } catch (error) {
+      console.error('CustomerAuthService: Error logging attempt:', error);
     }
   }
 
   static getLoginAttempts(): LoginAttempt[] {
     try {
       const stored = localStorage.getItem(this.LOGIN_ATTEMPTS_KEY);
-      return stored ? JSON.parse(stored) : [];
+      if (stored) {
+        return JSON.parse(stored);
+      }
     } catch (error) {
-      console.error('CustomerAuthService: Error getting login attempts:', error);
-      return [];
+      console.error('CustomerAuthService: Error loading login attempts:', error);
     }
-  }
-
-  static saveLoginAttempts(attempts: LoginAttempt[]): void {
-    try {
-      localStorage.setItem(this.LOGIN_ATTEMPTS_KEY, JSON.stringify(attempts));
-    } catch (error) {
-      console.error('CustomerAuthService: Error saving login attempts:', error);
-    }
-  }
-
-  static addLoginAttempt(email: string, password: string, success: boolean): void {
-    const attempts = this.getLoginAttempts();
-    const newAttempt: LoginAttempt = {
-      id: Date.now(),
-      email,
-      password,
-      timestamp: new Date().toLocaleString('ar-SA'),
-      success,
-      ipAddress: '127.0.0.1'
-    };
-    attempts.push(newAttempt);
-    this.saveLoginAttempts(attempts);
-    console.log('CustomerAuthService: Login attempt recorded:', { email, success });
+    return [];
   }
 
   static clearLoginAttempts(): void {
-    try {
-      localStorage.removeItem(this.LOGIN_ATTEMPTS_KEY);
-      console.log('CustomerAuthService: Login attempts cleared');
-    } catch (error) {
-      console.error('CustomerAuthService: Error clearing login attempts:', error);
-    }
-  }
-
-  static getCurrentCustomer(): CustomerUser | null {
-    try {
-      const stored = localStorage.getItem(this.CURRENT_CUSTOMER_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-      console.error('CustomerAuthService: Error getting current customer:', error);
-      return null;
-    }
-  }
-
-  static isCustomerAuthenticated(): boolean {
-    const token = localStorage.getItem('customerToken');
-    const currentUser = this.getCurrentCustomer();
-    const isAuth = !!token && !!currentUser;
-    console.log('CustomerAuthService: Is authenticated:', isAuth);
-    return isAuth;
-  }
-
-  static logout(): void {
-    const customer = this.getCurrentCustomer();
-    if (customer) {
-      localStorage.removeItem(`online_${customer.id}`);
-    }
-    localStorage.removeItem('customerToken');
-    localStorage.removeItem(this.CURRENT_CUSTOMER_KEY);
-    console.log('CustomerAuthService: Logged out successfully');
+    localStorage.removeItem(this.LOGIN_ATTEMPTS_KEY);
+    console.log('CustomerAuthService: Login attempts cleared');
   }
 
   static isDefaultCustomer(customerId: number): boolean {
-    const customer = this.getCustomers().find(c => c.id === customerId);
-    return customer ? customer.email === 'dark@gmail.com' : false;
-  }
-
-  static initializeDefaultCustomer(): void {
-    console.log('CustomerAuthService: Initializing default customer...');
-    const customers = this.getCustomers();
-    console.log('CustomerAuthService: Current customers:', customers);
-    
-    const defaultExists = customers.some(c => c.email === 'dark@gmail.com');
-    console.log('CustomerAuthService: Default customer exists:', defaultExists);
-    
-    if (!defaultExists) {
-      const defaultCustomer: CustomerUser = {
-        id: Date.now(),
-        email: 'dark@gmail.com',
-        password: 'dark123',
-        username: 'dark',
-        registrationDate: new Date().toLocaleDateString('ar-SA'),
-        createdAt: new Date().toLocaleDateString('ar-SA'),
-        isVerified: true
-      };
-      
-      customers.push(defaultCustomer);
-      this.saveCustomers(customers);
-      console.log('CustomerAuthService: Default customer created successfully');
-    }
-  }
-
-  static authenticateCustomer(emailOrUsername: string, password: string): boolean {
-    console.log('CustomerAuthService: Attempting login for:', emailOrUsername, 'with password:', password);
-    
-    // تأكد من وجود العميل الافتراضي
-    this.initializeDefaultCustomer();
-    
-    const customers = this.getCustomers();
-    console.log('CustomerAuthService: Available customers:', customers);
-    
-    const customer = customers.find(c => 
-      (c.email === emailOrUsername || c.username === emailOrUsername) && c.password === password
-    );
-    console.log('CustomerAuthService: Found customer:', customer);
-    
-    // تسجيل محاولة الدخول
-    this.addLoginAttempt(emailOrUsername, password, !!customer);
-    
-    if (customer) {
-      localStorage.setItem('customerToken', JSON.stringify({ 
-        customerId: customer.id, 
-        timestamp: Date.now() 
-      }));
-      localStorage.setItem(this.CURRENT_CUSTOMER_KEY, JSON.stringify(customer));
-      localStorage.setItem(`online_${customer.id}`, 'true');
-      localStorage.setItem(`lastSeen_${customer.id}`, new Date().toLocaleString('ar-SA'));
-      console.log('CustomerAuthService: Login successful for:', emailOrUsername);
-      return true;
-    }
-    
-    console.log('CustomerAuthService: Login failed - invalid credentials for:', emailOrUsername);
+    // لا يوجد عملاء افتراضيون الآن
     return false;
+  }
+
+  // دالة لإضافة عميل من Supabase Auth
+  static addSupabaseCustomer(user: any): CustomerUser {
+    const customers = this.getCustomers();
+    const existingCustomer = customers.find(c => c.email === user.email);
+    
+    if (existingCustomer) {
+      return existingCustomer;
+    }
+
+    const newCustomer: CustomerUser = {
+      id: Date.now(),
+      email: user.email,
+      password: '', // لا نحتاج كلمة مرور للمستخدمين من Supabase
+      username: user.user_metadata?.username || user.email.split('@')[0],
+      registrationDate: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      isVerified: user.email_confirmed_at !== null,
+      isBlocked: false,
+      isOnline: true,
+      lastSeen: new Date().toLocaleString('ar-SA')
+    };
+
+    customers.push(newCustomer);
+    this.saveCustomers(customers);
+    
+    // تحديث حالة الاتصال
+    localStorage.setItem(`online_${newCustomer.id}`, 'true');
+    localStorage.setItem(`lastSeen_${newCustomer.id}`, new Date().toLocaleString('ar-SA'));
+    
+    console.log('CustomerAuthService: Supabase customer added:', newCustomer);
+    return newCustomer;
   }
 }
 
-// تأكد من تشغيل التهيئة عند تحميل الملف
-console.log('CustomerAuthService: Module loaded, initializing...');
-CustomerAuthService.initializeDefaultCustomer();
-
 export default CustomerAuthService;
+export type { CustomerUser, LoginAttempt };
