@@ -55,21 +55,21 @@ const Home = () => {
 
   const services = [
     {
-      title: getTextContent(siteSettings.pageTexts.navigation.pubgTitle),
+      title: getTextContent(siteSettings?.pageTexts?.navigation?.pubgTitle || 'هكر ببجي'),
       description: 'أحدث الهاكات والأدوات لببجي موبايل',
       icon: Shield,
       path: '/pubg-hacks',
       gradient: 'from-red-500 to-pink-600'
     },
     {
-      title: getTextContent(siteSettings.pageTexts.navigation.webTitle),
+      title: getTextContent(siteSettings?.pageTexts?.navigation?.webTitle || 'برمجة مواقع'),
       description: 'تطوير مواقع احترافية ومتقدمة',
       icon: Code,
       path: '/web-development',
       gradient: 'from-blue-500 to-cyan-600'
     },
     {
-      title: getTextContent(siteSettings.pageTexts.navigation.discordTitle),
+      title: getTextContent(siteSettings?.pageTexts?.navigation?.discordTitle || 'بوتات ديسكورد'),
       description: 'بوتات ديسكورد مخصصة ومتطورة',
       icon: Bot,
       path: '/discord-bots',

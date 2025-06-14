@@ -1,228 +1,228 @@
+
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Package, DollarSign, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import type { Product } from '../../types/admin';
+import { Trash2, Plus, Edit, Save, X } from 'lucide-react';
+import { Product } from '../../types/admin';
+import { useProductManagement } from '../../hooks/useProductManagement';
 
 interface ProductsTabProps {
-  products: Product[];
-  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
-  updateProduct: (id: number, product: Partial<Product>) => Promise<void>;
-  deleteProduct: (id: number) => Promise<void>;
-  canAccess: (permission: string) => boolean;
+  canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
+  products?: Product[];
+  addProduct?: (product: Product) => void;
+  updateProduct?: (product: Product) => void;
+  deleteProduct?: (id: number) => void;
 }
 
-const ProductsTab: React.FC<ProductsTabProps> = ({
-  products,
-  addProduct,
-  updateProduct,
-  deleteProduct,
-  canAccess
-}) => {
-  const { toast } = useToast();
+const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
+  const {
+    products,
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    loading
+  } = useProductManagement();
+
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [newProduct, setNewProduct] = useState<Partial<Product>>({
+    name: '',
+    price: 0,
+    category: 'pubg',
+    description: '',
+    features: [],
+    images: [],
+    videos: []
+  });
 
-  const handleEditProduct = async (productData: Partial<Product>) => {
-    if (!editingProduct) return;
-    
-    setIsLoading(true);
-    try {
-      await updateProduct(editingProduct.id, productData);
-      setEditingProduct(null);
-      toast({
-        title: "تم تحديث المنتج",
-        description: "تم تحديث المنتج بنجاح"
+  const handleAddProduct = async () => {
+    if (newProduct.name && newProduct.price !== undefined) {
+      const productToAdd = {
+        id: Date.now(),
+        name: newProduct.name,
+        price: newProduct.price,
+        category: newProduct.category || 'pubg',
+        description: newProduct.description || '',
+        features: newProduct.features || [],
+        images: newProduct.images || [],
+        videos: newProduct.videos || [],
+        titleSize: 'large' as const,
+        textSize: 'medium' as const
+      };
+      
+      await addProduct(productToAdd);
+      setNewProduct({
+        name: '',
+        price: 0,
+        category: 'pubg',
+        description: '',
+        features: [],
+        images: [],
+        videos: []
       });
-    } catch (error) {
-      console.error('Error updating product:', error);
-      toast({
-        title: "خطأ في التحديث",
-        description: "حدث خطأ أثناء تحديث المنتج",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleDeleteProduct = async (product: Product) => {
-    if (!window.confirm(`هل أنت متأكد من حذف المنتج "${product.name}"؟`)) {
-      return;
-    }
+  const handleUpdateProduct = async (product: Product) => {
+    await updateProduct(product);
+    setEditingProduct(null);
+  };
 
-    setIsLoading(true);
-    try {
-      await deleteProduct(product.id);
-      toast({
-        title: "تم حذف المنتج",
-        description: "تم حذف المنتج بنجاح"
-      });
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      toast({
-        title: "خطأ في الحذف",
-        description: "حدث خطأ أثناء حذف المنتج",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+  const handleDeleteProduct = async (id: number) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+      await deleteProduct(id);
     }
   };
 
-  const categories = [
-    { value: 'pubg', label: 'هكر ببجي موبايل' },
-    { value: 'web', label: 'برمجة مواقع' },
-    { value: 'discord', label: 'برمجة بوتات ديسكورد' },
-    { value: 'other', label: 'خدمات أخرى' }
-  ];
+  if (!canAccess('مشرف')) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-400">ليس لديك صلاحية للوصول إلى هذا القسم</p>
+      </div>
+    );
+  }
 
-  const addProductByCategory = (category: string) => {
-    const categoryLabels: { [key: string]: string } = {
-      pubg: 'هكر ببجي موبايل',
-      web: 'موقع ويب',
-      discord: 'بوت ديسكورد',
-      other: 'خدمة'
-    };
-
-    const newProduct = addProduct();
-    if (newProduct) {
-      setTimeout(() => {
-        updateProduct(newProduct.id, { 
-          category, 
-          name: `${categoryLabels[category]} جديد` 
-        });
-      }, 100);
-    }
-  };
-
-  const handleInputChange = (productId: number, field: string, value: any) => {
-    console.log('Immediate save for product:', productId, field, value);
-    updateProduct(productId, { [field]: value });
-  };
-
-  const createMediaChangeHandler = (productId: number) => {
-    return {
-      onImagesChange: (receivedProductId: number, images: string[]) => {
-        console.log(`Saving images for product ${receivedProductId}`);
-        updateProduct(receivedProductId, { images });
-      },
-      onVideosChange: (receivedProductId: number, videos: string[]) => {
-        console.log(`Saving videos for product ${receivedProductId}`);
-        updateProduct(receivedProductId, { videos });
-      }
-    };
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <span className="ml-3 text-white">جاري تحميل المنتجات...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold text-white">إدارة المنتجات</h2>
-        <div className="flex gap-2 flex-wrap">
-          {categories.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => addProductByCategory(cat.value)}
-              className="glow-button flex items-center space-x-2 rtl:space-x-reverse text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>إضافة {cat.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      <h2 className="text-3xl font-bold text-white">إدارة المنتجات</h2>
       
+      {/* Add New Product */}
       <div className="admin-card rounded-xl p-6">
-        <div className="space-y-8">
-          {products.map((product) => {
-            const mediaHandlers = createMediaChangeHandler(product.id);
-            
-            return (
-              <div key={product.id} className="border border-white/10 rounded-lg p-6 space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-white">
-                    المنتج #{product.id} - {product.name} ({categories.find(c => c.value === product.category)?.label})
-                  </h3>
-                </div>
+        <h3 className="text-xl font-bold text-white mb-4">إضافة منتج جديد</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
+            type="text"
+            placeholder="اسم المنتج"
+            value={newProduct.name}
+            onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+            className="bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+          />
+          <input
+            type="number"
+            placeholder="السعر"
+            value={newProduct.price}
+            onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
+            className="bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+          />
+          <select
+            value={newProduct.category}
+            onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+            className="bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+          >
+            <option value="pubg">PUBG Hacks</option>
+            <option value="web">Web Development</option>
+            <option value="discord">Discord Bots</option>
+          </select>
+        </div>
+        <textarea
+          placeholder="وصف المنتج"
+          value={newProduct.description}
+          onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+          className="w-full mt-4 bg-white/10 text-white border border-white/20 rounded px-3 py-2 h-24 resize-none focus:outline-none focus:border-blue-400"
+        />
+        <button
+          onClick={handleAddProduct}
+          className="glow-button mt-4 flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          إضافة المنتج
+        </button>
+      </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
-                  <div className="lg:col-span-2">
-                    <label className="block text-gray-400 text-sm mb-2">اسم المنتج</label>
-                    <input
-                      type="text"
-                      value={product.name || ''}
-                      onChange={(e) => handleInputChange(product.id, 'name', e.target.value)}
-                      className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2">الفئة</label>
-                    <select
-                      value={product.category || 'pubg'}
-                      onChange={(e) => handleInputChange(product.id, 'category', e.target.value)}
-                      className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat.value} value={cat.value}>{cat.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div className="lg:col-span-2">
-                    <label className="block text-gray-400 text-sm mb-2">الوصف</label>
-                    <textarea
-                      value={product.description || ''}
-                      onChange={(e) => handleInputChange(product.id, 'description', e.target.value)}
-                      className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400 h-20 resize-none"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-400 text-sm mb-2">السعر ($)</label>
-                    <input
-                      type="number"
-                      value={product.price || 0}
-                      onChange={(e) => handleInputChange(product.id, 'price', Number(e.target.value))}
-                      className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                    />
-                  </div>
-                </div>
-
-                <MediaManager
-                  productId={product.id}
-                  images={product.images || []}
-                  videos={product.videos || []}
-                  onImagesChange={mediaHandlers.onImagesChange}
-                  onVideosChange={mediaHandlers.onVideosChange}
-                />
-
-                <ProductFeaturesManager
-                  features={product.features || []}
-                  onFeaturesChange={(features) => {
-                    updateProduct(product.id, { features });
-                  }}
-                />
-
-                <div className="flex justify-between items-center">
-                  <button
-                    onClick={() => deleteProduct(product.id)}
-                    className="text-red-400 hover:text-red-300 transition-colors p-2 flex items-center gap-2"
+      {/* Products List */}
+      <div className="space-y-4">
+        {products.map((product) => (
+          <div key={product.id} className="admin-card rounded-xl p-6">
+            {editingProduct?.id === product.id ? (
+              // Edit Mode
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <input
+                    type="text"
+                    value={editingProduct.name}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    className="bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                  />
+                  <input
+                    type="number"
+                    value={editingProduct.price}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) })}
+                    className="bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
+                  />
+                  <select
+                    value={editingProduct.category}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    className="bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
                   >
-                    <Trash2 className="w-4 h-4" />
-                    <span>حذف المنتج</span>
+                    <option value="pubg">PUBG Hacks</option>
+                    <option value="web">Web Development</option>
+                    <option value="discord">Discord Bots</option>
+                  </select>
+                </div>
+                <textarea
+                  value={editingProduct.description}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
+                  className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 h-24 resize-none focus:outline-none focus:border-blue-400"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleUpdateProduct(editingProduct)}
+                    className="glow-button flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    حفظ
+                  </button>
+                  <button
+                    onClick={() => setEditingProduct(null)}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded flex items-center gap-2 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    إلغاء
                   </button>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ) : (
+              // View Mode
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-white">{product.name}</h3>
+                  <p className="text-gray-300">${product.price}</p>
+                  <p className="text-gray-400 text-sm">{product.category}</p>
+                  {product.description && (
+                    <p className="text-gray-300 mt-2">{product.description}</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditingProduct(product)}
+                    className="text-blue-400 hover:text-blue-300 transition-colors p-2"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteProduct(product.id)}
+                    className="text-red-400 hover:text-red-300 transition-colors p-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
+
+      {products.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-400">لا توجد منتجات حالياً</p>
+        </div>
+      )}
     </div>
   );
 };
