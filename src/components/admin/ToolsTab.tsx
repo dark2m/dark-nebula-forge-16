@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Eye, EyeOff, Save, Wrench, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { passwordGeneratorToolCode } from '../../utils/passwordGeneratorTool';
 import type { SiteSettings, Tool } from '../../types/admin';
 
 interface ToolsTabProps {
@@ -53,6 +53,26 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
     setSiteSettings(updatedSettings);
     setEditingTool(newTool);
     setIsAddDialogOpen(true);
+  };
+
+  const addPasswordGeneratorTool = () => {
+    const passwordTool: Tool = {
+      id: Date.now(),
+      title: 'مولد كلمات المرور',
+      description: 'أداة لتوليد كلمات مرور قوية وآمنة مع خيارات متقدمة',
+      buttonText: 'استخدام المولد',
+      url: '',
+      icon: '🔐',
+      visible: true,
+      category: 'security',
+      customHtml: passwordGeneratorToolCode
+    };
+
+    const updatedSettings = {
+      ...siteSettings,
+      tools: [...tools, passwordTool]
+    };
+    setSiteSettings(updatedSettings);
   };
 
   const updateTool = (toolId: number, updates: Partial<Tool>) => {
@@ -151,10 +171,16 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                 إدارة وتعديل أدوات الموقع
               </CardDescription>
             </div>
-            <Button onClick={addTool} className="glow-button">
-              <Plus className="w-4 h-4 mr-2" />
-              إضافة أداة جديدة
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={addPasswordGeneratorTool} className="glow-button">
+                <Code className="w-4 h-4 mr-2" />
+                إضافة مولد كلمات المرور
+              </Button>
+              <Button onClick={addTool} className="glow-button">
+                <Plus className="w-4 h-4 mr-2" />
+                إضافة أداة جديدة
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -162,9 +188,14 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
             <div className="text-center py-8">
               <Wrench className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-400">لا توجد أدوات منشورة حالياً</p>
-              <Button onClick={addTool} className="mt-4 glow-button">
-                إضافة أول أداة
-              </Button>
+              <div className="flex gap-2 justify-center mt-4">
+                <Button onClick={addPasswordGeneratorTool} className="glow-button">
+                  إضافة مولد كلمات المرور
+                </Button>
+                <Button onClick={addTool} className="glow-button">
+                  إضافة أداة عامة
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="grid gap-4">

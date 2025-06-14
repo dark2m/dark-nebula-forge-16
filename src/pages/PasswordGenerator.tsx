@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
 
 const PasswordGenerator = () => {
   const [length, setLength] = useState(12);
@@ -242,17 +241,19 @@ const PasswordGenerator = () => {
           min-height: 100vh;
           color: var(--text-color);
           font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+          direction: rtl;
         }
 
         .sidebar {
           width: 260px;
           background: var(--glass-color);
           backdrop-filter: blur(20px);
-          border-right: 1px solid var(--input-border);
+          border-left: 1px solid var(--input-border);
           padding: 30px 20px;
           display: flex;
           flex-direction: column;
           z-index: 1;
+          order: 2;
         }
 
         .logo {
@@ -305,6 +306,7 @@ const PasswordGenerator = () => {
           flex-direction: column;
           align-items: center;
           z-index: 1;
+          order: 1;
         }
 
         .card {
@@ -485,6 +487,29 @@ const PasswordGenerator = () => {
           opacity: 1;
         }
 
+        .back-button {
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          background: var(--glass-color);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--input-border);
+          color: var(--text-color);
+          padding: 10px 15px;
+          border-radius: 12px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: var(--transition);
+          z-index: 10;
+          text-decoration: none;
+        }
+
+        .back-button:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+
         @media (max-width: 768px) {
           .sidebar {
             display: none;
@@ -492,30 +517,24 @@ const PasswordGenerator = () => {
 
           .main-content {
             padding: 20px;
+            order: 1;
           }
 
           .card {
             padding: 20px;
           }
+
+          .password-generator-container {
+            direction: ltr;
+          }
         }
       `}</style>
 
-      <div className="password-generator-container">
-        <aside className="sidebar">
-          <div className="logo">
-            <img src="https://i.imgur.com/AEmPsn1.jpeg" alt="logo" />
-            <span>DARK</span>
-          </div>
-          <nav>
-            <a href="#" className="active">
-              <i className="fa fa-key"></i> كلمات المرور
-            </a>
-            <a href="#" onClick={handleBackToTools}>
-              <ArrowLeft size={16} /> العودة للأدوات
-            </a>
-          </nav>
-        </aside>
+      <a href="#" onClick={handleBackToTools} className="back-button">
+        ← العودة للأدوات
+      </a>
 
+      <div className="password-generator-container">
         <main className="main-content">
           <div className="card">
             <h2>🔐 مولد كلمات المرور</h2>
@@ -626,6 +645,18 @@ const PasswordGenerator = () => {
             </div>
           </div>
         </main>
+
+        <aside className="sidebar">
+          <div className="logo">
+            <img src="https://i.imgur.com/AEmPsn1.jpeg" alt="logo" />
+            <span>DARK</span>
+          </div>
+          <nav>
+            <a href="#" className="active">
+              <i className="fa fa-key"></i> كلمات المرور
+            </a>
+          </nav>
+        </aside>
       </div>
     </div>
   );
