@@ -1,51 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, Shield, UserCheck, Lock } from 'lucide-react';
+import { Users, Shield, UserCheck, Lock } from 'lucide-react';
 import UserService from '../../utils/userService';
 import { useToast } from '@/hooks/use-toast';
 import type { AdminUser } from '../../types/admin';
 
 const UsersTab = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [newUser, setNewUser] = useState({
-    username: '',
-    password: '',
-    role: 'مشرف' as 'مدير عام' | 'مبرمج' | 'مشرف'
-  });
   const { toast } = useToast();
 
   useEffect(() => {
     setUsers(UserService.getAdminUsers());
   }, []);
-
-  const addUser = () => {
-    if (!newUser.username || !newUser.password) {
-      toast({
-        title: "خطأ",
-        description: "يجب ملء جميع الحقول",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const existingUser = users.find(u => u.username === newUser.username);
-    if (existingUser) {
-      toast({
-        title: "خطأ",
-        description: "اسم المستخدم موجود بالفعل",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    UserService.addAdminUser(newUser);
-    setUsers(UserService.getAdminUsers());
-    setNewUser({ username: '', password: '', role: 'مشرف' });
-    toast({
-      title: "تم إضافة المستخدم",
-      description: "تم إضافة المستخدم الجديد بنجاح"
-    });
-  };
 
   const updateUser = (id: number, updates: Partial<AdminUser>) => {
     UserService.updateAdminUser(id, updates);
@@ -53,27 +19,6 @@ const UsersTab = () => {
     toast({
       title: "تم تحديث المستخدم",
       description: "تم حفظ التغييرات بنجاح"
-    });
-  };
-
-  const deleteUser = (id: number) => {
-    const userToDelete = users.find(u => u.id === id);
-    
-    // منع حذف المالك الرئيسي
-    if (userToDelete?.username === 'dark') {
-      toast({
-        title: "غير مسموح",
-        description: "لا يمكن حذف المالك الرئيسي للخادم",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    UserService.deleteAdminUser(id);
-    setUsers(UserService.getAdminUsers());
-    toast({
-      title: "تم حذف المستخدم",
-      description: "تم حذف المستخدم بنجاح"
     });
   };
 
@@ -92,57 +37,6 @@ const UsersTab = () => {
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-white">إدارة المستخدمين</h2>
       
-      {/* Add New User */}
-      <div className="admin-card rounded-xl p-6">
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Plus className="w-5 h-5" />
-          إضافة مستخدم جديد
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-gray-400 text-sm mb-2">اسم المستخدم</label>
-            <input
-              type="text"
-              value={newUser.username}
-              onChange={(e) => setNewUser({...newUser, username: e.target.value})}
-              className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-              placeholder="admin"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-400 text-sm mb-2">كلمة المرور</label>
-            <input
-              type="password"
-              value={newUser.password}
-              onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-              className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-              placeholder="password"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-400 text-sm mb-2">الدور</label>
-            <select
-              value={newUser.role}
-              onChange={(e) => setNewUser({...newUser, role: e.target.value as 'مدير عام' | 'مبرمج' | 'مشرف'})}
-              className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-            >
-              <option value="مشرف">مشرف</option>
-              <option value="مبرمج">مبرمج</option>
-              <option value="مدير عام">مدير عام</option>
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={addUser}
-              className="w-full glow-button flex items-center justify-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              إضافة
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Users List */}
       <div className="admin-card rounded-xl p-6">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -185,18 +79,6 @@ const UsersTab = () => {
                   <option value="مبرمج">مبرمج</option>
                   <option value="مدير عام">مدير عام</option>
                 </select>
-                <button
-                  onClick={() => deleteUser(user.id)}
-                  className={`transition-colors p-2 ${
-                    isOwner(user.username) 
-                      ? 'text-gray-600 cursor-not-allowed' 
-                      : 'text-red-400 hover:text-red-300'
-                  }`}
-                  disabled={isOwner(user.username) || users.length <= 1}
-                  title={isOwner(user.username) ? 'لا يمكن حذف مالك الخادم' : 'حذف المستخدم'}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             </div>
           ))}
