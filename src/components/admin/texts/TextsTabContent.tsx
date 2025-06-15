@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SiteSettings } from '../../../types/admin';
 import TextEditor from '../TextEditor';
@@ -282,24 +281,48 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
     <div className="space-y-6">
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-white text-sm font-medium mb-2">عنوان الصفحة</label>
+          <label className="block text-white text-sm font-medium mb-2">عنوان صفحة تسجيل الدخول</label>
           <input
             type="text"
-            value={getTextContent(siteSettings.pageTexts.downloads?.title)}
-            onChange={(e) => updatePageTexts('downloads', 'title', e.target.value)}
+            value={getTextContent(siteSettings.pageTexts.downloads?.loginPage?.title)}
+            onChange={(e) => updatePageTexts('downloads', 'loginPage.title', e.target.value)}
             className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
-            placeholder="عنوان صفحة التنزيلات"
+            placeholder="عنوان صفحة تسجيل الدخول"
           />
         </div>
         
         <div>
-          <label className="block text-white text-sm font-medium mb-2">العنوان الفرعي</label>
+          <label className="block text-white text-sm font-medium mb-2">العنوان الفرعي لتسجيل الدخول</label>
           <input
             type="text"
-            value={getTextContent(siteSettings.pageTexts.downloads?.subtitle)}
-            onChange={(e) => updatePageTexts('downloads', 'subtitle', e.target.value)}
+            value={getTextContent(siteSettings.pageTexts.downloads?.loginPage?.subtitle)}
+            onChange={(e) => updatePageTexts('downloads', 'loginPage.subtitle', e.target.value)}
             className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
-            placeholder="العنوان الفرعي لصفحة التنزيلات"
+            placeholder="العنوان الفرعي لتسجيل الدخول"
+          />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-white text-sm font-medium mb-2">عنوان الصفحة الرئيسية</label>
+          <input
+            type="text"
+            value={getTextContent(siteSettings.pageTexts.downloads?.mainPage?.title)}
+            onChange={(e) => updatePageTexts('downloads', 'mainPage.title', e.target.value)}
+            className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
+            placeholder="عنوان الصفحة الرئيسية"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-white text-sm font-medium mb-2">العنوان الفرعي للصفحة الرئيسية</label>
+          <input
+            type="text"
+            value={getTextContent(siteSettings.pageTexts.downloads?.mainPage?.subtitle)}
+            onChange={(e) => updatePageTexts('downloads', 'mainPage.subtitle', e.target.value)}
+            className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
+            placeholder="العنوان الفرعي للصفحة الرئيسية"
           />
         </div>
       </div>
@@ -307,7 +330,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
       <div className="grid md:grid-cols-3 gap-4">
         <h3 className="text-lg font-semibold text-white mb-4 col-span-full">فئات التنزيلات</h3>
         
-        {Object.entries(siteSettings.pageTexts.downloads?.categories || {}).map(([key, value]) => (
+        {Object.entries(siteSettings.pageTexts.downloads?.mainPage?.categories || {}).map(([key, value]) => (
           <div key={key}>
             <label className="block text-white text-sm font-medium mb-2 capitalize">
               {key === 'all' ? 'الكل' : 
@@ -323,7 +346,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
             <input
               type="text"
               value={getTextContent(value)}
-              onChange={(e) => updatePageTexts('downloads', `categories.${key}`, e.target.value)}
+              onChange={(e) => updatePageTexts('downloads', `mainPage.categories.${key}`, e.target.value)}
               className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400"
             />
           </div>
@@ -333,7 +356,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
       <div className="grid md:grid-cols-2 gap-4">
         <h3 className="text-lg font-semibold text-white mb-4 col-span-full">نصوص الأزرار</h3>
         
-        {Object.entries(siteSettings.pageTexts.downloads?.buttons || {}).map(([key, value]) => (
+        {Object.entries(siteSettings.pageTexts.downloads?.mainPage?.buttons || {}).map(([key, value]) => (
           <div key={key}>
             <label className="block text-white text-sm font-medium mb-2 capitalize">
               {key === 'download' ? 'زر التنزيل' : 
@@ -342,7 +365,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
             <input
               type="text"
               value={getTextContent(value)}
-              onChange={(e) => updatePageTexts('downloads', `buttons.${key}`, e.target.value)}
+              onChange={(e) => updatePageTexts('downloads', `mainPage.buttons.${key}`, e.target.value)}
               className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400"
             />
           </div>
@@ -352,21 +375,18 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
       <div className="grid md:grid-cols-3 gap-4">
         <h3 className="text-lg font-semibold text-white mb-4 col-span-full">تسميات البيانات</h3>
         
-        {Object.entries(siteSettings.pageTexts.downloads?.labels || {}).map(([key, value]) => (
+        {Object.entries(siteSettings.pageTexts.downloads?.mainPage?.labels || {}).map(([key, value]) => (
           <div key={key}>
             <label className="block text-white text-sm font-medium mb-2 capitalize">
               {key === 'size' ? 'الحجم' :
                key === 'downloads' ? 'التنزيلات' :
                key === 'rating' ? 'التقييم' :
-               key === 'version' ? 'الإصدار' :
-               key === 'lastUpdate' ? 'آخر تحديث' :
-               key === 'features' ? 'المميزات' :
-               key === 'status' ? 'الحالة' : key}
+               key === 'version' ? 'الإصدار' : key}
             </label>
             <input
               type="text"
               value={getTextContent(value)}
-              onChange={(e) => updatePageTexts('downloads', `labels.${key}`, e.target.value)}
+              onChange={(e) => updatePageTexts('downloads', `mainPage.labels.${key}`, e.target.value)}
               className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400"
             />
           </div>
@@ -376,7 +396,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
       <div className="grid md:grid-cols-3 gap-4">
         <h3 className="text-lg font-semibold text-white mb-4 col-span-full">نصوص الإحصائيات</h3>
         
-        {Object.entries(siteSettings.pageTexts.downloads?.stats || {}).map(([key, value]) => (
+        {Object.entries(siteSettings.pageTexts.downloads?.mainPage?.stats || {}).map(([key, value]) => (
           <div key={key}>
             <label className="block text-white text-sm font-medium mb-2 capitalize">
               {key === 'totalDownloads' ? 'إجمالي التنزيلات' :
@@ -386,7 +406,7 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
             <input
               type="text"
               value={getTextContent(value)}
-              onChange={(e) => updatePageTexts('downloads', `stats.${key}`, e.target.value)}
+              onChange={(e) => updatePageTexts('downloads', `mainPage.stats.${key}`, e.target.value)}
               className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400"
             />
           </div>

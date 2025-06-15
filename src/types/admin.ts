@@ -30,7 +30,7 @@ export interface CartItem {
 }
 
 export interface AdminUser {
-  id: string;
+  id: number;
   username: string;
   email: string;
   role: 'مدير عام' | 'مبرمج' | 'مشرف';

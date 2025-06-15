@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Plus, Trash2, Key, Save, Shield, User, Settings, Lock } from 'lucide-react';
 import UserService from '../../utils/userService';
@@ -7,9 +6,9 @@ import type { AdminUser } from '../../types/admin';
 
 const PasswordsTab = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [editedUsers, setEditedUsers] = useState<{[key: string]: Partial<AdminUser>}>({});
-  const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
-  const [expandedPermissions, setExpandedPermissions] = useState<{[key: string]: boolean}>({});
+  const [editedUsers, setEditedUsers] = useState<{[key: number]: Partial<AdminUser>}>({});
+  const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
+  const [expandedPermissions, setExpandedPermissions] = useState<{[key: number]: boolean}>({});
   const [newUser, setNewUser] = useState({
     username: '',
     password: '',
@@ -53,14 +52,14 @@ const PasswordsTab = () => {
     backup: false
   };
 
-  const togglePasswordVisibility = (userId: string) => {
+  const togglePasswordVisibility = (userId: number) => {
     setShowPasswords(prev => ({
       ...prev,
       [userId]: !prev[userId]
     }));
   };
 
-  const togglePermissionsExpansion = (userId: string) => {
+  const togglePermissionsExpansion = (userId: number) => {
     setExpandedPermissions(prev => ({
       ...prev,
       [userId]: !prev[userId]
@@ -110,7 +109,7 @@ const PasswordsTab = () => {
     });
   };
 
-  const handleUserChange = (userId: string, field: string, value: any) => {
+  const handleUserChange = (userId: number, field: string, value: any) => {
     setEditedUsers(prev => ({
       ...prev,
       [userId]: {
@@ -120,7 +119,7 @@ const PasswordsTab = () => {
     }));
   };
 
-  const handlePermissionChange = (userId: string, permission: string, value: boolean) => {
+  const handlePermissionChange = (userId: number, permission: string, value: boolean) => {
     setEditedUsers(prev => ({
       ...prev,
       [userId]: {
@@ -133,7 +132,7 @@ const PasswordsTab = () => {
     }));
   };
 
-  const saveUser = (userId: string) => {
+  const saveUser = (userId: number) => {
     const changes = editedUsers[userId];
     if (changes) {
       UserService.updateAdminUser(userId, changes);
@@ -150,7 +149,7 @@ const PasswordsTab = () => {
     }
   };
 
-  const deleteUser = (id: string) => {
+  const deleteUser = (id: number) => {
     UserService.deleteAdminUser(id);
     setUsers(UserService.getAdminUsers());
     toast({
@@ -165,7 +164,7 @@ const PasswordsTab = () => {
       : user[field as keyof AdminUser];
   };
 
-  const hasChanges = (userId: string) => {
+  const hasChanges = (userId: number) => {
     return editedUsers[userId] && Object.keys(editedUsers[userId]).length > 0;
   };
 

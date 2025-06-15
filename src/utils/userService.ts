@@ -1,4 +1,3 @@
-
 import { AdminUser } from '../types/admin';
 
 class UserService {
@@ -25,7 +24,7 @@ class UserService {
         email: 'admin@example.com',
         permissions: ['overview', 'products', 'users', 'passwords', 'tools', 'customerSupport', 'siteControl', 'texts', 'navigation', 'contact', 'design', 'preview', 'backup'],
         isActive: true,
-        createdAt: new Date().toISOString()
+        lastLogin: new Date().toISOString()
       },
     ];
     

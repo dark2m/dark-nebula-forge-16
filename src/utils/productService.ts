@@ -49,7 +49,8 @@ class ProductService {
         features: ['ESP للاعبين', 'ESP للأسلحة', 'ESP للسيارات', 'آمن 100%'],
         textSize: 'medium',
         titleSize: 'large',
-        inStock: true
+        inStock: true,
+        isActive: true
       },
       { 
         id: 2, 
@@ -62,7 +63,8 @@ class ProductService {
         features: ['رؤية ليلية متقدمة', 'كشف الأعداء المختبئين', 'تحسين الرؤية', 'آمن ومحدث'],
         textSize: 'medium',
         titleSize: 'large',
-        inStock: true
+        inStock: true,
+        isActive: true
       }
     ];
   }
@@ -122,7 +124,8 @@ class ProductService {
       features: product.features || [],
       textSize: product.textSize || 'medium',
       titleSize: product.titleSize || 'large',
-      inStock: product.inStock ?? true
+      inStock: product.inStock ?? true,
+      isActive: product.isActive ?? true
     };
     
     const updatedProducts = [...products, newProduct];

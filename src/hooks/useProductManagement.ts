@@ -55,7 +55,8 @@ export const useProductManagement = (
         features: [],
         textSize: 'medium',
         titleSize: 'large',
-        inStock: true
+        inStock: true,
+        isActive: true
       });
       
       toast({
