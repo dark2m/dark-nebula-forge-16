@@ -30,8 +30,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
   // التأكد من وجود tools في الإعدادات
   const tools = siteSettings.tools || [];
   const toolsPageSettings = siteSettings.pageTexts?.tools || {
-    pageTitle: 'أدوات الموقع',
-    pageSubtitle: 'مجموعة من الأدوات المفيدة للموقع'
+    title: 'أدوات الموقع',
+    subtitle: 'مجموعة من الأدوات المفيدة للموقع'
   };
 
   const categories = [
@@ -44,12 +44,14 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
   const addTool = () => {
     const newTool: Tool = {
       id: Date.now(),
+      name: 'أداة جديدة',
       title: 'أداة جديدة',
       description: 'وصف الأداة',
       buttonText: 'استخدام الأداة',
       url: '',
       icon: '🔧',
       visible: true,
+      isActive: true,
       category: 'general',
       customHtml: ''
     };
@@ -80,12 +82,14 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
 
     const newTool: Tool = {
       id: Date.now(),
+      name: `${categoryLabels[category]} جديدة`,
       title: `${categoryLabels[category]} جديدة`,
       description: 'وصف الأداة',
       buttonText: 'استخدام الأداة',
       url: '',
       icon: categoryIcons[category],
       visible: true,
+      isActive: true,
       category: category,
       customHtml: ''
     };
@@ -100,12 +104,14 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
   const addPasswordGeneratorTool = () => {
     const passwordTool: Tool = {
       id: Date.now(),
+      name: 'مولد كلمات المرور',
       title: 'مولد كلمات المرور',
       description: 'أداة لتوليد كلمات مرور قوية وآمنة مع خيارات متقدمة',
       buttonText: 'استخدام المولد',
       url: '',
       icon: '🔐',
       visible: true,
+      isActive: true,
       category: 'security',
       customHtml: passwordGeneratorToolCode
     };
@@ -223,8 +229,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
               </label>
               <input
                 type="text"
-                value={toolsPageSettings.pageTitle}
-                onChange={(e) => updatePageTexts('pageTitle', e.target.value)}
+                value={toolsPageSettings.title || ''}
+                onChange={(e) => updatePageTexts('title', e.target.value)}
                 className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-400 transition-colors"
                 placeholder="عنوان الصفحة..."
               />
@@ -233,8 +239,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
             <div>
               <label className="block text-yellow-300 text-sm font-medium mb-3">وصف الصفحة</label>
               <textarea
-                value={toolsPageSettings.pageSubtitle}
-                onChange={(e) => updatePageTexts('pageSubtitle', e.target.value)}
+                value={toolsPageSettings.subtitle || ''}
+                onChange={(e) => updatePageTexts('subtitle', e.target.value)}
                 rows={3}
                 className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-yellow-400 transition-colors resize-none"
                 placeholder="وصف الصفحة..."
@@ -429,3 +435,4 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
 };
 
 export default ToolsTab;
+

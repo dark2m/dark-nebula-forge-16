@@ -1,4 +1,5 @@
 
+
 export interface Product {
   id: number;
   name: string;
@@ -35,7 +36,7 @@ export interface AdminUser {
 export interface CartItem {
   id: number;
   name: string;
-  price: string;
+  price: number;
   quantity: number;
   image?: string;
   category: string;
@@ -44,11 +45,15 @@ export interface CartItem {
 export interface Tool {
   id: number;
   name: string;
+  title: string;
   description: string;
+  buttonText: string;
   icon: string;
   category: string;
   url: string;
   isActive: boolean;
+  visible: boolean;
+  customHtml?: string;
 }
 
 export interface PageTexts {
@@ -226,3 +231,4 @@ export interface SiteSettings {
   tools?: Tool[];
   pageTexts: PageTexts;
 }
+
