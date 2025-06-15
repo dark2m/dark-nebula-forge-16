@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,12 +49,6 @@ const UserSessionManager = () => {
       toast({
         title: "تم تسجيل الدخول",
         description: rememberMe ? "تم حفظ معلومات تسجيل الدخول" : "تم تسجيل الدخول بنجاح"
-      });
-    } else {
-      toast({
-        title: "خطأ في تسجيل الدخول",
-        description: error.message || "البريد الإلكتروني أو كلمة المرور غير صحيحة",
-        variant: "destructive"
       });
     }
   };

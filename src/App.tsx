@@ -6,25 +6,22 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navigation from "./components/Navigation";
-import Index from "./pages/Index";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AuthGuard from "./components/auth/AuthGuard";
+import AuthPage from "./components/auth/AuthPage";
+import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
-import PubgHacks from "./pages/PubgHacks";
-import DiscordBots from "./pages/DiscordBots";
-import WebDevelopment from "./pages/WebDevelopment";
-import Tools from "./pages/Tools";
-import PasswordGenerator from "./pages/PasswordGenerator";
-import GmailGenerator from "./pages/GmailGenerator";
-import Downloads from "./pages/Downloads";
-import ContactUs from "./pages/ContactUs";
-import CustomerSupport from "./pages/CustomerSupport";
-import AboutUs from "./pages/AboutUs";
 import OfficialPage from "./pages/OfficialPage";
+import PubgHacks from "./pages/PubgHacks";
+import WebDevelopment from "./pages/WebDevelopment";
+import DiscordBots from "./pages/DiscordBots";
+import Tools from "./pages/Tools";
+import CustomerSupport from "./pages/CustomerSupport";
+import Downloads from "./pages/Downloads";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
-import ProtectedRoute from "./components/ProtectedRoute";
+import EmailVerification from "./pages/EmailVerification";
 import NotFound from "./pages/NotFound";
-import Sport from "./pages/Sport";
-import Dashboard from "./pages/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -35,33 +32,80 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <div className="min-h-screen bg-black text-white">
-            <Navigation />
+          <div className="min-h-screen">
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/sport" element={<Sport />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/pubg-hacks" element={<PubgHacks />} />
-              <Route path="/discord-bots" element={<DiscordBots />} />
-              <Route path="/web-development" element={<WebDevelopment />} />
-              <Route path="/tools" element={<Tools />} />
-              <Route path="/password-generator" element={<PasswordGenerator />} />
-              <Route path="/gmail-generator" element={<GmailGenerator />} />
-              <Route path="/downloads" element={<Downloads />} />
-              <Route path="/contact" element={<ContactUs />} />
-              <Route path="/support" element={<CustomerSupport />} />
-              <Route path="/about" element={<AboutUs />} />
-              <Route path="/official" element={<OfficialPage />} />
+              {/* Auth Route */}
+              <Route path="/auth" element={<AuthPage />} />
+              
+              {/* Email Verification Route */}
+              <Route path="/verify-email" element={<EmailVerification />} />
+              
+              {/* Protected Dashboard */}
+              <Route path="/dashboard" element={
+                <AuthGuard>
+                  <Dashboard />
+                </AuthGuard>
+              } />
+              
+              {/* Public Routes */}
+              <Route path="/" element={
+                <>
+                  <Navigation />
+                  <Home />
+                </>
+              } />
+              <Route path="/official" element={
+                <>
+                  <Navigation />
+                  <OfficialPage />
+                </>
+              } />
+              <Route path="/pubg-hacks" element={
+                <>
+                  <Navigation />
+                  <PubgHacks />
+                </>
+              } />
+              <Route path="/web-development" element={
+                <>
+                  <Navigation />
+                  <WebDevelopment />
+                </>
+              } />
+              <Route path="/discord-bots" element={
+                <>
+                  <Navigation />
+                  <DiscordBots />
+                </>
+              } />
+              <Route path="/tool" element={
+                <>
+                  <Navigation />
+                  <Tools />
+                </>
+              } />
+              <Route path="/sport" element={
+                <>
+                  <Navigation />
+                  <CustomerSupport />
+                </>
+              } />
+              <Route path="/download" element={
+                <>
+                  <Navigation />
+                  <Downloads />
+                </>
+              } />
+              
+              {/* Admin Routes */}
               <Route path="/admin/login" element={<AdminLogin />} />
-              <Route
-                path="/admin/*"
-                element={
-                  <ProtectedRoute>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/admin/dashboard" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              
+              {/* 404 Page */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
