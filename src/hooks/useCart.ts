@@ -1,15 +1,15 @@
 
 import { useState, useEffect } from 'react';
 import CartService from '../utils/cartService';
-import type { Product } from '../types/admin';
+import type { Product, CartItem } from '../types/admin';
 
 export const useCart = () => {
-  const [cartItems, setCartItems] = useState<{[key: string]: Array<{id: number, name: string, price: string, category: string}>}>({});
+  const [cartItems, setCartItems] = useState<{[key: string]: CartItem[]}>({});
 
   useEffect(() => {
     const loadCarts = () => {
       const categories = ['pubg', 'web', 'discord'];
-      const newCartItems: {[key: string]: any[]} = {};
+      const newCartItems: {[key: string]: CartItem[]} = {};
       
       categories.forEach(category => {
         const cartData = CartService.getCart(category);

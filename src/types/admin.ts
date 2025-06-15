@@ -15,6 +15,9 @@ export interface Product {
   specifications?: Record<string, string>;
   gallery?: string[];
   videoUrl?: string;
+  rating?: number;
+  images?: string[];
+  videos?: string[];
 }
 
 export interface AdminUser {
@@ -32,10 +35,20 @@ export interface AdminUser {
 export interface CartItem {
   id: number;
   name: string;
-  price: number;
+  price: string;
   quantity: number;
   image?: string;
   category: string;
+}
+
+export interface Tool {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  url: string;
+  isActive: boolean;
 }
 
 export interface PageTexts {
@@ -44,9 +57,11 @@ export interface PageTexts {
     heroSubtitle?: string;
     featuresTitle?: string;
     features?: Array<{
+      id?: string;
       title: string;
       description: string;
       icon: string;
+      visible?: boolean;
     }>;
   };
   official?: {
@@ -138,6 +153,11 @@ export interface PageTexts {
       wrongPassword?: string;
     };
   };
+  tools?: {
+    title?: string;
+    subtitle?: string;
+    categories?: Record<string, string>;
+  };
 }
 
 export interface SiteSettings {
@@ -150,7 +170,7 @@ export interface SiteSettings {
     accent: string;
   };
   globalTextSize: 'small' | 'medium' | 'large';
-  downloadsPassword?: string; // كلمة مرور التنزيلات
+  downloadsPassword?: string;
   backgroundSettings: {
     type: 'color' | 'gradient' | 'image';
     value: string;
@@ -160,7 +180,7 @@ export interface SiteSettings {
     meteorCount: number;
     meteorSize: 'small' | 'medium' | 'large';
     meteorOpacity: number;
-    meteorDirection: 'up' | 'down' | 'left' | 'right';
+    meteorDirection: 'up' | 'down' | 'left' | 'right' | 'mixed';
     meteorColors: string[];
     animationSpeed: 'slow' | 'normal' | 'fast';
   };
@@ -184,9 +204,11 @@ export interface SiteSettings {
     heroSubtitle: string;
     featuresTitle: string;
     features: Array<{
+      id?: string;
       title: string;
       description: string;
       icon: string;
+      visible?: boolean;
     }>;
   };
   typography: {
@@ -201,5 +223,6 @@ export interface SiteSettings {
     spacing: 'compact' | 'normal' | 'relaxed';
     animations: boolean;
   };
+  tools?: Tool[];
   pageTexts: PageTexts;
 }

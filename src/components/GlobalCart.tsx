@@ -10,16 +10,17 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AdminStorage from '../utils/adminStorage';
+import type { CartItem } from '../types/admin';
 
 const GlobalCart = () => {
-  const [cartItems, setCartItems] = useState<{[key: string]: Array<{id: number, name: string, price: string, category: string}>}>({});
+  const [cartItems, setCartItems] = useState<{[key: string]: CartItem[]}>({});
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
 
   useEffect(() => {
     const loadCarts = () => {
       const categories = ['pubg', 'web', 'discord'];
-      const newCartItems: {[key: string]: any[]} = {};
+      const newCartItems: {[key: string]: CartItem[]} = {};
       
       categories.forEach(category => {
         const cartData = AdminStorage.getCart(category);
@@ -97,11 +98,11 @@ const GlobalCart = () => {
       <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">{cartTexts.cartTitle}</DialogTitle>
+            <DialogTitle className="text-xl font-bold">{cartTexts?.cartTitle || 'السلة'}</DialogTitle>
           </DialogHeader>
           
           {totalItems === 0 ? (
-            <p className="text-gray-500 text-center py-8">{cartTexts.emptyCartMessage}</p>
+            <p className="text-gray-500 text-center py-8">{cartTexts?.emptyCartMessage || 'السلة فارغة'}</p>
           ) : (
             <Tabs defaultValue="pubg" className="space-y-4">
               <TabsList className="grid w-full grid-cols-3">
@@ -135,7 +136,7 @@ const GlobalCart = () => {
                             size="sm"
                             onClick={() => removeFromCart(item.id, category)}
                           >
-                            {cartTexts.removeButton}
+                            {cartTexts?.removeButton || 'حذف'}
                           </Button>
                         </div>
                       ))}
