@@ -1,5 +1,3 @@
-
-
 export interface AdminUser {
   id: number;
   username: string;
@@ -18,6 +16,8 @@ export interface CartItem {
   id: number;
   name: string;
   price: string;
+  quantity: number;
+  category: string;
 }
 
 export interface Product {
@@ -550,4 +550,3 @@ export interface ErrorPageTexts {
     buttonText: string;
   };
 }
-
