@@ -1,0 +1,397 @@
+
+import React from 'react';
+import { Save, Palette, Type, Layout, Settings, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import TaskbarControl from './TaskbarControl';
+import { useSupabaseSiteSettings } from '@/hooks/useSupabaseSiteSettings';
+
+const SiteControlTabWithSupabase: React.FC = () => {
+  const { settings, loading, saving, saveSettings, autoSave } = useSupabaseSiteSettings();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-white text-lg">جارِ تحميل الإعدادات...</div>
+      </div>
+    );
+  }
+
+  const handleSave = () => {
+    saveSettings(settings);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white">تحكم شامل في الموقع</h2>
+          <p className="text-gray-400">إدارة جميع جوانب الموقع من مكان واحد - محفوظ في قاعدة البيانات</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="glow-button">
+          <Save className="w-4 h-4 mr-2" />
+          {saving ? 'جارِ الحفظ...' : 'حفظ جميع التغييرات'}
+        </Button>
+      </div>
+
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5 bg-white/20 backdrop-blur-sm">
+          <TabsTrigger value="general" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">عام</TabsTrigger>
+          <TabsTrigger value="taskbar" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">شريط المهام</TabsTrigger>
+          <TabsTrigger value="appearance" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">المظهر</TabsTrigger>
+          <TabsTrigger value="layout" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">التخطيط</TabsTrigger>
+          <TabsTrigger value="background" className="data-[state=active]:bg-white/30 data-[state=active]:text-white">الخلفية</TabsTrigger>
+        </TabsList>
+
+        {/* General Settings */}
+        <TabsContent value="general" className="space-y-6">
+          <Card className="bg-white/20 backdrop-blur-sm border-white/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Globe className="w-5 h-5" />
+                إعدادات الموقع العامة
+              </CardTitle>
+              <CardDescription className="text-gray-200">
+                إعدادات أساسية للموقع
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="site-title" className="text-white">عنوان الموقع</Label>
+                  <Input
+                    id="site-title"
+                    value={settings.title || ''}
+                    onChange={(e) => autoSave({
+                      ...settings,
+                      title: e.target.value
+                    })}
+                    placeholder="اسم الموقع"
+                    className="bg-white/20 border-white/30 text-white placeholder:text-gray-300"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="title-size" className="text-white">حجم العنوان</Label>
+                  <Select
+                    value={settings.titleSize || 'large'}
+                    onValueChange={(value) => autoSave({
+                      ...settings,
+                      titleSize: value as any
+                    })}
+                  >
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
+                      <SelectItem value="sm">صغير</SelectItem>
+                      <SelectItem value="md">متوسط</SelectItem>
+                      <SelectItem value="lg">كبير</SelectItem>
+                      <SelectItem value="xl">كبير جداً</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="site-description" className="text-white">وصف الموقع</Label>
+                <Textarea
+                  id="site-description"
+                  value={settings.description || ''}
+                  onChange={(e) => autoSave({
+                    ...settings,
+                    description: e.target.value
+                  })}
+                  placeholder="وصف مختصر للموقع"
+                  rows={3}
+                  className="bg-white/20 border-white/30 text-white placeholder:text-gray-300"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="global-text-size" className="text-white">حجم النص العام</Label>
+                <Select
+                  value={settings.globalTextSize || 'medium'}
+                  onValueChange={(value) => autoSave({
+                    ...settings,
+                    globalTextSize: value as any
+                  })}
+                >
+                  <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
+                    <SelectItem value="small">صغير</SelectItem>
+                    <SelectItem value="medium">متوسط</SelectItem>
+                    <SelectItem value="large">كبير</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Taskbar Control */}
+        <TabsContent value="taskbar" className="space-y-6">
+          <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg p-6">
+            <TaskbarControl
+              siteSettings={settings}
+              setSiteSettings={autoSave}
+              saveSiteSettings={handleSave}
+            />
+          </div>
+        </TabsContent>
+
+        {/* Appearance Settings */}
+        <TabsContent value="appearance" className="space-y-6">
+          <Card className="bg-white/20 backdrop-blur-sm border-white/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Palette className="w-5 h-5" />
+                إعدادات المظهر
+              </CardTitle>
+              <CardDescription className="text-gray-200">
+                تخصيص ألوان وشكل الموقع
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="primary-color" className="text-white">اللون الأساسي</Label>
+                  <Input
+                    id="primary-color"
+                    type="color"
+                    value={settings.colors?.primary || '#3b82f6'}
+                    onChange={(e) => autoSave({
+                      ...settings,
+                      colors: {
+                        ...settings.colors,
+                        primary: e.target.value
+                      }
+                    })}
+                    className="h-12 bg-white/20 border-white/30"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="secondary-color" className="text-white">اللون الثانوي</Label>
+                  <Input
+                    id="secondary-color"
+                    type="color"
+                    value={settings.colors?.secondary || '#8b5cf6'}
+                    onChange={(e) => autoSave({
+                      ...settings,
+                      colors: {
+                        ...settings.colors,
+                        secondary: e.target.value
+                      }
+                    })}
+                    className="h-12 bg-white/20 border-white/30"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="accent-color" className="text-white">لون التمييز</Label>
+                  <Input
+                    id="accent-color"
+                    type="color"
+                    value={settings.colors?.accent || '#06b6d4'}
+                    onChange={(e) => autoSave({
+                      ...settings,
+                      colors: {
+                        ...settings.colors,
+                        accent: e.target.value
+                      }
+                    })}
+                    className="h-12 bg-white/20 border-white/30"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 bg-white/10 p-3 rounded-lg">
+                <Switch
+                  id="animations"
+                  checked={settings.design?.animations || false}
+                  onCheckedChange={(checked) => autoSave({
+                    ...settings,
+                    design: {
+                      ...settings.design,
+                      animations: checked
+                    }
+                  })}
+                />
+                <Label htmlFor="animations" className="text-white">تفعيل الحركات والانتقالات</Label>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Layout Settings */}
+        <TabsContent value="layout" className="space-y-6">
+          <Card className="bg-white/20 backdrop-blur-sm border-white/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Layout className="w-5 h-5" />
+                إعدادات التخطيط
+              </CardTitle>
+              <CardDescription className="text-gray-200">
+                تحكم في تباعد العناصر وتخطيط الصفحة
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="font-family" className="text-white">نوع الخط</Label>
+                  <Select
+                    value={settings.typography?.fontFamily || 'system'}
+                    onValueChange={(value) => autoSave({
+                      ...settings,
+                      typography: {
+                        ...settings.typography,
+                        fontFamily: value as any
+                      }
+                    })}
+                  >
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
+                      <SelectItem value="system">النظام الافتراضي</SelectItem>
+                      <SelectItem value="serif">خط عربي</SelectItem>
+                      <SelectItem value="mono">خط عصري</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="line-height" className="text-white">ارتفاع الأسطر</Label>
+                  <Select
+                    value={settings.typography?.lineHeight || 'normal'}
+                    onValueChange={(value) => autoSave({
+                      ...settings,
+                      typography: {
+                        ...settings.typography,
+                        lineHeight: value as any
+                      }
+                    })}
+                  >
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
+                      <SelectItem value="tight">ضيق</SelectItem>
+                      <SelectItem value="normal">عادي</SelectItem>
+                      <SelectItem value="relaxed">مريح</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Background Settings */}
+        <TabsContent value="background" className="space-y-6">
+          <Card className="bg-white/20 backdrop-blur-sm border-white/30">
+            <CardHeader>
+              <CardTitle className="text-white">إعدادات الخلفية المتحركة</CardTitle>
+              <CardDescription className="text-gray-200">
+                تخصيص النجوم والشهب في الخلفية
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/10 p-4 rounded-lg">
+                  <Label className="text-white">عدد النجوم: {settings.backgroundSettings?.starCount || 80}</Label>
+                  <Slider
+                    value={[settings.backgroundSettings?.starCount || 80]}
+                    onValueChange={([value]) => autoSave({
+                      ...settings,
+                      backgroundSettings: {
+                        ...settings.backgroundSettings,
+                        starCount: value
+                      }
+                    })}
+                    max={200}
+                    min={10}
+                    step={10}
+                    className="mt-2"
+                  />
+                </div>
+                <div className="bg-white/10 p-4 rounded-lg">
+                  <Label className="text-white">عدد الشهب: {settings.backgroundSettings?.meteorCount || 10}</Label>
+                  <Slider
+                    value={[settings.backgroundSettings?.meteorCount || 10]}
+                    onValueChange={([value]) => autoSave({
+                      ...settings,
+                      backgroundSettings: {
+                        ...settings.backgroundSettings,
+                        meteorCount: value
+                      }
+                    })}
+                    max={50}
+                    min={0}
+                    step={5}
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-white">سرعة الحركة</Label>
+                  <Select
+                    value={settings.backgroundSettings?.animationSpeed || 'normal'}
+                    onValueChange={(value) => autoSave({
+                      ...settings,
+                      backgroundSettings: {
+                        ...settings.backgroundSettings,
+                        animationSpeed: value as any
+                      }
+                    })}
+                  >
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
+                      <SelectItem value="slow">بطيء</SelectItem>
+                      <SelectItem value="normal">عادي</SelectItem>
+                      <SelectItem value="fast">سريع</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-white">حجم النجوم</Label>
+                  <Select
+                    value={settings.backgroundSettings?.starSize || 'medium'}
+                    onValueChange={(value) => autoSave({
+                      ...settings,
+                      backgroundSettings: {
+                        ...settings.backgroundSettings,
+                        starSize: value as any
+                      }
+                    })}
+                  >
+                    <SelectTrigger className="bg-white/20 border-white/30 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white/90 backdrop-blur-sm border-white/30">
+                      <SelectItem value="small">صغير</SelectItem>
+                      <SelectItem value="medium">متوسط</SelectItem>
+                      <SelectItem value="large">كبير</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default SiteControlTabWithSupabase;
