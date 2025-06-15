@@ -34,16 +34,26 @@ class SupabaseUserService {
   // حفظ/تحديث مستخدم
   static async saveAdminUser(user: AdminUser): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('admin_users')
-        .upsert({
-          id: user.id === 0 ? undefined : user.id,
-          username: user.username,
-          password: user.password,
-          role: user.role
-        });
+      const userData = {
+        username: user.username,
+        password: user.password,
+        role: user.role
+      };
 
-      if (error) throw error;
+      if (user.id === 0) {
+        // إدراج مستخدم جديد
+        const { error } = await supabase
+          .from('admin_users')
+          .insert([userData]);
+        if (error) throw error;
+      } else {
+        // تحديث مستخدم موجود
+        const { error } = await supabase
+          .from('admin_users')
+          .update(userData)
+          .eq('id', user.id);
+        if (error) throw error;
+      }
     } catch (error) {
       console.error('SupabaseUserService: Error saving user:', error);
       throw error;
