@@ -5,7 +5,6 @@ import { useIsMobile } from '../hooks/use-mobile';
 import AdminStorage from '../utils/adminStorage';
 import SettingsService from '../utils/settingsService';
 import TranslationService from '../utils/translationService';
-import LanguageSelector from './LanguageSelector';
 import { getTextContent } from '../utils/textUtils';
 
 const Navigation = () => {
@@ -162,20 +161,14 @@ const Navigation = () => {
               </button>
             )}
 
-            {/* Admin Login and Language Selector Container */}
-            <div className="flex flex-col items-center space-y-2">
-              {/* Admin Login */}
-              <Link
-                to="/admin/login"
-                className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
-              >
-                <User className="w-4 h-4" />
-                <span className="hidden sm:block">{TranslationService.translate('nav.admin')}</span>
-              </Link>
-              
-              {/* Language Selector - positioned below admin button */}
-              <LanguageSelector />
-            </div>
+            {/* Admin Login */}
+            <Link
+              to="/admin/login"
+              className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden sm:block">{TranslationService.translate('nav.admin')}</span>
+            </Link>
           </div>
         </div>
 
@@ -201,11 +194,6 @@ const Navigation = () => {
                   </Link>
                 );
               })}
-              
-              {/* Language Selector in mobile menu */}
-              <div className="pt-3 border-t border-white/20">
-                <LanguageSelector />
-              </div>
             </div>
           </div>
         )}
