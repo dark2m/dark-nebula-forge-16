@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 export interface CustomerSupportUser {
   id: string;
@@ -46,412 +47,329 @@ export interface CustomerLoginAttempt {
   user_agent?: string;
 }
 
-class SupabaseCustomerSupportService {
-  // إدارة العملاء
-  async getCustomers(): Promise<CustomerSupportUser[]> {
+// Helper function to convert Json to array
+const jsonToArray = (json: Json): any[] => {
+  if (Array.isArray(json)) return json;
+  if (typeof json === 'string') {
     try {
-      const { data, error } = await supabase
-        .from('customer_support_users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching customers:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getCustomers:', error);
+      const parsed = JSON.parse(json);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
       return [];
     }
   }
+  return [];
+};
 
-  async createCustomer(customer: {
+// Helper function to ensure valid status
+const normalizeStatus = (status: string): 'active' | 'closed' | 'waiting' => {
+  if (status === 'active' || status === 'closed' || status === 'waiting') {
+    return status;
+  }
+  return 'active'; // default fallback
+};
+
+// Helper function to convert database row to CustomerSupportMessage
+const convertToMessage = (row: any): CustomerSupportMessage => ({
+  id: row.id,
+  customer_id: row.customer_id,
+  message: row.message,
+  attachments: jsonToArray(row.attachments),
+  files: jsonToArray(row.files),
+  is_from_customer: row.is_from_customer,
+  is_read: row.is_read,
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+});
+
+// Helper function to convert database row to CustomerSupportSession
+const convertToSession = (row: any): CustomerSupportSession => ({
+  id: row.id,
+  customer_id: row.customer_id,
+  status: normalizeStatus(row.status),
+  last_activity: row.last_activity,
+  unread_count: row.unread_count,
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+});
+
+class SupabaseCustomerSupportService {
+  // Get all customers
+  static async getCustomers(): Promise<CustomerSupportUser[]> {
+    const { data, error } = await supabase
+      .from('customer_support_users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching customers:', error);
+      throw error;
+    }
+
+    return data as CustomerSupportUser[];
+  }
+
+  // Create a new customer
+  static async createCustomer(customerData: {
     email: string;
     username?: string;
     password_hash?: string;
     is_verified?: boolean;
   }): Promise<CustomerSupportUser | null> {
-    try {
-      const { data, error } = await supabase
-        .from('customer_support_users')
-        .insert({
-          email: customer.email,
-          username: customer.username || customer.email.split('@')[0],
-          password_hash: customer.password_hash,
-          is_verified: customer.is_verified || false,
-        })
-        .select()
-        .single();
+    const { data, error } = await supabase
+      .from('customer_support_users')
+      .insert([customerData])
+      .select()
+      .single();
 
-      if (error) {
-        console.error('Error creating customer:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error in createCustomer:', error);
-      return null;
+    if (error) {
+      console.error('Error creating customer:', error);
+      throw error;
     }
+
+    return data as CustomerSupportUser;
   }
 
-  async updateCustomer(id: string, updates: Partial<CustomerSupportUser>): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('customer_support_users')
-        .update(updates)
-        .eq('id', id);
+  // Update customer
+  static async updateCustomer(id: string, updates: Partial<CustomerSupportUser>): Promise<boolean> {
+    const { error } = await supabase
+      .from('customer_support_users')
+      .update(updates)
+      .eq('id', id);
 
-      if (error) {
-        console.error('Error updating customer:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in updateCustomer:', error);
-      return false;
+    if (error) {
+      console.error('Error updating customer:', error);
+      throw error;
     }
+
+    return true;
   }
 
-  async deleteCustomer(id: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('customer_support_users')
-        .delete()
-        .eq('id', id);
+  // Delete customer
+  static async deleteCustomer(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('customer_support_users')
+      .delete()
+      .eq('id', id);
 
-      if (error) {
-        console.error('Error deleting customer:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in deleteCustomer:', error);
-      return false;
+    if (error) {
+      console.error('Error deleting customer:', error);
+      throw error;
     }
+
+    return true;
   }
 
-  // إدارة الرسائل
-  async getMessages(customerId?: string): Promise<CustomerSupportMessage[]> {
-    try {
-      let query = supabase
-        .from('customer_support_messages')
-        .select('*')
-        .order('created_at', { ascending: true });
-
-      if (customerId) {
-        query = query.eq('customer_id', customerId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching messages:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getMessages:', error);
-      return [];
-    }
-  }
-
-  async sendMessage(message: {
+  // Send message
+  static async sendMessage(messageData: {
     customer_id: string;
     message: string;
     attachments?: any[];
     files?: any[];
     is_from_customer?: boolean;
   }): Promise<CustomerSupportMessage | null> {
-    try {
-      const { data, error } = await supabase
-        .from('customer_support_messages')
-        .insert({
-          customer_id: message.customer_id,
-          message: message.message,
-          attachments: message.attachments || [],
-          files: message.files || [],
-          is_from_customer: message.is_from_customer || false,
-          is_read: false,
-        })
-        .select()
-        .single();
+    // First, insert the message
+    const { data: messageRow, error: messageError } = await supabase
+      .from('customer_support_messages')
+      .insert([{
+        customer_id: messageData.customer_id,
+        message: messageData.message,
+        attachments: JSON.stringify(messageData.attachments || []),
+        files: JSON.stringify(messageData.files || []),
+        is_from_customer: messageData.is_from_customer ?? true,
+      }])
+      .select()
+      .single();
 
-      if (error) {
-        console.error('Error sending message:', error);
-        return null;
-      }
-
-      // تحديث آخر نشاط للجلسة
-      await this.updateSessionActivity(message.customer_id);
-
-      return data;
-    } catch (error) {
-      console.error('Error in sendMessage:', error);
-      return null;
+    if (messageError) {
+      console.error('Error sending message:', messageError);
+      throw messageError;
     }
-  }
 
-  async markMessagesAsRead(customerId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('customer_support_messages')
-        .update({ is_read: true })
-        .eq('customer_id', customerId)
-        .eq('is_read', false);
+    // Update or create session
+    const { data: existingSession } = await supabase
+      .from('customer_support_sessions')
+      .select('*')
+      .eq('customer_id', messageData.customer_id)
+      .single();
 
-      if (error) {
-        console.error('Error marking messages as read:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in markMessagesAsRead:', error);
-      return false;
-    }
-  }
-
-  // إدارة الجلسات
-  async getSessions(): Promise<CustomerSupportSession[]> {
-    try {
-      const { data, error } = await supabase
-        .from('customer_support_sessions')
-        .select('*')
-        .order('last_activity', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching sessions:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getSessions:', error);
-      return [];
-    }
-  }
-
-  async createOrUpdateSession(customerId: string): Promise<CustomerSupportSession | null> {
-    try {
-      // التحقق من وجود جلسة
-      const { data: existingSession } = await supabase
-        .from('customer_support_sessions')
-        .select('*')
-        .eq('customer_id', customerId)
-        .single();
-
-      if (existingSession) {
-        // تحديث الجلسة الموجودة
-        const { data, error } = await supabase
-          .from('customer_support_sessions')
-          .update({
-            last_activity: new Date().toISOString(),
-            status: 'active',
-          })
-          .eq('id', existingSession.id)
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error updating session:', error);
-          return null;
-        }
-
-        return data;
-      } else {
-        // إنشاء جلسة جديدة
-        const { data, error } = await supabase
-          .from('customer_support_sessions')
-          .insert({
-            customer_id: customerId,
-            status: 'active',
-            last_activity: new Date().toISOString(),
-            unread_count: 0,
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error creating session:', error);
-          return null;
-        }
-
-        return data;
-      }
-    } catch (error) {
-      console.error('Error in createOrUpdateSession:', error);
-      return null;
-    }
-  }
-
-  async updateSessionActivity(customerId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
+    if (existingSession) {
+      // Update existing session
+      await supabase
         .from('customer_support_sessions')
         .update({
           last_activity: new Date().toISOString(),
+          unread_count: messageData.is_from_customer ? existingSession.unread_count + 1 : existingSession.unread_count,
         })
-        .eq('customer_id', customerId);
-
-      if (error) {
-        console.error('Error updating session activity:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in updateSessionActivity:', error);
-      return false;
-    }
-  }
-
-  async closeSession(customerId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
+        .eq('customer_id', messageData.customer_id);
+    } else {
+      // Create new session
+      await supabase
         .from('customer_support_sessions')
-        .update({
-          status: 'closed',
-          last_activity: new Date().toISOString(),
-        })
-        .eq('customer_id', customerId);
-
-      if (error) {
-        console.error('Error closing session:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in closeSession:', error);
-      return false;
+        .insert([{
+          customer_id: messageData.customer_id,
+          status: 'active',
+          unread_count: messageData.is_from_customer ? 1 : 0,
+        }]);
     }
+
+    return convertToMessage(messageRow);
   }
 
-  async deleteSession(customerId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('customer_support_sessions')
-        .delete()
-        .eq('customer_id', customerId);
+  // Get messages for a customer
+  static async getMessages(customerId: string): Promise<CustomerSupportMessage[]> {
+    const { data, error } = await supabase
+      .from('customer_support_messages')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: true });
 
-      if (error) {
-        console.error('Error deleting session:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in deleteSession:', error);
-      return false;
+    if (error) {
+      console.error('Error fetching messages:', error);
+      throw error;
     }
+
+    return data.map(convertToMessage);
   }
 
-  // إدارة محاولات تسجيل الدخول
-  async logLoginAttempt(attempt: {
-    email: string;
-    ip_address?: string;
-    success: boolean;
-    user_agent?: string;
-  }): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('customer_login_attempts')
-        .insert({
-          email: attempt.email,
-          ip_address: attempt.ip_address || 'unknown',
-          success: attempt.success,
-          user_agent: attempt.user_agent || 'unknown',
-        });
+  // Mark messages as read
+  static async markMessagesAsRead(customerId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('customer_support_messages')
+      .update({ is_read: true })
+      .eq('customer_id', customerId)
+      .eq('is_from_customer', true);
 
-      if (error) {
-        console.error('Error logging login attempt:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in logLoginAttempt:', error);
-      return false;
+    if (error) {
+      console.error('Error marking messages as read:', error);
+      throw error;
     }
+
+    // Reset unread count in session
+    await supabase
+      .from('customer_support_sessions')
+      .update({ unread_count: 0 })
+      .eq('customer_id', customerId);
+
+    return true;
   }
 
-  async getLoginAttempts(limit: number = 100): Promise<CustomerLoginAttempt[]> {
-    try {
-      const { data, error } = await supabase
-        .from('customer_login_attempts')
-        .select('*')
-        .order('attempted_at', { ascending: false })
-        .limit(limit);
+  // Get all sessions
+  static async getSessions(): Promise<CustomerSupportSession[]> {
+    const { data, error } = await supabase
+      .from('customer_support_sessions')
+      .select('*')
+      .order('last_activity', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching login attempts:', error);
-        return [];
-      }
-
-      return data || [];
-    } catch (error) {
-      console.error('Error in getLoginAttempts:', error);
-      return [];
+    if (error) {
+      console.error('Error fetching sessions:', error);
+      throw error;
     }
+
+    return data.map(convertToSession);
   }
 
-  // دالة للمصادقة
-  async authenticateCustomer(email: string, password: string): Promise<{
+  // Close session
+  static async closeSession(customerId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('customer_support_sessions')
+      .update({ status: 'closed' })
+      .eq('customer_id', customerId);
+
+    if (error) {
+      console.error('Error closing session:', error);
+      throw error;
+    }
+
+    return true;
+  }
+
+  // Delete session
+  static async deleteSession(customerId: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('customer_support_sessions')
+      .delete()
+      .eq('customer_id', customerId);
+
+    if (error) {
+      console.error('Error deleting session:', error);
+      throw error;
+    }
+
+    return true;
+  }
+
+  // Get login attempts
+  static async getLoginAttempts(): Promise<CustomerLoginAttempt[]> {
+    const { data, error } = await supabase
+      .from('customer_login_attempts')
+      .select('*')
+      .order('attempted_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error('Error fetching login attempts:', error);
+      throw error;
+    }
+
+    return data as CustomerLoginAttempt[];
+  }
+
+  // Authenticate customer
+  static async authenticateCustomer(email: string, password: string): Promise<{
     success: boolean;
     customer?: CustomerSupportUser;
     error?: string;
   }> {
-    try {
-      // تسجيل محاولة الدخول
-      await this.logLoginAttempt({
+    // Log the attempt
+    await supabase
+      .from('customer_login_attempts')
+      .insert([{
         email,
         success: false,
-      });
+        ip_address: 'unknown',
+        user_agent: navigator.userAgent,
+      }]);
 
-      // البحث عن العميل
-      const { data: customer, error } = await supabase
-        .from('customer_support_users')
-        .select('*')
-        .eq('email', email)
-        .single();
+    // Find customer by email
+    const { data: customer, error } = await supabase
+      .from('customer_support_users')
+      .select('*')
+      .eq('email', email)
+      .single();
 
-      if (error || !customer) {
-        return { success: false, error: 'بيانات الدخول غير صحيحة' };
-      }
-
-      if (customer.is_blocked) {
-        return { success: false, error: 'تم حظر هذا الحساب' };
-      }
-
-      // في هذا المثال، سنقوم بمقارنة بسيطة
-      // في التطبيق الحقيقي، يجب استخدام hashing للكلمات السرية
-      if (customer.password_hash !== password) {
-        return { success: false, error: 'بيانات الدخول غير صحيحة' };
-      }
-
-      // تحديث آخر دخول
-      await this.updateCustomer(customer.id, {
-        last_login: new Date().toISOString(),
-      });
-
-      // تسجيل محاولة دخول ناجحة
-      await this.logLoginAttempt({
-        email,
-        success: true,
-      });
-
-      return { success: true, customer };
-    } catch (error) {
-      console.error('Error in authenticateCustomer:', error);
-      return { success: false, error: 'خطأ في الخادم' };
+    if (error || !customer) {
+      return { success: false, error: 'Customer not found' };
     }
+
+    // Check if customer is blocked
+    if (customer.is_blocked) {
+      return { success: false, error: 'Customer is blocked' };
+    }
+
+    // Simple password check (in real app, use proper hashing)
+    if (customer.password_hash === password) {
+      // Update last login
+      await supabase
+        .from('customer_support_users')
+        .update({ last_login: new Date().toISOString() })
+        .eq('id', customer.id);
+
+      // Log successful attempt
+      await supabase
+        .from('customer_login_attempts')
+        .insert([{
+          email,
+          success: true,
+          ip_address: 'unknown',
+          user_agent: navigator.userAgent,
+        }]);
+
+      return { success: true, customer: customer as CustomerSupportUser };
+    }
+
+    return { success: false, error: 'Invalid password' };
   }
 }
 
-export default new SupabaseCustomerSupportService();
+export default SupabaseCustomerSupportService;
