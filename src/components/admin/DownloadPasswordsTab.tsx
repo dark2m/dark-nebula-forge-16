@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Key, Plus, Edit, Trash2, Eye, EyeOff, Shield, Clock, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import DownloadPasswordService from '../../utils/downloadPasswordService';
+import DownloadCategoriesService from '../../utils/downloadCategoriesService';
 import type { DownloadPassword } from '../../types/downloads';
 
 interface DownloadPasswordsTabProps {
@@ -15,11 +15,10 @@ interface DownloadPasswordsTabProps {
 const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }) => {
   const { toast } = useToast();
   const [passwords, setPasswords] = useState<DownloadPassword[]>(DownloadPasswordService.getDownloadPasswords());
+  const [categories] = useState<string[]>(DownloadCategoriesService.getCategories());
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<DownloadPassword>>({});
   const [showPassword, setShowPassword] = useState<number | null>(null);
-
-  const categories = ['ألعاب', 'أدوات', 'تصميم', 'برمجة', 'موسيقى', 'فيديو', 'كتب', 'أمان'];
 
   const handleAdd = () => {
     if (!canAccess('مبرمج')) {
@@ -34,7 +33,7 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
     const newPassword = DownloadPasswordService.addPassword({
       name: "كلمة مرور جديدة",
       password: `pass_${Date.now()}`,
-      allowedCategories: ["ألعاب"],
+      allowedCategories: [categories[0] || "ألعاب"],
       isActive: true,
       description: "وصف كلمة المرور"
     });

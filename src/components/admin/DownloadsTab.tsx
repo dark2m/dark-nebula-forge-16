@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import FileUploader from '../FileUploader';
 import DownloadService from '../../utils/downloadService';
+import DownloadCategoriesService from '../../utils/downloadCategoriesService';
+import DownloadCategoriesManager from './DownloadCategoriesManager';
 import type { DownloadItem } from '../../types/downloads';
 
 interface DownloadsTabProps {
@@ -15,6 +17,7 @@ interface DownloadsTabProps {
 const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
   const { toast } = useToast();
   const [downloads, setDownloads] = useState<DownloadItem[]>(DownloadService.getDownloads());
+  const [categories, setCategories] = useState<string[]>(DownloadCategoriesService.getCategories());
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<DownloadItem>>({});
   const [showImageUploader, setShowImageUploader] = useState<number | null>(null);
@@ -45,7 +48,6 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
     { name: 'Home', component: Home, label: 'الرئيسية' }
   ];
 
-  const categories = ['ألعاب', 'أدوات', 'تصميم', 'برمجة', 'موسيقى', 'فيديو', 'كتب', 'أمان'];
   const statusOptions = ['جديد', 'محدث', 'شائع', 'قديم'];
 
   const handleAdd = () => {
@@ -62,7 +64,7 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
       id: Date.now(),
       title: "منتج جديد",
       description: "وصف المنتج",
-      category: "أدوات",
+      category: categories[0] || "أدوات",
       size: "1.0 MB",
       downloads: 0,
       rating: 5.0,
@@ -196,6 +198,12 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
           </Button>
         )}
       </div>
+
+      {/* Categories Management */}
+      <DownloadCategoriesManager
+        categories={categories}
+        onCategoriesChange={setCategories}
+      />
 
       <div className="grid gap-4">
         {downloads.map((download) => {

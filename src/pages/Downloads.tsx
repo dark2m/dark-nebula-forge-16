@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StarryBackground from '../components/StarryBackground';
 import DownloadService from '../utils/downloadService';
+import DownloadCategoriesService from '../utils/downloadCategoriesService';
 import AdminStorage from '../utils/adminStorage';
 import type { DownloadItem } from '../types/downloads';
 import type { DownloadsPageTexts } from '../types/admin';
@@ -15,6 +16,7 @@ import DownloadPasswordService from '../utils/downloadPasswordService';
 const Downloads = () => {
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [filteredDownloads, setFilteredDownloads] = useState<DownloadItem[]>([]);
+  const [categories] = useState<string[]>(DownloadCategoriesService.getCategories());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -43,15 +45,7 @@ const Downloads = () => {
       title: 'مركز التنزيلات',
       subtitle: 'احصل على أفضل الأدوات والبرامج المتخصصة',
       categories: {
-        all: 'الكل',
-        games: 'ألعاب',
-        tools: 'أدوات',
-        design: 'تصميم',
-        programming: 'برمجة',
-        music: 'موسيقى',
-        video: 'فيديو',
-        books: 'كتب',
-        security: 'أمان'
+        all: 'الكل'
       },
       buttons: {
         download: 'تنزيل',
@@ -193,7 +187,6 @@ const Downloads = () => {
     ? (downloads.reduce((sum, item) => sum + (item.rating || 0), 0) / downloads.length).toFixed(1)
     : '0';
 
-  // صفحة تسجيل الدخول المحدثة
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen relative overflow-hidden">
@@ -405,14 +398,9 @@ const Downloads = () => {
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-white/20">
                 <SelectItem value="all">{mainPageTexts.categories?.all || 'الكل'}</SelectItem>
-                <SelectItem value="games">{mainPageTexts.categories?.games || 'ألعاب'}</SelectItem>
-                <SelectItem value="tools">{mainPageTexts.categories?.tools || 'أدوات'}</SelectItem>
-                <SelectItem value="design">{mainPageTexts.categories?.design || 'تصميم'}</SelectItem>
-                <SelectItem value="programming">{mainPageTexts.categories?.programming || 'برمجة'}</SelectItem>
-                <SelectItem value="music">{mainPageTexts.categories?.music || 'موسيقى'}</SelectItem>
-                <SelectItem value="video">{mainPageTexts.categories?.video || 'فيديو'}</SelectItem>
-                <SelectItem value="books">{mainPageTexts.categories?.books || 'كتب'}</SelectItem>
-                <SelectItem value="security">{mainPageTexts.categories?.security || 'أمان'}</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -456,7 +444,7 @@ const Downloads = () => {
                         </CardDescription>
                       </div>
                       <Badge variant="secondary" className="ml-2">
-                        {mainPageTexts.categories?.[item.category as keyof typeof mainPageTexts.categories] || item.category}
+                        {item.category}
                       </Badge>
                     </div>
                   </CardHeader>
