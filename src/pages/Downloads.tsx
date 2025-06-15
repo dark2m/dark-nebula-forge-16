@@ -343,46 +343,46 @@ const Downloads = () => {
       <div className="relative z-10 pt-20 pb-12 downloads-content">
         <div className="container mx-auto px-6">
           
-          {/* Logout Button - مميز ومتحرك */}
-          <div className="absolute top-6 right-6 z-20">
-            <div className="relative group">
-              {/* Background Glow Effect */}
-              <div className="absolute -inset-2 bg-gradient-to-r from-red-500/30 via-orange-500/20 to-red-500/30 rounded-xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-500 animate-pulse"></div>
-              
-              {/* Main Button */}
-              <Button
-                onClick={handleLogout}
-                className="relative bg-gradient-to-r from-red-600 via-red-500 to-orange-500 hover:from-red-500 hover:via-red-400 hover:to-orange-400 text-white font-bold py-3 px-6 rounded-xl shadow-2xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-red-500/50 border border-red-400/30"
-              >
-                {/* Inner Glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-orange-400/20 rounded-xl"></div>
-                
-                {/* Button Content */}
-                <div className="relative flex items-center gap-2">
-                  <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
-                  <span className="font-semibold">خروج</span>
-                </div>
-                
-                {/* Animated Border */}
-                <div className="absolute inset-0 rounded-xl overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-400/30 to-orange-400/30 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                </div>
-              </Button>
-              
-              {/* Corner Decorations */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-red-400 to-orange-400 rounded-full blur-sm opacity-60 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-gradient-to-br from-orange-400 to-red-400 rounded-full blur-sm opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
-            </div>
-          </div>
-
-          {/* Header with password info */}
-          <div className="text-center mb-8 pt-16">
+          {/* Header with logout button underneath */}
+          <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
               {mainPageTexts.title}
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-6">
               {mainPageTexts.subtitle}
             </p>
+            
+            {/* Logout Button - positioned under the subtitle */}
+            <div className="flex justify-center mb-6">
+              <div className="relative group">
+                {/* Background Glow Effect */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-red-500/30 via-orange-500/20 to-red-500/30 rounded-xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-500 animate-pulse"></div>
+                
+                {/* Main Button */}
+                <Button
+                  onClick={handleLogout}
+                  className="relative bg-gradient-to-r from-red-600 via-red-500 to-orange-500 hover:from-red-500 hover:via-red-400 hover:to-orange-400 text-white font-bold py-3 px-6 rounded-xl shadow-2xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-red-500/50 border border-red-400/30"
+                >
+                  {/* Inner Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-orange-400/20 rounded-xl"></div>
+                  
+                  {/* Button Content */}
+                  <div className="relative flex items-center gap-2">
+                    <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+                    <span className="font-semibold">خروج</span>
+                  </div>
+                  
+                  {/* Animated Border */}
+                  <div className="absolute inset-0 rounded-xl overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-400/30 to-orange-400/30 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  </div>
+                </Button>
+                
+                {/* Corner Decorations */}
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-red-400 to-orange-400 rounded-full blur-sm opacity-60 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-gradient-to-br from-orange-400 to-red-400 rounded-full blur-sm opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
+              </div>
+            </div>
             
             {/* Display current access level */}
             {userPasswordData && (
