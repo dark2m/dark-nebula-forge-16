@@ -74,7 +74,12 @@ const Downloads = () => {
     }
   };
 
+  // التأكد من وجود النصوص مع fallback آمن
   const texts = siteSettings?.pageTexts?.downloads || defaultTexts;
+  
+  // التأكد من وجود loginPage و mainPage
+  const loginPageTexts = texts.loginPage || defaultTexts.loginPage;
+  const mainPageTexts = texts.mainPage || defaultTexts.mainPage;
 
   useEffect(() => {
     // التحقق من حالة تسجيل الدخول المحفوظة
@@ -125,7 +130,7 @@ const Downloads = () => {
       setError('');
       localStorage.setItem('downloadsAuth', 'true');
     } else {
-      setError(texts.loginPage.errorMessage);
+      setError(loginPageTexts.errorMessage);
     }
   };
 
@@ -206,10 +211,10 @@ const Downloads = () => {
                 </div>
                 
                 <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-3">
-                  {texts.loginPage.title}
+                  {loginPageTexts.title}
                 </CardTitle>
                 <CardDescription className="text-gray-300 text-lg leading-relaxed">
-                  {texts.loginPage.subtitle}
+                  {loginPageTexts.subtitle}
                 </CardDescription>
               </CardHeader>
               
@@ -217,7 +222,7 @@ const Downloads = () => {
                 {/* Enhanced Password Input */}
                 <div className="relative group">
                   <label className="block text-sm font-medium text-gray-300 mb-3 group-focus-within:text-blue-300 transition-colors duration-300">
-                    {texts.loginPage.passwordLabel}
+                    {loginPageTexts.passwordLabel}
                   </label>
                   <div className="relative">
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl opacity-0 group-focus-within:opacity-30 transition-opacity duration-300 blur-sm"></div>
@@ -227,7 +232,7 @@ const Downloads = () => {
                         type="password"
                         value={passwordInput}
                         onChange={(e) => setPasswordInput(e.target.value)}
-                        placeholder={texts.loginPage.passwordPlaceholder}
+                        placeholder={loginPageTexts.passwordPlaceholder}
                         className="bg-white/5 border-white/20 text-white placeholder-gray-400 pr-12 py-4 rounded-xl focus:border-blue-400/50 focus:bg-white/10 transition-all duration-300"
                         onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                       />
@@ -253,7 +258,7 @@ const Downloads = () => {
                   <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
                   <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 text-white font-bold text-lg transition-all duration-300 group-hover:from-blue-500 group-hover:via-purple-500 group-hover:to-cyan-500 py-1 px-6 rounded-xl">
                     <Lock className="w-5 h-5 mr-2 inline" />
-                    {texts.loginPage.loginButton}
+                    {loginPageTexts.loginButton}
                   </div>
                 </Button>
                 
@@ -264,7 +269,7 @@ const Downloads = () => {
                   className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10 py-4 rounded-xl transition-all duration-300"
                 >
                   <MessageCircle className="w-5 h-5 mr-2" />
-                  {texts.loginPage.contactSupport}
+                  {loginPageTexts.contactSupport}
                 </Button>
               </CardContent>
             </Card>
@@ -294,10 +299,10 @@ const Downloads = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
-              {texts.mainPage.title}
+              {mainPageTexts.title}
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              {texts.mainPage.subtitle}
+              {mainPageTexts.subtitle}
             </p>
           </div>
 
@@ -307,7 +312,7 @@ const Downloads = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">{texts.mainPage.stats.totalDownloads}</p>
+                    <p className="text-gray-400 text-sm">{mainPageTexts.stats.totalDownloads}</p>
                     <p className="text-2xl font-bold text-white">{totalDownloads.toLocaleString()}</p>
                   </div>
                   <TrendingUp className="w-8 h-8 text-blue-400" />
@@ -319,7 +324,7 @@ const Downloads = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">{texts.mainPage.stats.availableFiles}</p>
+                    <p className="text-gray-400 text-sm">{mainPageTexts.stats.availableFiles}</p>
                     <p className="text-2xl font-bold text-white">{downloads.length}</p>
                   </div>
                   <Package className="w-8 h-8 text-green-400" />
@@ -331,7 +336,7 @@ const Downloads = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">{texts.mainPage.stats.averageRating}</p>
+                    <p className="text-gray-400 text-sm">{mainPageTexts.stats.averageRating}</p>
                     <p className="text-2xl font-bold text-white">{averageRating}/5</p>
                   </div>
                   <Award className="w-8 h-8 text-yellow-400" />
@@ -346,7 +351,7 @@ const Downloads = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 type="text"
-                placeholder={texts.mainPage.placeholders.search}
+                placeholder={mainPageTexts.placeholders.search}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-white/5 border-white/20 text-white placeholder-gray-400"
@@ -359,15 +364,15 @@ const Downloads = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-white/20">
-                <SelectItem value="all">{texts.mainPage.categories.all}</SelectItem>
-                <SelectItem value="games">{texts.mainPage.categories.games}</SelectItem>
-                <SelectItem value="tools">{texts.mainPage.categories.tools}</SelectItem>
-                <SelectItem value="design">{texts.mainPage.categories.design}</SelectItem>
-                <SelectItem value="programming">{texts.mainPage.categories.programming}</SelectItem>
-                <SelectItem value="music">{texts.mainPage.categories.music}</SelectItem>
-                <SelectItem value="video">{texts.mainPage.categories.video}</SelectItem>
-                <SelectItem value="books">{texts.mainPage.categories.books}</SelectItem>
-                <SelectItem value="security">{texts.mainPage.categories.security}</SelectItem>
+                <SelectItem value="all">{mainPageTexts.categories.all}</SelectItem>
+                <SelectItem value="games">{mainPageTexts.categories.games}</SelectItem>
+                <SelectItem value="tools">{mainPageTexts.categories.tools}</SelectItem>
+                <SelectItem value="design">{mainPageTexts.categories.design}</SelectItem>
+                <SelectItem value="programming">{mainPageTexts.categories.programming}</SelectItem>
+                <SelectItem value="music">{mainPageTexts.categories.music}</SelectItem>
+                <SelectItem value="video">{mainPageTexts.categories.video}</SelectItem>
+                <SelectItem value="books">{mainPageTexts.categories.books}</SelectItem>
+                <SelectItem value="security">{mainPageTexts.categories.security}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -391,7 +396,7 @@ const Downloads = () => {
               <CardContent className="p-12 text-center">
                 <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  {texts.mainPage.placeholders.noResults}
+                  {mainPageTexts.placeholders.noResults}
                 </h3>
                 <p className="text-gray-400">جرب تغيير مصطلحات البحث أو الفئة</p>
               </CardContent>
@@ -411,7 +416,7 @@ const Downloads = () => {
                         </CardDescription>
                       </div>
                       <Badge variant="secondary" className="ml-2">
-                        {texts.mainPage.categories[item.category as keyof typeof texts.mainPage.categories] || item.category}
+                        {mainPageTexts.categories[item.category as keyof typeof mainPageTexts.categories] || item.category}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -419,17 +424,17 @@ const Downloads = () => {
                   <CardContent className="p-6 pt-0">
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">{texts.mainPage.labels.size}:</span>
+                        <span className="text-gray-400">{mainPageTexts.labels.size}:</span>
                         <span className="text-white">{item.size}</span>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">{texts.mainPage.labels.downloads}:</span>
+                        <span className="text-gray-400">{mainPageTexts.labels.downloads}:</span>
                         <span className="text-white">{item.downloads.toLocaleString()}</span>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">{texts.mainPage.labels.rating}:</span>
+                        <span className="text-gray-400">{mainPageTexts.labels.rating}:</span>
                         <div className="flex items-center">
                           <Star className="w-4 h-4 text-yellow-400 fill-current" />
                           <span className="text-white ml-1">{item.rating}/5</span>
@@ -438,7 +443,7 @@ const Downloads = () => {
                       
                       {item.version && (
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">{texts.mainPage.labels.version}:</span>
+                          <span className="text-gray-400">{mainPageTexts.labels.version}:</span>
                           <span className="text-white">{item.version}</span>
                         </div>
                       )}
@@ -449,7 +454,7 @@ const Downloads = () => {
                       className="w-full glow-button group-hover:scale-105 transition-transform"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      {texts.mainPage.buttons.download}
+                      {mainPageTexts.buttons.download}
                     </Button>
                   </CardContent>
                 </Card>
