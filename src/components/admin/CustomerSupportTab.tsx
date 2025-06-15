@@ -25,7 +25,8 @@ import {
   Search,
   Image as ImageIcon,
   Video,
-  Upload
+  Upload,
+  EyeOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [currentMessages, setCurrentMessages] = useState<(ChatMessage | AdminMessage)[]>([]);
   const [adminAttachments, setAdminAttachments] = useState<{ type: 'image' | 'video', data: string }[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { uploadFile, uploading } = useFileUpload();
@@ -345,7 +347,6 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     return "2.5 دقيقة";
   };
 
-  // دالة لعرض المرفقات في الرسائل
   const renderMessageAttachments = (message: ChatMessage | AdminMessage) => {
     const attachments = message.attachments || [];
     if (attachments.length === 0) return null;
@@ -1049,14 +1050,37 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
                   {selectedCustomer.isOnline ? 'متصل' : selectedCustomer.isBlocked ? 'محظور' : 'غير متصل'}
                 </p>
               </div>
-            </div>
-            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Lock className="w-4 h-4 text-yellow-400" />
-                <span className="text-yellow-400 font-medium">معلومات حساسة محمية</span>
+              <div>
+                <h4 className="text-gray-400 mb-2">كلمة السر</h4>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={selectedCustomer.password || "غير متوفرة"}
+                    readOnly
+                    className="bg-white/10 border-white/20 text-white"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
               </div>
-              <p className="text-yellow-300 text-sm">
-                كلمة السر وبيانات الأمان الأخرى محمية ولا يمكن عرضها لحماية خصوصية العميل.
+              <div>
+                <h4 className="text-gray-400 mb-2">معرف العميل</h4>
+                <p className="text-white">#{selectedCustomer.id}</p>
+              </div>
+            </div>
+            <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Lock className="w-4 h-4 text-blue-400" />
+                <span className="text-blue-400 font-medium">معلومات الأمان</span>
+              </div>
+              <p className="text-blue-300 text-sm">
+                يمكنك الآن رؤية كلمة سر العميل ومعلوماته الحساسة. تأكد من الحفاظ على سرية هذه المعلومات.
               </p>
             </div>
           </CardContent>
