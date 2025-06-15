@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Download, FileText, Package, Star, Clock, Shield, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Video, Book, Calendar, Mail, Phone, Search, Settings, Home } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -40,12 +39,35 @@ const Downloads = () => {
     };
   }, []);
 
-  const categories = ["الكل", "ألعاب", "أدوات", "تصميم", "برمجة", "موسيقى", "فيديو", "كتب", "أمان"];
-  const [selectedCategory, setSelectedCategory] = useState("الكل");
+  const categories = [
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.all) || "الكل",
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.games) || "ألعاب",
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.tools) || "أدوات",
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.design) || "تصميم",
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.programming) || "برمجة",
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.music) || "موسيقى",
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.video) || "فيديو",
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.books) || "كتب",
+    getTextContent(siteSettings.pageTexts.downloads?.categories?.security) || "أمان"
+  ];
 
-  const filteredItems = selectedCategory === "الكل" 
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+
+  const filteredItems = selectedCategory === categories[0]
     ? downloadItems 
-    : downloadItems.filter(item => item.category === selectedCategory);
+    : downloadItems.filter(item => {
+        const categoryMapping = {
+          [categories[1]]: "ألعاب",
+          [categories[2]]: "أدوات", 
+          [categories[3]]: "تصميم",
+          [categories[4]]: "برمجة",
+          [categories[5]]: "موسيقى",
+          [categories[6]]: "فيديو",
+          [categories[7]]: "كتب",
+          [categories[8]]: "أمان"
+        };
+        return item.category === categoryMapping[selectedCategory];
+      });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -94,10 +116,10 @@ const Downloads = () => {
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-blue-400 bg-clip-text text-transparent">
-              مركز التنزيلات
+              {getTextContent(siteSettings.pageTexts.downloads?.title) || "مركز التنزيلات"}
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              احصل على أفضل الأدوات والبرامج المتخصصة مجاناً
+              {getTextContent(siteSettings.pageTexts.downloads?.subtitle) || "احصل على أفضل الأدوات والبرامج المتخصصة مجاناً"}
             </p>
           </div>
 
@@ -183,10 +205,12 @@ const Downloads = () => {
 
                     {/* Download Info */}
                     <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                      <span className="text-sm text-gray-400">الحجم: {item.size}</span>
+                      <span className="text-sm text-gray-400">
+                        {getTextContent(siteSettings.pageTexts.downloads?.labels?.size) || "الحجم"}: {item.size}
+                      </span>
                       <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
                         <Download className="w-4 h-4 mr-2" />
-                        تنزيل
+                        {getTextContent(siteSettings.pageTexts.downloads?.buttons?.download) || "تنزيل"}
                       </Button>
                     </div>
                   </CardContent>
@@ -201,17 +225,23 @@ const Downloads = () => {
               <div className="text-3xl font-bold text-blue-400 mb-2">
                 {downloadItems.reduce((total, item) => total + item.downloads, 0).toLocaleString()}
               </div>
-              <div className="text-gray-300">إجمالي التنزيلات</div>
+              <div className="text-gray-300">
+                {getTextContent(siteSettings.pageTexts.downloads?.stats?.totalDownloads) || "إجمالي التنزيلات"}
+              </div>
             </div>
             <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20">
               <div className="text-3xl font-bold text-green-400 mb-2">{downloadItems.length}</div>
-              <div className="text-gray-300">ملفات متاحة</div>
+              <div className="text-gray-300">
+                {getTextContent(siteSettings.pageTexts.downloads?.stats?.availableFiles) || "ملفات متاحة"}
+              </div>
             </div>
             <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20">
               <div className="text-3xl font-bold text-purple-400 mb-2">
                 {downloadItems.length > 0 ? (downloadItems.reduce((total, item) => total + item.rating, 0) / downloadItems.length).toFixed(1) : '0'}
               </div>
-              <div className="text-gray-300">متوسط التقييم</div>
+              <div className="text-gray-300">
+                {getTextContent(siteSettings.pageTexts.downloads?.stats?.averageRating) || "متوسط التقييم"}
+              </div>
             </div>
           </div>
         </div>

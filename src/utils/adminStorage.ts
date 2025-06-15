@@ -59,8 +59,8 @@ class AdminStorage {
   static saveSiteSettings = SettingsService.saveSiteSettings;
 
   // إضافة method للحصول على الإعدادات الافتراضية
-  static getDefaultSiteSettings() {
-    const defaultSettings = {
+  static getDefaultSiteSettings(): SiteSettings {
+    return {
       title: 'DARK',
       titleSize: 'xl' as const,
       description: 'موقع DARK للخدمات التقنية',
@@ -153,6 +153,43 @@ class AdminStorage {
           purchaseNote: 'سيتم توجيهك إلى الديسكورد لإتمام الشراء',
           addToCartButton: 'أضف للسلة',
           removeButton: 'حذف'
+        },
+        downloads: {
+          title: "مركز التنزيلات",
+          subtitle: "احصل على أفضل الأدوات والبرامج المتخصصة مجاناً",
+          categories: {
+            all: "الكل",
+            games: "ألعاب",
+            tools: "أدوات", 
+            design: "تصميم",
+            programming: "برمجة",
+            music: "موسيقى",
+            video: "فيديو",
+            books: "كتب",
+            security: "أمان"
+          },
+          buttons: {
+            download: "تنزيل",
+            filter: "تصفية"
+          },
+          labels: {
+            size: "الحجم",
+            downloads: "التنزيلات",
+            rating: "التقييم",
+            version: "الإصدار",
+            lastUpdate: "آخر تحديث",
+            features: "المميزات",
+            status: "الحالة"
+          },
+          stats: {
+            totalDownloads: "إجمالي التنزيلات",
+            availableFiles: "ملفات متاحة",
+            averageRating: "متوسط التقييم"
+          },
+          placeholders: {
+            search: "البحث في التنزيلات...",
+            noResults: "لا توجد نتائج"
+          }
         }
       }
     };

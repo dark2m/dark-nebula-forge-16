@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SiteSettings } from '../../../types/admin';
 import TextEditor from '../TextEditor';
@@ -277,7 +276,124 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
     </div>
   );
 
-  const renderActiveSection = () => {
+  const renderDownloadsTexts = () => (
+    <div className="space-y-6">
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-white text-sm font-medium mb-2">عنوان الصفحة</label>
+          <input
+            type="text"
+            value={getTextContent(siteSettings.pageTexts.downloads?.title)}
+            onChange={(e) => updatePageTexts('downloads', 'title', e.target.value)}
+            className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
+            placeholder="عنوان صفحة التنزيلات"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-white text-sm font-medium mb-2">العنوان الفرعي</label>
+          <input
+            type="text"
+            value={getTextContent(siteSettings.pageTexts.downloads?.subtitle)}
+            onChange={(e) => updatePageTexts('downloads', 'subtitle', e.target.value)}
+            className="w-full p-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400"
+            placeholder="العنوان الفرعي لصفحة التنزيلات"
+          />
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        <h3 className="text-lg font-semibold text-white mb-4 col-span-full">فئات التنزيلات</h3>
+        
+        {Object.entries(siteSettings.pageTexts.downloads?.categories || {}).map(([key, value]) => (
+          <div key={key}>
+            <label className="block text-white text-sm font-medium mb-2 capitalize">
+              {key === 'all' ? 'الكل' : 
+               key === 'games' ? 'الألعاب' :
+               key === 'tools' ? 'الأدوات' :
+               key === 'design' ? 'التصميم' :
+               key === 'programming' ? 'البرمجة' :
+               key === 'music' ? 'الموسيقى' :
+               key === 'video' ? 'الفيديو' :
+               key === 'books' ? 'الكتب' :
+               key === 'security' ? 'الأمان' : key}
+            </label>
+            <input
+              type="text"
+              value={getTextContent(value)}
+              onChange={(e) => updatePageTexts('downloads', `categories.${key}`, e.target.value)}
+              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <h3 className="text-lg font-semibold text-white mb-4 col-span-full">نصوص الأزرار</h3>
+        
+        {Object.entries(siteSettings.pageTexts.downloads?.buttons || {}).map(([key, value]) => (
+          <div key={key}>
+            <label className="block text-white text-sm font-medium mb-2 capitalize">
+              {key === 'download' ? 'زر التنزيل' : 
+               key === 'filter' ? 'زر التصفية' : key}
+            </label>
+            <input
+              type="text"
+              value={getTextContent(value)}
+              onChange={(e) => updatePageTexts('downloads', `buttons.${key}`, e.target.value)}
+              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        <h3 className="text-lg font-semibold text-white mb-4 col-span-full">تسميات البيانات</h3>
+        
+        {Object.entries(siteSettings.pageTexts.downloads?.labels || {}).map(([key, value]) => (
+          <div key={key}>
+            <label className="block text-white text-sm font-medium mb-2 capitalize">
+              {key === 'size' ? 'الحجم' :
+               key === 'downloads' ? 'التنزيلات' :
+               key === 'rating' ? 'التقييم' :
+               key === 'version' ? 'الإصدار' :
+               key === 'lastUpdate' ? 'آخر تحديث' :
+               key === 'features' ? 'المميزات' :
+               key === 'status' ? 'الحالة' : key}
+            </label>
+            <input
+              type="text"
+              value={getTextContent(value)}
+              onChange={(e) => updatePageTexts('downloads', `labels.${key}`, e.target.value)}
+              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        <h3 className="text-lg font-semibold text-white mb-4 col-span-full">نصوص الإحصائيات</h3>
+        
+        {Object.entries(siteSettings.pageTexts.downloads?.stats || {}).map(([key, value]) => (
+          <div key={key}>
+            <label className="block text-white text-sm font-medium mb-2 capitalize">
+              {key === 'totalDownloads' ? 'إجمالي التنزيلات' :
+               key === 'availableFiles' ? 'الملفات المتاحة' :
+               key === 'averageRating' ? 'متوسط التقييم' : key}
+            </label>
+            <input
+              type="text"
+              value={getTextContent(value)}
+              onChange={(e) => updatePageTexts('downloads', `stats.${key}`, e.target.value)}
+              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white placeholder-gray-400"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
     switch (activeSection) {
       case 'home':
         return renderHomeSection();
@@ -291,14 +407,16 @@ const TextsTabContent: React.FC<TextsTabContentProps> = ({
         return renderCartSection();
       case 'navigation':
         return renderNavigationSection();
+      case 'downloads':
+        return renderDownloadsTexts();
       default:
-        return renderHomeSection();
+        return <div className="text-gray-400">اختر قسماً من الجانب لتحرير النصوص</div>;
     }
   };
 
   return (
-    <div className="space-y-6">
-      {renderActiveSection()}
+    <div className="mt-6">
+      {renderContent()}
     </div>
   );
 };

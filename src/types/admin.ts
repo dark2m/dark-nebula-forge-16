@@ -183,7 +183,73 @@ export interface SiteSettings {
     spacing: 'tight' | 'normal' | 'loose';
     animations: boolean;
   };
-  pageTexts: PageTexts;
+  pageTexts: {
+    home: {
+      heroTitle: string;
+      heroSubtitle: string;
+      featuresTitle: string;
+      features: Array<{
+        id: string;
+        icon: string;
+        title: string;
+        description: string;
+        visible: boolean;
+      }>;
+    },
+    navigation: {
+      homeTitle: string;
+      pubgTitle: string;
+      webTitle: string;
+      discordTitle: string;
+      officialTitle: string;
+      adminTitle: string;
+    },
+    cart: {
+      cartTitle: string;
+      emptyCartMessage: string;
+      purchaseButton: string;
+      purchaseNote: string;
+      addToCartButton: string;
+      removeButton: string;
+    },
+    downloads: {
+      title: string;
+      subtitle: string;
+      categories: {
+        all: string;
+        games: string;
+        tools: string;
+        design: string;
+        programming: string;
+        music: string;
+        video: string;
+        books: string;
+        security: string;
+      };
+      buttons: {
+        download: string;
+        filter: string;
+      };
+      labels: {
+        size: string;
+        downloads: string;
+        rating: string;
+        version: string;
+        lastUpdate: string;
+        features: string;
+        status: string;
+      };
+      stats: {
+        totalDownloads: string;
+        availableFiles: string;
+        averageRating: string;
+      };
+      placeholders: {
+        search: string;
+        noResults: string;
+      };
+    },
+  };
   tools?: Tool[];
 }
 
