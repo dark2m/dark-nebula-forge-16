@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, X, Check, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,10 +23,18 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
 
+  // Load categories on component mount and sync with the limited set
+  useEffect(() => {
+    // Set the current limited categories
+    const limitedCategories = ['أدوات', 'بيباس'];
+    DownloadCategoriesService.saveCategories(limitedCategories);
+    onCategoriesChange(limitedCategories);
+  }, [onCategoriesChange]);
+
   const handleAddCategory = () => {
     if (newCategory.trim() && !categories.includes(newCategory.trim())) {
-      DownloadCategoriesService.addCategory(newCategory);
-      const updatedCategories = DownloadCategoriesService.getCategories();
+      const updatedCategories = [...categories, newCategory.trim()];
+      DownloadCategoriesService.saveCategories(updatedCategories);
       onCategoriesChange(updatedCategories);
       setNewCategory('');
       setIsAdding(false);
@@ -52,8 +60,10 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
   const handleSaveEdit = () => {
     if (editingIndex !== null && editValue.trim() && !categories.includes(editValue.trim())) {
       const oldCategory = categories[editingIndex];
-      DownloadCategoriesService.updateCategory(oldCategory, editValue);
-      const updatedCategories = DownloadCategoriesService.getCategories();
+      const updatedCategories = [...categories];
+      updatedCategories[editingIndex] = editValue.trim();
+      
+      DownloadCategoriesService.saveCategories(updatedCategories);
       onCategoriesChange(updatedCategories);
       setEditingIndex(null);
       setEditValue('');
@@ -72,13 +82,33 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
   };
 
   const handleDeleteCategory = (category: string) => {
-    DownloadCategoriesService.removeCategory(category);
-    const updatedCategories = DownloadCategoriesService.getCategories();
+    if (categories.length <= 1) {
+      toast({
+        title: "تحذير",
+        description: "لا يمكن حذف آخر فئة متبقية",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const updatedCategories = categories.filter(c => c !== category);
+    DownloadCategoriesService.saveCategories(updatedCategories);
     onCategoriesChange(updatedCategories);
     
     toast({
       title: "تم حذف الفئة",
       description: `تم حذف فئة "${category}" بنجاح`
+    });
+  };
+
+  const resetToDefault = () => {
+    const defaultCategories = ['أدوات', 'بيباس'];
+    DownloadCategoriesService.saveCategories(defaultCategories);
+    onCategoriesChange(defaultCategories);
+    
+    toast({
+      title: "تم إعادة التعيين",
+      description: "تم إعادة تعيين الفئات للإعدادات الافتراضية"
     });
   };
 
@@ -90,14 +120,24 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
             <Tag className="w-5 h-5 text-blue-400" />
             <CardTitle className="text-white">إدارة فئات التنزيلات</CardTitle>
           </div>
-          <Button
-            onClick={() => setIsAdding(true)}
-            size="sm"
-            className="bg-green-500 hover:bg-green-600"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            إضافة فئة
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={resetToDefault}
+              size="sm"
+              variant="outline"
+              className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+            >
+              إعادة تعيين
+            </Button>
+            <Button
+              onClick={() => setIsAdding(true)}
+              size="sm"
+              className="bg-green-500 hover:bg-green-600"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              إضافة فئة
+            </Button>
+          </div>
         </div>
       </CardHeader>
       
@@ -188,9 +228,18 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
           ))}
         </div>
         
-        <p className="text-gray-400 text-sm">
-          💡 يمكنك إضافة وتعديل وحذف فئات التنزيلات حسب احتياجاتك
-        </p>
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-blue-300 mb-2">
+            <Tag className="w-4 h-4" />
+            <span className="font-medium">الفئات الحالية النشطة</span>
+          </div>
+          <p className="text-gray-300 text-sm">
+            الفئات المعروضة حالياً: <strong>أدوات</strong> و <strong>بيباس</strong> فقط
+          </p>
+          <p className="text-gray-400 text-xs mt-1">
+            💡 يمكنك إضافة أو تعديل الفئات وستظهر في صفحة التنزيلات مباشرة
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
