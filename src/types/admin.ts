@@ -1,247 +1,394 @@
-
-
-export interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image?: string;
-  images?: string[];
-  features: string[];
-  isActive: boolean;
-  discount?: number;
-  originalPrice?: number;
-  videos?: string[];
-  gallery?: string[];
-  rating?: number;
-  titleSize?: string;
-  textSize?: string;
-  inStock?: boolean;
-}
-
-export interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  image?: string;
-  category?: string;
-}
-
 export interface AdminUser {
-  id: number;
+  id: string;
   username: string;
-  email: string;
+  password: string;
   role: 'مدير عام' | 'مبرمج' | 'مشرف';
-  lastLogin: string;
-  isActive: boolean;
-  permissions?: string[];
-  password?: string;
-}
-
-export interface NavigationItem {
-  id: string;
   name: string;
-  path: string;
-  icon: string;
-  visible: boolean;
-}
-
-export interface ContactInfo {
-  telegram: string;
-  discord: string;
-  whatsapp: string;
   email: string;
-  phone: string;
-  address: string;
-}
-
-export interface Feature {
-  id: string;
-  icon: string;
-  title: string;
-  description: string;
-  visible: boolean;
-}
-
-export interface HomePage {
-  heroTitle: string;
-  heroSubtitle: string;
-  featuresTitle: string;
-  features: Feature[];
-}
-
-export interface BackgroundSettings {
-  type: 'color' | 'gradient' | 'stars' | 'meteors' | 'animated' | 'image';
-  value: string;
-  starCount: number;
-  meteorCount: number;
-  animationSpeed: 'slow' | 'normal' | 'fast';
-  starOpacity: number;
-  meteorOpacity: number;
-  starSize: 'small' | 'medium' | 'large';
-  meteorSize: 'small' | 'medium' | 'large';
-  meteorDirection: 'up' | 'down' | 'left' | 'right' | 'mixed';
-  meteorColors: string[];
-}
-
-export interface Colors {
-  primary: string;
-  secondary: string;
-  accent: string;
-}
-
-export interface Typography {
-  fontFamily: 'system' | 'inter' | 'roboto' | 'cairo' | 'tajawal';
-  headingWeight: 'normal' | 'medium' | 'semibold' | 'bold';
-  bodyWeight: 'normal' | 'medium' | 'semibold';
-  lineHeight: 'tight' | 'normal' | 'relaxed';
-}
-
-export interface Design {
-  borderRadius: 'none' | 'small' | 'medium' | 'large';
-  shadows: 'none' | 'small' | 'medium' | 'large';
-  spacing: 'compact' | 'normal' | 'relaxed';
-  animations: boolean;
-}
-
-export interface Tool {
-  id: number;
-  name: string;
-  title: string;
-  description: string;
-  buttonText: string;
-  url: string;
-  icon: string;
-  visible: boolean;
+  avatar?: string;
+  lastLogin?: string;
+  createdAt: string;
   isActive: boolean;
-  category: 'general' | 'security' | 'design' | 'development' | string;
-  customHtml?: string;
 }
 
-export interface DownloadsLoginPageTexts {
-  title: string;
-  subtitle: string;
-  passwordLabel: string;
-  passwordPlaceholder: string;
-  loginButton: string;
-  contactSupport: string;
-  errorMessage: string;
+export interface SiteSettings {
+  siteName: string;
+  siteDescription: string;
+  siteKeywords: string;
+  siteUrl: string;
+  siteEmail: string;
+  sitePhone: string;
+  siteAddress: string;
+  siteLogo: string;
+  siteFavicon: string;
+  siteTheme: string;
+  siteLanguage: string;
+  siteDirection: string;
+  siteStatus: string;
+  siteStatusMessage: string;
+  siteAnalytics: string;
+  siteSocial: {
+    facebook: string;
+    twitter: string;
+    instagram: string;
+    youtube: string;
+    linkedin: string;
+    github: string;
+    discord: string;
+    telegram: string;
+  };
+  siteFooter: {
+    text: string;
+    links: {
+      text: string;
+      url: string;
+    }[];
+  };
+  siteHeader: {
+    links: {
+      text: string;
+      url: string;
+    }[];
+  };
+  siteMeta: {
+    title: string;
+    description: string;
+    keywords: string;
+    author: string;
+    ogImage: string;
+    ogUrl: string;
+    ogType: string;
+    ogSiteName: string;
+    twitterCard: string;
+    twitterSite: string;
+    twitterCreator: string;
+  };
+  siteScripts: {
+    head: string;
+    body: string;
+  };
+  siteStyles: {
+    head: string;
+    body: string;
+  };
+  siteSettings: {
+    maintenance: boolean;
+    maintenanceMessage: string;
+    registration: boolean;
+    registrationMessage: string;
+    login: boolean;
+    loginMessage: string;
+    contact: boolean;
+    contactMessage: string;
+    search: boolean;
+    searchMessage: string;
+    comments: boolean;
+    commentsMessage: string;
+    ratings: boolean;
+    ratingsMessage: string;
+    sharing: boolean;
+    sharingMessage: string;
+    downloads: boolean;
+    downloadsMessage: string;
+    downloadsPassword: string;
+  };
+  contactInfo: {
+    email: string;
+    phone: string;
+    address: string;
+    hours: string;
+    map: string;
+    discord: string;
+    telegram: string;
+  };
+  pageTexts: {
+    home: HomePageTexts;
+    about: AboutPageTexts;
+    contact: ContactPageTexts;
+    downloads: DownloadsPageTexts;
+    login: LoginPageTexts;
+    register: RegisterPageTexts;
+    profile: ProfilePageTexts;
+    admin: AdminPageTexts;
+    error: ErrorPageTexts;
+  };
 }
 
-export interface DownloadsMainPageTexts {
-  title: string;
-  subtitle: string;
-  categories: {
-    all: string;
-    games: string;
-    tools: string;
-    design: string;
-    programming: string;
-    music: string;
-    video: string;
-    books: string;
-    security: string;
+export interface HomePageTexts {
+  hero: {
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    buttonUrl: string;
   };
-  buttons: {
-    download: string;
-    filter: string;
+  features: {
+    title: string;
+    subtitle: string;
+    items: {
+      title: string;
+      description: string;
+      icon: string;
+    }[];
   };
-  labels: {
-    size: string;
-    downloads: string;
-    rating: string;
-    version: string;
+  cta: {
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    buttonUrl: string;
   };
-  stats: {
-    totalDownloads: string;
-    availableFiles: string;
-    averageRating: string;
+  testimonials: {
+    title: string;
+    subtitle: string;
+    items: {
+      name: string;
+      role: string;
+      text: string;
+      avatar: string;
+    }[];
   };
-  placeholders: {
-    search: string;
-    noResults: string;
+}
+
+export interface AboutPageTexts {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  content: {
+    title: string;
+    text: string;
+  };
+  team: {
+    title: string;
+    subtitle: string;
+    items: {
+      name: string;
+      role: string;
+      bio: string;
+      avatar: string;
+    }[];
+  };
+}
+
+export interface ContactPageTexts {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  form: {
+    title: string;
+    subtitle: string;
+    nameLabel: string;
+    emailLabel: string;
+    subjectLabel: string;
+    messageLabel: string;
+    buttonText: string;
+    successMessage: string;
+    errorMessage: string;
+  };
+  info: {
+    title: string;
+    subtitle: string;
+    items: {
+      title: string;
+      text: string;
+      icon: string;
+    }[];
   };
 }
 
 export interface DownloadsPageTexts {
-  loginPage: DownloadsLoginPageTexts;
-  mainPage: DownloadsMainPageTexts;
+  loginPage: {
+    title: string;
+    subtitle: string;
+    passwordLabel: string;
+    passwordPlaceholder: string;
+    loginButton: string;
+    contactSupport: string;
+    errorMessage: string;
+  };
+  mainPage: {
+    title: string;
+    subtitle: string;
+    categories: {
+      all: string;
+      [key: string]: string; // Allow dynamic category names
+    };
+    buttons: {
+      download: string;
+      filter: string;
+    };
+    labels: {
+      size: string;
+      downloads: string;
+      rating: string;
+      version: string;
+    };
+    stats: {
+      totalDownloads: string;
+      availableFiles: string;
+      averageRating: string;
+    };
+    placeholders: {
+      search: string;
+      noResults: string;
+    };
+  };
 }
 
-export interface PageTexts {
-  home: {
-    heroTitle: string;
-    heroSubtitle: string;
-    featuresTitle: string;
-    features: Feature[];
-  };
-  official: {
-    pageTitle: string;
-    pageSubtitle: string;
-    aboutTitle: string;
-    aboutContent: string[];
-    whyChooseTitle: string;
-    whyChooseItems: Array<{
-      icon: string;
-      title: string;
-      description: string;
-    }>;
-    contactTitle: string;
-  };
-  pubgHacks: {
-    pageTitle: string;
-    pageSubtitle: string;
-    safetyTitle: string;
-    safetyDescription: string;
-  };
-  webDevelopment: {
-    pageTitle: string;
-    pageSubtitle: string;
-    servicesTitle: string;
-  };
-  discordBots: {
-    pageTitle: string;
-    pageSubtitle: string;
-    featuresTitle: string;
-  };
-  tools: {
+export interface LoginPageTexts {
+  hero: {
     title: string;
     subtitle: string;
   };
-  downloads: DownloadsPageTexts;
-  navigation: {
-    homeTitle: string;
-    pubgTitle: string;
-    webTitle: string;
-    discordTitle: string;
-    officialTitle: string;
-    adminTitle: string;
-  };
-  cart: {
-    cartTitle: string;
-    emptyCartMessage: string;
-    purchaseButton: string;
-    purchaseNote: string;
-    addToCartButton: string;
-    removeButton: string;
+  form: {
+    title: string;
+    subtitle: string;
+    usernameLabel: string;
+    passwordLabel: string;
+    buttonText: string;
+    forgotPassword: string;
+    registerLink: string;
+    successMessage: string;
+    errorMessage: string;
   };
 }
 
-export interface SiteSettings {
-  title: string;
-  titleSize: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  description: string;
-  colors: Colors;
-  globalTextSize: 'small' | 'medium' | 'large';
-  backgroundSettings: BackgroundSettings;
-  navigation: NavigationItem[];
-  contactInfo: ContactInfo;
-  homePage: HomePage;
-  typography: Typography;
-  design: Design;
-  tools: Tool[];
-  downloadsPassword: string;
-  pageTexts: PageTexts;
+export interface RegisterPageTexts {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  form: {
+    title: string;
+    subtitle: string;
+    nameLabel: string;
+    usernameLabel: string;
+    emailLabel: string;
+    passwordLabel: string;
+    confirmPasswordLabel: string;
+    buttonText: string;
+    loginLink: string;
+    successMessage: string;
+    errorMessage: string;
+  };
+}
+
+export interface ProfilePageTexts {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  info: {
+    title: string;
+    subtitle: string;
+    nameLabel: string;
+    usernameLabel: string;
+    emailLabel: string;
+    roleLabel: string;
+    createdAtLabel: string;
+    lastLoginLabel: string;
+  };
+  edit: {
+    title: string;
+    subtitle: string;
+    nameLabel: string;
+    emailLabel: string;
+    passwordLabel: string;
+    confirmPasswordLabel: string;
+    buttonText: string;
+    successMessage: string;
+    errorMessage: string;
+  };
+}
+
+export interface AdminPageTexts {
+  hero: {
+    title: string;
+    subtitle: string;
+  };
+  sidebar: {
+    dashboard: string;
+    users: string;
+    settings: string;
+    pages: string;
+    media: string;
+    logout: string;
+  };
+  dashboard: {
+    title: string;
+    subtitle: string;
+    stats: {
+      users: string;
+      pages: string;
+      media: string;
+      downloads: string;
+    };
+  };
+  users: {
+    title: string;
+    subtitle: string;
+    table: {
+      name: string;
+      username: string;
+      email: string;
+      role: string;
+      createdAt: string;
+      lastLogin: string;
+      actions: string;
+    };
+    add: {
+      title: string;
+      subtitle: string;
+      nameLabel: string;
+      usernameLabel: string;
+      emailLabel: string;
+      passwordLabel: string;
+      roleLabel: string;
+      buttonText: string;
+      successMessage: string;
+      errorMessage: string;
+    };
+    edit: {
+      title: string;
+      subtitle: string;
+      nameLabel: string;
+      usernameLabel: string;
+      emailLabel: string;
+      passwordLabel: string;
+      roleLabel: string;
+      buttonText: string;
+      successMessage: string;
+      errorMessage: string;
+    };
+    delete: {
+      title: string;
+      subtitle: string;
+      buttonText: string;
+      successMessage: string;
+      errorMessage: string;
+    };
+  };
+}
+
+export interface ErrorPageTexts {
+  notFound: {
+    title: string;
+    subtitle: string;
+    buttonText: string;
+  };
+  serverError: {
+    title: string;
+    subtitle: string;
+    buttonText: string;
+  };
+  forbidden: {
+    title: string;
+    subtitle: string;
+    buttonText: string;
+  };
+  unauthorized: {
+    title: string;
+    subtitle: string;
+    buttonText: string;
+  };
 }
