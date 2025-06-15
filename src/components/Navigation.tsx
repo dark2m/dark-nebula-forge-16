@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench, MessageCircle } from 'lucide-react';
@@ -152,9 +153,6 @@ const Navigation = () => {
 
           {/* Right side controls */}
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            {/* Language Selector - positioned better */}
-            <LanguageSelector />
-
             {/* Mobile Hamburger Menu */}
             {(isMobile || window.innerWidth <= 1024) && (
               <button
@@ -165,14 +163,22 @@ const Navigation = () => {
               </button>
             )}
 
-            {/* Admin Login */}
-            <Link
-              to="/admin/login"
-              className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
-            >
-              <User className="w-4 h-4" />
-              <span className="hidden sm:block">{TranslationService.translate('nav.admin')}</span>
-            </Link>
+            {/* Admin Login and Language Selector Container */}
+            <div className="flex flex-col items-center space-y-1">
+              {/* Admin Login */}
+              <Link
+                to="/admin/login"
+                className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:block">{TranslationService.translate('nav.admin')}</span>
+              </Link>
+              
+              {/* Language Selector - positioned below admin button */}
+              <div className="scale-75">
+                <LanguageSelector />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -198,6 +204,11 @@ const Navigation = () => {
                   </Link>
                 );
               })}
+              
+              {/* Language Selector in mobile menu */}
+              <div className="pt-3 border-t border-white/20">
+                <LanguageSelector />
+              </div>
             </div>
           </div>
         )}
