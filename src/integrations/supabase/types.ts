@@ -201,6 +201,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sales_overview: {
+        Row: {
+          completed_orders: number | null
+          created_at: string | null
+          id: string
+          monthly_revenue: number | null
+          pending_orders: number | null
+          total_sales: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          completed_orders?: number | null
+          created_at?: string | null
+          id?: string
+          monthly_revenue?: number | null
+          pending_orders?: number | null
+          total_sales?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          completed_orders?: number | null
+          created_at?: string | null
+          id?: string
+          monthly_revenue?: number | null
+          pending_orders?: number | null
+          total_sales?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       site_data: {
         Row: {
           content: Json
