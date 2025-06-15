@@ -1,5 +1,6 @@
 
 import type { DownloadPassword } from '../types/downloads';
+import DownloadCategoriesService from './downloadCategoriesService';
 
 class DownloadPasswordService {
   private static readonly STORAGE_KEY = 'download_passwords';
@@ -45,6 +46,16 @@ class DownloadPasswordService {
         createdAt: new Date().toISOString(),
         usageCount: 0,
         description: "الوصول لأدوات الأمان"
+      },
+      {
+        id: 4,
+        name: "وصول كامل",
+        password: "fullaccess999",
+        allowedCategories: ["وصول كامل"],
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        usageCount: 0,
+        description: "الوصول لجميع الفئات والمحتوى"
       }
     ];
   }
@@ -91,6 +102,12 @@ class DownloadPasswordService {
     const found = passwords.find(p => p.password === password && p.isActive);
     
     if (found) {
+      // إذا كانت كلمة مرور "وصول كامل"، قم بتحديث الفئات المسموحة لتشمل جميع الفئات المتاحة
+      if (found.allowedCategories.includes("وصول كامل")) {
+        const allCategories = DownloadCategoriesService.getCategories();
+        found.allowedCategories = allCategories;
+      }
+      
       // تحديث عداد الاستخدام
       this.updatePassword(found.id, {
         usageCount: found.usageCount + 1,
@@ -105,8 +122,14 @@ class DownloadPasswordService {
     const passwords = this.getDownloadPasswords();
     return passwords.find(p => 
       p.isActive && 
-      categories.some(cat => p.allowedCategories.includes(cat))
+      (p.allowedCategories.includes("وصول كامل") || 
+       categories.some(cat => p.allowedCategories.includes(cat)))
     ) || null;
+  }
+
+  // دالة للتحقق من وجود وصول كامل
+  static hasFullAccess(passwordData: DownloadPassword): boolean {
+    return passwordData.allowedCategories.includes("وصول كامل");
   }
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock, MessageCircle, Users, Shield, LogOut } from 'lucide-react';
+import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock, MessageCircle, Users, Shield, LogOut, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -176,9 +176,17 @@ const Downloads = () => {
     // فلترة حسب الفئات المسموحة لكلمة المرور
     if (userPasswordData && userPasswordData.allowedCategories && userPasswordData.allowedCategories.length > 0) {
       console.log('Filtering by password categories:', userPasswordData.allowedCategories);
-      filtered = filtered.filter(item => 
-        userPasswordData.allowedCategories.includes(item.category)
-      );
+      
+      // إذا كان لديه وصول كامل، اعرض جميع التنزيلات
+      if (userPasswordData.allowedCategories.includes("وصول كامل")) {
+        console.log('User has full access - showing all downloads');
+        // لا حاجة لفلترة، اعرض جميع التنزيلات
+      } else {
+        // فلترة عادية للفئات المحددة
+        filtered = filtered.filter(item => 
+          userPasswordData.allowedCategories.includes(item.category)
+        );
+      }
       console.log('Filtered downloads:', filtered);
     }
 
@@ -449,12 +457,29 @@ const Downloads = () => {
             {/* Display current access level */}
             {userPasswordData && (
               <div className="flex justify-center">
-                <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-2">
-                  <div className="flex items-center gap-2 text-green-300">
-                    <Shield className="w-4 h-4" />
-                    <span className="text-sm">
-                      وصول لـ: {userPasswordData.allowedCategories?.join(', ') || 'جميع الفئات'}
-                    </span>
+                <div className={`border rounded-lg px-4 py-2 ${
+                  userPasswordData.allowedCategories?.includes("وصول كامل") 
+                    ? 'bg-purple-500/10 border-purple-500/20' 
+                    : 'bg-green-500/10 border-green-500/20'
+                }`}>
+                  <div className={`flex items-center gap-2 ${
+                    userPasswordData.allowedCategories?.includes("وصول كامل") 
+                      ? 'text-purple-300' 
+                      : 'text-green-300'
+                  }`}>
+                    {userPasswordData.allowedCategories?.includes("وصول كامل") ? (
+                      <>
+                        <Globe className="w-4 h-4" />
+                        <span className="text-sm">وصول كامل لجميع الفئات</span>
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-4 h-4" />
+                        <span className="text-sm">
+                          وصول لـ: {userPasswordData.allowedCategories?.join(', ') || 'جميع الفئات'}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Key, Plus, Edit, Trash2, Eye, EyeOff, Shield, Clock, Users } from 'lucide-react';
+import { Key, Plus, Edit, Trash2, Eye, EyeOff, Shield, Clock, Users, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
     const newPassword = DownloadPasswordService.addPassword({
       name: "كلمة مرور جديدة",
       password: `pass_${Date.now()}`,
-      allowedCategories: [categories[0] || "ألعاب"],
+      allowedCategories: [categories[0] || "أدوات"],
       isActive: true,
       description: "وصف كلمة المرور"
     });
@@ -96,11 +97,34 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
 
   const handleCategoryToggle = (category: string, isChecked: boolean) => {
     const current = editForm.allowedCategories || [];
+    
+    // إذا كان المستخدم يختار "وصول كامل"
+    if (category === "وصول كامل") {
+      if (isChecked) {
+        setEditForm({...editForm, allowedCategories: ["وصول كامل"]});
+      } else {
+        setEditForm({...editForm, allowedCategories: [categories[0] || "أدوات"]});
+      }
+      return;
+    }
+    
+    // إذا كان "وصول كامل" مختار، قم بإلغاء اختياره أولاً
+    if (current.includes("وصول كامل")) {
+      const newCategories = isChecked ? [category] : [];
+      setEditForm({...editForm, allowedCategories: newCategories});
+      return;
+    }
+    
+    // التعامل العادي مع الفئات
     if (isChecked) {
       setEditForm({...editForm, allowedCategories: [...current, category]});
     } else {
       setEditForm({...editForm, allowedCategories: current.filter(c => c !== category)});
     }
+  };
+
+  const isFullAccess = (password: DownloadPassword) => {
+    return password.allowedCategories.includes("وصول كامل");
   };
 
   return (
@@ -111,7 +135,7 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
           <p className="text-gray-400">إنشاء وإدارة كلمات مرور متخصصة للفئات المختلفة</p>
           <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <p className="text-blue-300 text-sm">
-              💡 يمكنك تخصيص كل كلمة مرور لفتح فئة أو عدة فئات محددة فقط
+              💡 يمكنك تخصيص كل كلمة مرور لفتح فئة أو عدة فئات محددة، أو استخدام "وصول كامل" للوصول لجميع الفئات
             </p>
           </div>
         </div>
@@ -127,19 +151,34 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
         {passwords.map((password) => {
           const isCurrentlyEditing = isEditing === password.id;
           const isPasswordVisible = showPassword === password.id;
+          const hasFullAccess = isFullAccess(password);
 
           return (
             <Card key={password.id} className="bg-white/5 border-white/20">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <Key className="w-6 h-6 text-blue-400" />
+                    <div className={`p-2 rounded-lg ${hasFullAccess ? 'bg-purple-500/20' : 'bg-blue-500/20'}`}>
+                      {hasFullAccess ? (
+                        <Globe className="w-6 h-6 text-purple-400" />
+                      ) : (
+                        <Key className="w-6 h-6 text-blue-400" />
+                      )}
                     </div>
                     <div>
-                      <CardTitle className="text-white text-lg">{password.name}</CardTitle>
+                      <CardTitle className="text-white text-lg flex items-center gap-2">
+                        {password.name}
+                        {hasFullAccess && (
+                          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30">
+                            وصول كامل
+                          </Badge>
+                        )}
+                      </CardTitle>
                       <p className="text-gray-400 text-sm">
-                        الفئات المسموحة: {password.allowedCategories.join(', ')}
+                        {hasFullAccess 
+                          ? "الوصول لجميع الفئات المتاحة" 
+                          : `الفئات المسموحة: ${password.allowedCategories.join(', ')}`
+                        }
                       </p>
                     </div>
                   </div>
@@ -217,8 +256,30 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
 
                     <div>
                       <label className="block text-white text-sm font-medium mb-3">
-                        الفئات المسموحة (يمكن اختيار أكثر من فئة)
+                        الفئات المسموحة
                       </label>
+                      
+                      {/* خيار الوصول الكامل */}
+                      <div className="mb-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="full-access"
+                            checked={editForm.allowedCategories?.includes("وصول كامل") || false}
+                            onChange={(e) => handleCategoryToggle("وصول كامل", e.target.checked)}
+                            className="rounded border-white/20"
+                          />
+                          <label htmlFor="full-access" className="text-purple-300 font-medium cursor-pointer flex items-center gap-2">
+                            <Globe className="w-4 h-4" />
+                            وصول كامل (جميع الفئات)
+                          </label>
+                        </div>
+                        <p className="text-purple-200 text-xs mt-2">
+                          🌟 يمنح الوصول لجميع الفئات المتاحة حالياً ومستقبلاً
+                        </p>
+                      </div>
+
+                      {/* الفئات العادية */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {categories.map(category => (
                           <div key={category} className="flex items-center space-x-2 bg-white/5 p-2 rounded border border-white/10">
@@ -228,15 +289,20 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
                               checked={editForm.allowedCategories?.includes(category) || false}
                               onChange={(e) => handleCategoryToggle(category, e.target.checked)}
                               className="rounded border-white/20"
+                              disabled={editForm.allowedCategories?.includes("وصول كامل")}
                             />
-                            <label htmlFor={`cat-${category}`} className="text-white text-sm cursor-pointer">
+                            <label htmlFor={`cat-${category}`} className={`text-sm cursor-pointer ${
+                              editForm.allowedCategories?.includes("وصول كامل") 
+                                ? 'text-gray-500' 
+                                : 'text-white'
+                            }`}>
                               {category}
                             </label>
                           </div>
                         ))}
                       </div>
                       <p className="text-gray-400 text-xs mt-2">
-                        💡 اختر الفئات التي يمكن لحاملي هذه كلمة المرور الوصول إليها
+                        💡 اختر "وصول كامل" للوصول لجميع الفئات، أو اختر فئات محددة
                       </p>
                     </div>
 
@@ -296,13 +362,22 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
                     </div>
 
                     <div>
-                      <p className="text-gray-400 text-sm mb-2">الفئات المسموحة:</p>
+                      <p className="text-gray-400 text-sm mb-2">
+                        {hasFullAccess ? "مستوى الوصول:" : "الفئات المسموحة:"}
+                      </p>
                       <div className="flex flex-wrap gap-1">
-                        {password.allowedCategories.map((category, index) => (
-                          <Badge key={index} variant="outline" className="text-xs border-blue-500/30 text-blue-300 bg-blue-500/10">
-                            {category}
+                        {hasFullAccess ? (
+                          <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-300 bg-purple-500/10 flex items-center gap-1">
+                            <Globe className="w-3 h-3" />
+                            وصول كامل لجميع الفئات
                           </Badge>
-                        ))}
+                        ) : (
+                          password.allowedCategories.map((category, index) => (
+                            <Badge key={index} variant="outline" className="text-xs border-blue-500/30 text-blue-300 bg-blue-500/10">
+                              {category}
+                            </Badge>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
