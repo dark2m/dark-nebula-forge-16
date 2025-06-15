@@ -153,7 +153,7 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
     });
   };
 
-  const updateDownloadsTexts = (section: string, field: string, value: any) => {
+  const updateDownloadsTexts = (section: 'loginPage' | 'mainPage', field: string, value: any) => {
     setSiteSettings({
       ...siteSettings,
       pageTexts: {
@@ -161,7 +161,7 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
         downloads: {
           ...siteSettings.pageTexts?.downloads,
           [section]: {
-            ...siteSettings.pageTexts?.downloads?.[section as keyof typeof siteSettings.pageTexts.downloads],
+            ...siteSettings.pageTexts?.downloads?.[section],
             [field]: value
           }
         }
