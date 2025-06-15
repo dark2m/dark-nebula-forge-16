@@ -49,10 +49,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       case 'products':
         return (
           <ProductsTab
-            products={products}
-            addProduct={addProduct}
-            updateProduct={updateProduct}
-            deleteProduct={deleteProduct}
             canAccess={canAccess}
           />
         );
@@ -65,10 +61,10 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         );
 
       case 'users':
-        return <UsersTab canAccess={canAccess} />;
+        return <UsersTab />;
 
       case 'passwords':
-        return <PasswordsTab canAccess={canAccess} />;
+        return <PasswordsTab />;
 
       case 'tools':
         return (
@@ -76,7 +72,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             saveSiteSettings={saveSiteSettings}
-            canAccess={canAccess}
           />
         );
 
@@ -86,7 +81,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             saveSiteSettings={saveSiteSettings}
-            canAccess={canAccess}
           />
         );
 
@@ -96,7 +90,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             saveSiteSettings={saveSiteSettings}
-            canAccess={canAccess}
           />
         );
 
@@ -106,7 +99,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             saveSiteSettings={saveSiteSettings}
-            canAccess={canAccess}
           />
         );
 
@@ -116,7 +108,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             saveSiteSettings={saveSiteSettings}
-            canAccess={canAccess}
           />
         );
 
@@ -126,12 +117,11 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
             saveSiteSettings={saveSiteSettings}
-            canAccess={canAccess}
           />
         );
 
       case 'design':
-        return <DesignTab canAccess={canAccess} />;
+        return <DesignTab />;
 
       case 'preview':
         return <LivePreviewTab siteSettings={siteSettings} />;
@@ -141,7 +131,6 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
           <BackupTab
             siteSettings={siteSettings}
             setSiteSettings={setSiteSettings}
-            canAccess={canAccess}
           />
         );
 

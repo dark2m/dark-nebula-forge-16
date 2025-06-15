@@ -20,7 +20,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          id?: never
+          id: number
           password: string
           role?: string
           updated_at?: string | null
@@ -28,162 +28,11 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          id?: never
+          id?: number
           password?: string
           role?: string
           updated_at?: string | null
           username?: string
-        }
-        Relationships: []
-      }
-      customer_login_attempts: {
-        Row: {
-          attempted_at: string | null
-          email: string
-          id: string
-          ip_address: string | null
-          success: boolean | null
-          user_agent: string | null
-        }
-        Insert: {
-          attempted_at?: string | null
-          email: string
-          id?: string
-          ip_address?: string | null
-          success?: boolean | null
-          user_agent?: string | null
-        }
-        Update: {
-          attempted_at?: string | null
-          email?: string
-          id?: string
-          ip_address?: string | null
-          success?: boolean | null
-          user_agent?: string | null
-        }
-        Relationships: []
-      }
-      customer_support_messages: {
-        Row: {
-          attachments: Json | null
-          created_at: string | null
-          customer_id: string | null
-          files: Json | null
-          id: string
-          is_from_customer: boolean | null
-          is_read: boolean | null
-          message: string
-          updated_at: string | null
-        }
-        Insert: {
-          attachments?: Json | null
-          created_at?: string | null
-          customer_id?: string | null
-          files?: Json | null
-          id?: string
-          is_from_customer?: boolean | null
-          is_read?: boolean | null
-          message: string
-          updated_at?: string | null
-        }
-        Update: {
-          attachments?: Json | null
-          created_at?: string | null
-          customer_id?: string | null
-          files?: Json | null
-          id?: string
-          is_from_customer?: boolean | null
-          is_read?: boolean | null
-          message?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_support_messages_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customer_support_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_support_sessions: {
-        Row: {
-          created_at: string | null
-          customer_id: string | null
-          id: string
-          last_activity: string | null
-          status: string | null
-          unread_count: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string
-          last_activity?: string | null
-          status?: string | null
-          unread_count?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          customer_id?: string | null
-          id?: string
-          last_activity?: string | null
-          status?: string | null
-          unread_count?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customer_support_sessions_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customer_support_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      customer_support_users: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-          is_blocked: boolean | null
-          is_verified: boolean | null
-          last_login: string | null
-          password_hash: string | null
-          updated_at: string | null
-          username: string | null
-          verification_code: string | null
-          verification_expires_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-          is_blocked?: boolean | null
-          is_verified?: boolean | null
-          last_login?: string | null
-          password_hash?: string | null
-          updated_at?: string | null
-          username?: string | null
-          verification_code?: string | null
-          verification_expires_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          is_blocked?: boolean | null
-          is_verified?: boolean | null
-          last_login?: string | null
-          password_hash?: string | null
-          updated_at?: string | null
-          username?: string | null
-          verification_code?: string | null
-          verification_expires_at?: string | null
         }
         Relationships: []
       }
@@ -253,132 +102,6 @@ export type Database = {
         }
         Relationships: []
       }
-      download_categories: {
-        Row: {
-          created_at: string | null
-          id: number
-          is_active: boolean | null
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: never
-          is_active?: boolean | null
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: never
-          is_active?: boolean | null
-          name?: string
-        }
-        Relationships: []
-      }
-      download_passwords: {
-        Row: {
-          allowed_categories: Json | null
-          created_at: string | null
-          description: string | null
-          id: number
-          is_active: boolean | null
-          last_used: string | null
-          name: string
-          password: string
-          updated_at: string | null
-          usage_count: number | null
-        }
-        Insert: {
-          allowed_categories?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id: number
-          is_active?: boolean | null
-          last_used?: string | null
-          name: string
-          password: string
-          updated_at?: string | null
-          usage_count?: number | null
-        }
-        Update: {
-          allowed_categories?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: number
-          is_active?: boolean | null
-          last_used?: string | null
-          name?: string
-          password?: string
-          updated_at?: string | null
-          usage_count?: number | null
-        }
-        Relationships: []
-      }
-      downloads: {
-        Row: {
-          category: string
-          created_at: string | null
-          description: string | null
-          download_url: string | null
-          downloads: number | null
-          features: Json | null
-          filename: string | null
-          icon: string | null
-          id: number
-          images: Json | null
-          last_update: string | null
-          password_category: string | null
-          rating: number | null
-          size: string | null
-          status: string | null
-          title: string
-          updated_at: string | null
-          version: string | null
-          videos: Json | null
-        }
-        Insert: {
-          category?: string
-          created_at?: string | null
-          description?: string | null
-          download_url?: string | null
-          downloads?: number | null
-          features?: Json | null
-          filename?: string | null
-          icon?: string | null
-          id: number
-          images?: Json | null
-          last_update?: string | null
-          password_category?: string | null
-          rating?: number | null
-          size?: string | null
-          status?: string | null
-          title: string
-          updated_at?: string | null
-          version?: string | null
-          videos?: Json | null
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          description?: string | null
-          download_url?: string | null
-          downloads?: number | null
-          features?: Json | null
-          filename?: string | null
-          icon?: string | null
-          id?: number
-          images?: Json | null
-          last_update?: string | null
-          password_category?: string | null
-          rating?: number | null
-          size?: string | null
-          status?: string | null
-          title?: string
-          updated_at?: string | null
-          version?: string | null
-          videos?: Json | null
-        }
-        Relationships: []
-      }
       login_attempts: {
         Row: {
           created_at: string | null
@@ -409,63 +132,6 @@ export type Database = {
         }
         Relationships: []
       }
-      page_texts: {
-        Row: {
-          created_at: string | null
-          id: string
-          page_name: string
-          section_name: string
-          text_key: string
-          text_value: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          page_name: string
-          section_name: string
-          text_key: string
-          text_value: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          page_name?: string
-          section_name?: string
-          text_key?: string
-          text_value?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      product_updates: {
-        Row: {
-          created_at: string | null
-          id: number
-          is_active: boolean | null
-          message: string
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: never
-          is_active?: boolean | null
-          message: string
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: never
-          is_active?: boolean | null
-          message?: string
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       products: {
         Row: {
           category: string
@@ -473,13 +139,9 @@ export type Database = {
           description: string | null
           features: Json | null
           id: number
-          image: string | null
           images: Json | null
-          in_stock: boolean | null
-          is_active: boolean | null
           name: string
           price: number
-          rating: number | null
           text_size: string | null
           title_size: string | null
           updated_at: string | null
@@ -491,13 +153,9 @@ export type Database = {
           description?: string | null
           features?: Json | null
           id: number
-          image?: string | null
           images?: Json | null
-          in_stock?: boolean | null
-          is_active?: boolean | null
           name: string
           price?: number
-          rating?: number | null
           text_size?: string | null
           title_size?: string | null
           updated_at?: string | null
@@ -509,13 +167,9 @@ export type Database = {
           description?: string | null
           features?: Json | null
           id?: number
-          image?: string | null
           images?: Json | null
-          in_stock?: boolean | null
-          is_active?: boolean | null
           name?: string
           price?: number
-          rating?: number | null
           text_size?: string | null
           title_size?: string | null
           updated_at?: string | null
@@ -625,54 +279,6 @@ export type Database = {
           id?: string
           settings_data?: Json
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      site_tools: {
-        Row: {
-          button_text: string
-          category: string | null
-          created_at: string | null
-          custom_html: string | null
-          description: string | null
-          icon: string | null
-          id: number
-          is_active: boolean | null
-          name: string
-          title: string
-          updated_at: string | null
-          url: string | null
-          visible: boolean | null
-        }
-        Insert: {
-          button_text?: string
-          category?: string | null
-          created_at?: string | null
-          custom_html?: string | null
-          description?: string | null
-          icon?: string | null
-          id?: number
-          is_active?: boolean | null
-          name: string
-          title: string
-          updated_at?: string | null
-          url?: string | null
-          visible?: boolean | null
-        }
-        Update: {
-          button_text?: string
-          category?: string | null
-          created_at?: string | null
-          custom_html?: string | null
-          description?: string | null
-          icon?: string | null
-          id?: number
-          is_active?: boolean | null
-          name?: string
-          title?: string
-          updated_at?: string | null
-          url?: string | null
-          visible?: boolean | null
         }
         Relationships: []
       }
