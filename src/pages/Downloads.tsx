@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Star, Filter, Package, TrendingUp, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,8 +18,11 @@ const Downloads = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  
   const siteSettings = AdminStorage.getSiteSettings();
-  const texts = siteSettings.pageTexts.downloads || {
+  
+  // Provide complete fallback structure
+  const defaultTexts = {
     title: 'مركز التنزيلات',
     subtitle: 'احصل على أفضل الأدوات والبرامج المتخصصة مجاناً',
     categories: {
@@ -55,6 +59,8 @@ const Downloads = () => {
       noResults: 'لا توجد نتائج'
     }
   };
+
+  const texts = siteSettings?.pageTexts?.downloads || defaultTexts;
 
   useEffect(() => {
     loadDownloads();
@@ -145,7 +151,7 @@ const Downloads = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-400 text-sm">{texts.stats.totalDownloads}</p>
+                      <p className="text-gray-400 text-sm">{texts.stats?.totalDownloads || 'إجمالي التنزيلات'}</p>
                       <p className="text-2xl font-bold text-white">{totalDownloads.toLocaleString()}</p>
                     </div>
                     <TrendingUp className="w-8 h-8 text-blue-400" />
@@ -157,7 +163,7 @@ const Downloads = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-400 text-sm">{texts.stats.availableFiles}</p>
+                      <p className="text-gray-400 text-sm">{texts.stats?.availableFiles || 'ملفات متاحة'}</p>
                       <p className="text-2xl font-bold text-white">{downloads.length}</p>
                     </div>
                     <Package className="w-8 h-8 text-green-400" />
@@ -169,7 +175,7 @@ const Downloads = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-400 text-sm">{texts.stats.averageRating}</p>
+                      <p className="text-gray-400 text-sm">{texts.stats?.averageRating || 'متوسط التقييم'}</p>
                       <p className="text-2xl font-bold text-white">{averageRating}/5</p>
                     </div>
                     <Award className="w-8 h-8 text-yellow-400" />
@@ -184,7 +190,7 @@ const Downloads = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder={texts.placeholders.search}
+                  placeholder={texts.placeholders?.search || 'البحث في التنزيلات...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-white/5 border-white/20 text-white placeholder-gray-400"
@@ -197,15 +203,15 @@ const Downloads = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-white/20">
-                  <SelectItem value="all">{texts.categories.all}</SelectItem>
-                  <SelectItem value="games">{texts.categories.games}</SelectItem>
-                  <SelectItem value="tools">{texts.categories.tools}</SelectItem>
-                  <SelectItem value="design">{texts.categories.design}</SelectItem>
-                  <SelectItem value="programming">{texts.categories.programming}</SelectItem>
-                  <SelectItem value="music">{texts.categories.music}</SelectItem>
-                  <SelectItem value="video">{texts.categories.video}</SelectItem>
-                  <SelectItem value="books">{texts.categories.books}</SelectItem>
-                  <SelectItem value="security">{texts.categories.security}</SelectItem>
+                  <SelectItem value="all">{texts.categories?.all || 'الكل'}</SelectItem>
+                  <SelectItem value="games">{texts.categories?.games || 'ألعاب'}</SelectItem>
+                  <SelectItem value="tools">{texts.categories?.tools || 'أدوات'}</SelectItem>
+                  <SelectItem value="design">{texts.categories?.design || 'تصميم'}</SelectItem>
+                  <SelectItem value="programming">{texts.categories?.programming || 'برمجة'}</SelectItem>
+                  <SelectItem value="music">{texts.categories?.music || 'موسيقى'}</SelectItem>
+                  <SelectItem value="video">{texts.categories?.video || 'فيديو'}</SelectItem>
+                  <SelectItem value="books">{texts.categories?.books || 'كتب'}</SelectItem>
+                  <SelectItem value="security">{texts.categories?.security || 'أمان'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -229,7 +235,7 @@ const Downloads = () => {
                 <CardContent className="p-12 text-center">
                   <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-white mb-2">
-                    {texts.placeholders.noResults}
+                    {texts.placeholders?.noResults || 'لا توجد نتائج'}
                   </h3>
                   <p className="text-gray-400">جرب تغيير مصطلحات البحث أو الفئة</p>
                 </CardContent>
@@ -249,7 +255,7 @@ const Downloads = () => {
                           </CardDescription>
                         </div>
                         <Badge variant="secondary" className="ml-2">
-                          {texts.categories[item.category as keyof typeof texts.categories] || item.category}
+                          {texts.categories?.[item.category as keyof typeof texts.categories] || item.category}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -257,17 +263,17 @@ const Downloads = () => {
                     <CardContent className="p-6 pt-0">
                       <div className="space-y-3 mb-4">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">{texts.labels.size}:</span>
+                          <span className="text-gray-400">{texts.labels?.size || 'الحجم'}:</span>
                           <span className="text-white">{item.size}</span>
                         </div>
                         
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">{texts.labels.downloads}:</span>
+                          <span className="text-gray-400">{texts.labels?.downloads || 'التنزيلات'}:</span>
                           <span className="text-white">{item.downloads.toLocaleString()}</span>
                         </div>
                         
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">{texts.labels.rating}:</span>
+                          <span className="text-gray-400">{texts.labels?.rating || 'التقييم'}:</span>
                           <div className="flex items-center">
                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
                             <span className="text-white ml-1">{item.rating}/5</span>
@@ -276,7 +282,7 @@ const Downloads = () => {
                         
                         {item.version && (
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-400">{texts.labels.version}:</span>
+                            <span className="text-gray-400">{texts.labels?.version || 'الإصدار'}:</span>
                             <span className="text-white">{item.version}</span>
                           </div>
                         )}
@@ -287,7 +293,7 @@ const Downloads = () => {
                         className="w-full glow-button group-hover:scale-105 transition-transform"
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        {texts.buttons.download}
+                        {texts.buttons?.download || 'تنزيل'}
                       </Button>
                     </CardContent>
                   </Card>
