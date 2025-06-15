@@ -4,7 +4,7 @@ import { Plus, Trash2, Edit3, Save, Image, Video, Star, Package, DollarSign } fr
 import ProductFeaturesManager from '../ProductFeaturesManager';
 import MediaManager from '../MediaManager';
 import { useToast } from '@/hooks/use-toast';
-import { useProductManagement } from '@/hooks/useProductManagement';
+import { useSupabaseProducts } from '@/hooks/useSupabaseProducts';
 
 interface ProductsTabProps {
   canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
@@ -12,7 +12,7 @@ interface ProductsTabProps {
 
 const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
   const { toast } = useToast();
-  const { products, addProduct, updateProduct, deleteProduct } = useProductManagement(canAccess, toast);
+  const { products, isLoading, isSaving, addProduct, updateProduct, deleteProduct } = useSupabaseProducts();
 
   const categories = [
     { value: 'pubg', label: 'هكر ببجي موبايل', color: 'bg-gradient-to-r from-blue-500 to-blue-600', icon: '🎮' },
@@ -21,40 +21,55 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
     { value: 'other', label: 'خدمات أخرى', color: 'bg-gradient-to-r from-teal-500 to-teal-600', icon: '⚡' }
   ];
 
-  const addProductByCategory = (category: string) => {
-    const categoryLabels: { [key: string]: string } = {
-      pubg: 'هكر ببجي موبايل',
-      web: 'موقع ويب',
-      discord: 'بوت ديسكورد',
-      other: 'خدمة'
-    };
-
-    const newProduct = addProduct();
-    if (newProduct) {
-      setTimeout(() => {
-        updateProduct(newProduct.id, { 
-          category, 
-          name: `${categoryLabels[category]} جديد`,
-          rating: 5
-        });
-      }, 100);
+  const addProductByCategory = async (category: string) => {
+    if (!canAccess('مبرمج')) {
+      toast({
+        title: "غير مسموح",
+        description: "ليس لديك صلاحية لإضافة المنتجات",
+        variant: "destructive"
+      });
+      return;
     }
+    
+    await addProduct(category);
   };
 
-  const handleInputChange = (productId: number, field: string, value: any) => {
+  const handleInputChange = async (productId: number, field: string, value: any) => {
+    if (!canAccess('مبرمج')) {
+      toast({
+        title: "غير مسموح",
+        description: "ليس لديك صلاحية لتعديل المنتجات",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     console.log('Immediate save for product:', productId, field, value);
-    updateProduct(productId, { [field]: value });
+    await updateProduct(productId, { [field]: value });
+  };
+
+  const handleDeleteProduct = async (productId: number) => {
+    if (!canAccess('مبرمج')) {
+      toast({
+        title: "غير مسموح",
+        description: "ليس لديك صلاحية لحذف المنتجات",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    await deleteProduct(productId);
   };
 
   const createMediaChangeHandler = (productId: number) => {
     return {
-      onImagesChange: (receivedProductId: number, images: string[]) => {
+      onImagesChange: async (receivedProductId: number, images: string[]) => {
         console.log(`Saving images for product ${receivedProductId}`);
-        updateProduct(receivedProductId, { images });
+        await updateProduct(receivedProductId, { images });
       },
-      onVideosChange: (receivedProductId: number, videos: string[]) => {
+      onVideosChange: async (receivedProductId: number, videos: string[]) => {
         console.log(`Saving videos for product ${receivedProductId}`);
-        updateProduct(receivedProductId, { videos });
+        await updateProduct(receivedProductId, { videos });
       }
     };
   };
@@ -82,6 +97,14 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
     );
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-white">جاري تحميل المنتجات...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 p-6">
       {/* Header محسن */}
@@ -93,7 +116,7 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
             </div>
             <div>
               <h2 className="text-3xl font-bold text-white mb-1">إدارة المنتجات</h2>
-              <p className="text-gray-400">أضف وعدل منتجاتك بسهولة</p>
+              <p className="text-gray-400">أضف وعدل منتجاتك - محفوظة للجميع</p>
             </div>
           </div>
           <div className="text-center bg-white/5 rounded-xl p-4">
@@ -109,7 +132,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
           <button
             key={cat.value}
             onClick={() => addProductByCategory(cat.value)}
-            className={`${cat.color} p-6 rounded-2xl hover:scale-105 transition-all duration-300 group shadow-lg hover:shadow-xl`}
+            disabled={isSaving}
+            className={`${cat.color} p-6 rounded-2xl hover:scale-105 transition-all duration-300 group shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <div className="flex flex-col items-center space-y-3">
               <div className="text-3xl group-hover:scale-110 transition-transform duration-300">
@@ -124,6 +148,16 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
         ))}
       </div>
       
+      {/* حالة الحفظ */}
+      {isSaving && (
+        <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
+          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-400"></div>
+            <span className="text-blue-300">جاري الحفظ...</span>
+          </div>
+        </div>
+      )}
+
       {/* قائمة المنتجات - تصميم محسن */}
       <div className="space-y-6">
         {products.map((product) => {
@@ -156,8 +190,9 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                       <span className="text-white font-medium text-lg">{product.price}</span>
                     </div>
                     <button
-                      onClick={() => deleteProduct(product.id)}
-                      className="bg-orange-500/20 hover:bg-orange-500/40 rounded-xl p-3 transition-colors"
+                      onClick={() => handleDeleteProduct(product.id)}
+                      disabled={isSaving}
+                      className="bg-orange-500/20 hover:bg-orange-500/40 rounded-xl p-3 transition-colors disabled:opacity-50"
                     >
                       <Trash2 className="w-5 h-5 text-orange-300" />
                     </button>
@@ -175,7 +210,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                       type="text"
                       value={product.name || ''}
                       onChange={(e) => handleInputChange(product.id, 'name', e.target.value)}
-                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 transition-colors"
+                      disabled={isSaving}
+                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 transition-colors disabled:opacity-50"
                       placeholder="اسم المنتج..."
                     />
                   </div>
@@ -185,7 +221,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                     <select
                       value={product.category || 'pubg'}
                       onChange={(e) => handleInputChange(product.id, 'category', e.target.value)}
-                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400 transition-colors"
+                      disabled={isSaving}
+                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400 transition-colors disabled:opacity-50"
                     >
                       {categories.map((cat) => (
                         <option key={cat.value} value={cat.value} className="bg-gray-800">
@@ -201,7 +238,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                       type="number"
                       value={product.price || 0}
                       onChange={(e) => handleInputChange(product.id, 'price', Number(e.target.value))}
-                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-green-400 transition-colors"
+                      disabled={isSaving}
+                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-green-400 transition-colors disabled:opacity-50"
                       placeholder="0"
                     />
                   </div>
@@ -221,7 +259,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                   <textarea
                     value={product.description || ''}
                     onChange={(e) => handleInputChange(product.id, 'description', e.target.value)}
-                    className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-4 focus:outline-none focus:border-cyan-400 transition-colors h-24 resize-none"
+                    disabled={isSaving}
+                    className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-4 focus:outline-none focus:border-cyan-400 transition-colors h-24 resize-none disabled:opacity-50"
                     placeholder="وصف المنتج..."
                   />
                 </div>
@@ -275,7 +314,8 @@ const ProductsTab: React.FC<ProductsTabProps> = ({ canAccess }) => {
                 <button
                   key={cat.value}
                   onClick={() => addProductByCategory(cat.value)}
-                  className={`${cat.color} px-6 py-3 rounded-xl text-white font-medium hover:scale-105 transition-transform shadow-lg`}
+                  disabled={isSaving}
+                  className={`${cat.color} px-6 py-3 rounded-xl text-white font-medium hover:scale-105 transition-transform shadow-lg disabled:opacity-50`}
                 >
                   {cat.icon} {cat.label}
                 </button>

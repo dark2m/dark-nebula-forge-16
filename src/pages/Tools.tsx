@@ -1,36 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
-import SettingsService from '../utils/settingsService';
 import PasswordGenerator from './PasswordGenerator';
-import type { SiteSettings, Tool } from '../types/admin';
+import { useSupabaseTools } from '../hooks/useSupabaseTools';
+import type { Tool } from '../types/admin';
 
 const Tools = () => {
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>({} as SiteSettings);
-  const [loading, setLoading] = useState(true);
+  const { tools, isLoading } = useSupabaseTools();
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [showPasswordGenerator, setShowPasswordGenerator] = useState(false);
-
-  useEffect(() => {
-    const loadSettings = () => {
-      const settings = SettingsService.getSiteSettings();
-      setSiteSettings(settings);
-      setLoading(false);
-    };
-
-    loadSettings();
-
-    // الاستماع لتحديثات الإعدادات
-    const handleSettingsUpdate = (event: CustomEvent) => {
-      setSiteSettings(event.detail.settings);
-    };
-
-    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    };
-  }, []);
 
   // إخفاء شريط المهام عند عرض أداة مخصصة أو مولد كلمات المرور
   useEffect(() => {
@@ -53,7 +32,7 @@ const Tools = () => {
     };
   }, [selectedTool, showPasswordGenerator]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen relative flex items-center justify-center">
         <StarryBackground />
@@ -62,15 +41,11 @@ const Tools = () => {
     );
   }
 
-  const tools = siteSettings.tools?.filter(tool => tool.visible) || [];
-  const pageTexts = siteSettings.pageTexts?.tools || {
-    title: 'أدوات الموقع',
-    subtitle: 'مجموعة من الأدوات المفيدة للموقع'
-  };
+  const visibleTools = tools.filter(tool => tool.visible && tool.isActive);
 
   const handleToolClick = (tool: Tool) => {
     // التحقق من نوع الأداة
-    if (tool.title === 'مولد كلمات المرور' || tool.id === 1) {
+    if (tool.title === 'مولد كلمات المرور' || tool.name === 'password-generator') {
       setShowPasswordGenerator(true);
       return;
     }
@@ -180,14 +155,14 @@ const Tools = () => {
         <div className="container mx-auto px-6 py-24">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-white mb-4">
-              {pageTexts.title}
+              أدوات الموقع
             </h1>
             <p className="text-xl text-gray-300">
-              {pageTexts.subtitle}
+              مجموعة من الأدوات المفيدة للموقع
             </p>
           </div>
 
-          {tools.length === 0 ? (
+          {visibleTools.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🔧</div>
               <h3 className="text-2xl font-bold text-white mb-2">لا توجد أدوات متاحة حالياً</h3>
@@ -195,7 +170,7 @@ const Tools = () => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {tools.map((tool) => (
+              {visibleTools.map((tool) => (
                 <div 
                   key={tool.id}
                   className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 hover:bg-white/20 hover:border-white/40 transition-all duration-300 cursor-pointer transform hover:scale-105"

@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import DownloadPasswordService from '../../utils/downloadPasswordService';
-import DownloadCategoriesService from '../../utils/downloadCategoriesService';
+import { useSupabaseDownloadPasswords } from '../../hooks/useSupabaseDownloadPasswords';
+import { useSupabaseDownloadCategories } from '../../hooks/useSupabaseDownloadCategories';
 import type { DownloadPassword } from '../../types/downloads';
 
 interface DownloadPasswordsTabProps {
@@ -15,13 +15,13 @@ interface DownloadPasswordsTabProps {
 
 const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }) => {
   const { toast } = useToast();
-  const [passwords, setPasswords] = useState<DownloadPassword[]>(DownloadPasswordService.getDownloadPasswords());
-  const [categories] = useState<string[]>(DownloadCategoriesService.getCategories());
+  const { passwords, isLoading, addPassword, updatePassword, deletePassword } = useSupabaseDownloadPasswords();
+  const { categories } = useSupabaseDownloadCategories();
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<DownloadPassword>>({});
   const [showPassword, setShowPassword] = useState<number | null>(null);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!canAccess('مبرمج')) {
       toast({
         title: "خطأ في الصلاحية",
@@ -31,19 +31,12 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
       return;
     }
 
-    const newPassword = DownloadPasswordService.addPassword({
+    await addPassword({
       name: "كلمة مرور جديدة",
       password: `pass_${Date.now()}`,
       allowedCategories: [categories[0] || "أدوات"],
       isActive: true,
       description: "وصف كلمة المرور"
-    });
-
-    setPasswords(DownloadPasswordService.getDownloadPasswords());
-    
-    toast({
-      title: "تم إضافة كلمة المرور",
-      description: "تم إضافة كلمة مرور جديدة بنجاح"
     });
   };
 
@@ -52,21 +45,15 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
     setEditForm(password);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editForm || isEditing === null) return;
 
-    DownloadPasswordService.updatePassword(isEditing, editForm);
-    setPasswords(DownloadPasswordService.getDownloadPasswords());
+    await updatePassword(isEditing, editForm);
     setIsEditing(null);
     setEditForm({});
-
-    toast({
-      title: "تم حفظ التغييرات",
-      description: "تم تحديث كلمة المرور بنجاح"
-    });
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (!canAccess('مدير عام')) {
       toast({
         title: "خطأ في الصلاحية",
@@ -76,13 +63,7 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
       return;
     }
 
-    DownloadPasswordService.deletePassword(id);
-    setPasswords(DownloadPasswordService.getDownloadPasswords());
-
-    toast({
-      title: "تم حذف كلمة المرور",
-      description: "تم حذف كلمة المرور بنجاح"
-    });
+    await deletePassword(id);
   };
 
   const togglePasswordVisibility = (id: number) => {
@@ -126,6 +107,14 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
   const isFullAccess = (password: DownloadPassword) => {
     return password.allowedCategories.includes("وصول كامل");
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-white text-xl">جاري التحميل...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

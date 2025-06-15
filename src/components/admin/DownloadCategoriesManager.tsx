@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, Edit, Trash2, X, Check, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import DownloadCategoriesService from '../../utils/downloadCategoriesService';
+import { useSupabaseDownloadCategories } from '../../hooks/useSupabaseDownloadCategories';
 
 interface DownloadCategoriesManagerProps {
   categories: string[];
@@ -17,100 +16,68 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
   categories,
   onCategoriesChange
 }) => {
-  const { toast } = useToast();
+  const { 
+    categories: dbCategories, 
+    isLoading, 
+    addCategory, 
+    updateCategory, 
+    deleteCategory,
+    refreshCategories
+  } = useSupabaseDownloadCategories();
+  
   const [isAdding, setIsAdding] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState('');
 
-  // Load categories on component mount and sync with the limited set
-  useEffect(() => {
-    // Set the current limited categories
-    const limitedCategories = ['أدوات', 'بيباس'];
-    DownloadCategoriesService.saveCategories(limitedCategories);
-    onCategoriesChange(limitedCategories);
-  }, [onCategoriesChange]);
+  // استخدام الفئات من قاعدة البيانات
+  React.useEffect(() => {
+    onCategoriesChange(dbCategories);
+  }, [dbCategories, onCategoriesChange]);
 
-  const handleAddCategory = () => {
-    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
-      const updatedCategories = [...categories, newCategory.trim()];
-      DownloadCategoriesService.saveCategories(updatedCategories);
-      onCategoriesChange(updatedCategories);
+  const handleAddCategory = async () => {
+    if (newCategory.trim() && !dbCategories.includes(newCategory.trim())) {
+      await addCategory(newCategory.trim());
       setNewCategory('');
       setIsAdding(false);
-      
-      toast({
-        title: "تم إضافة الفئة",
-        description: `تم إضافة فئة "${newCategory}" بنجاح`
-      });
-    } else if (categories.includes(newCategory.trim())) {
-      toast({
-        title: "خطأ",
-        description: "هذه الفئة موجودة بالفعل",
-        variant: "destructive"
-      });
     }
   };
 
   const handleEditCategory = (index: number) => {
     setEditingIndex(index);
-    setEditValue(categories[index]);
+    setEditValue(dbCategories[index]);
   };
 
-  const handleSaveEdit = () => {
-    if (editingIndex !== null && editValue.trim() && !categories.includes(editValue.trim())) {
-      const oldCategory = categories[editingIndex];
-      const updatedCategories = [...categories];
-      updatedCategories[editingIndex] = editValue.trim();
-      
-      DownloadCategoriesService.saveCategories(updatedCategories);
-      onCategoriesChange(updatedCategories);
+  const handleSaveEdit = async () => {
+    if (editingIndex !== null && editValue.trim() && !dbCategories.includes(editValue.trim())) {
+      const oldCategory = dbCategories[editingIndex];
+      await updateCategory(oldCategory, editValue.trim());
       setEditingIndex(null);
       setEditValue('');
-      
-      toast({
-        title: "تم تحديث الفئة",
-        description: `تم تحديث الفئة من "${oldCategory}" إلى "${editValue}"`
-      });
-    } else if (categories.includes(editValue.trim())) {
-      toast({
-        title: "خطأ",
-        description: "هذه الفئة موجودة بالفعل",
-        variant: "destructive"
-      });
     }
   };
 
-  const handleDeleteCategory = (category: string) => {
-    if (categories.length <= 1) {
-      toast({
-        title: "تحذير",
-        description: "لا يمكن حذف آخر فئة متبقية",
-        variant: "destructive"
-      });
+  const handleDeleteCategory = async (category: string) => {
+    if (dbCategories.length <= 1) {
       return;
     }
-
-    const updatedCategories = categories.filter(c => c !== category);
-    DownloadCategoriesService.saveCategories(updatedCategories);
-    onCategoriesChange(updatedCategories);
-    
-    toast({
-      title: "تم حذف الفئة",
-      description: `تم حذف فئة "${category}" بنجاح`
-    });
+    await deleteCategory(category);
   };
 
-  const resetToDefault = () => {
-    const defaultCategories = ['أدوات', 'بيباس'];
-    DownloadCategoriesService.saveCategories(defaultCategories);
-    onCategoriesChange(defaultCategories);
-    
-    toast({
-      title: "تم إعادة التعيين",
-      description: "تم إعادة تعيين الفئات للإعدادات الافتراضية"
-    });
+  const resetToDefault = async () => {
+    // سيتم إعادة تعيين الفئات في قاعدة البيانات
+    await refreshCategories();
   };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-white/5 border-white/20">
+        <CardContent className="p-6 text-center">
+          <div className="text-white">جاري التحميل...</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-white/5 border-white/20">
@@ -127,7 +94,7 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
               variant="outline"
               className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
             >
-              إعادة تعيين
+              إعادة تحميل
             </Button>
             <Button
               onClick={() => setIsAdding(true)}
@@ -173,7 +140,7 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
         )}
         
         <div className="flex flex-wrap gap-2">
-          {categories.map((category, index) => (
+          {dbCategories.map((category, index) => (
             <div key={index} className="flex items-center gap-1">
               {editingIndex === index ? (
                 <div className="flex gap-1">
@@ -231,13 +198,13 @@ const DownloadCategoriesManager: React.FC<DownloadCategoriesManagerProps> = ({
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
           <div className="flex items-center gap-2 text-blue-300 mb-2">
             <Tag className="w-4 h-4" />
-            <span className="font-medium">الفئات الحالية النشطة</span>
+            <span className="font-medium">الفئات النشطة من قاعدة البيانات</span>
           </div>
           <p className="text-gray-300 text-sm">
-            الفئات المعروضة حالياً: <strong>أدوات</strong> و <strong>بيباس</strong> فقط
+            الفئات المعروضة محفوظة في قاعدة البيانات ومتاحة للجميع
           </p>
           <p className="text-gray-400 text-xs mt-1">
-            💡 يمكنك إضافة أو تعديل الفئات وستظهر في صفحة التنزيلات مباشرة
+            💡 يمكنك إضافة أو تعديل الفئات وستظهر في صفحة التنزيلات مباشرة للجميع
           </p>
         </div>
       </CardContent>
