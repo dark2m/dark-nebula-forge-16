@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Plus, Trash2, Key, Save, Shield, User, Settings, Lock } from 'lucide-react';
 import { useSupabaseAdminUsers } from '../../hooks/useSupabaseAdminUsers';
 import { useToast } from '@/hooks/use-toast';
+import AuthService from '../../utils/auth';
 import type { AdminUser } from '../../types/admin';
 
 const PasswordsTab = () => {
@@ -15,39 +16,14 @@ const PasswordsTab = () => {
     password: '',
     email: '',
     role: 'مشرف' as 'مدير عام' | 'مبرمج' | 'مشرف',
-    permissions: {
-      overview: true,
-      products: false,
-      users: false,
-      passwords: false,
-      tools: true,
-      customerSupport: true,
-      siteControl: false,
-      texts: false,
-      navigation: false,
-      contact: false,
-      design: false,
-      preview: true,
-      backup: false
-    }
   });
   const { toast } = useToast();
 
-  const defaultPermissions = {
-    overview: true,
-    products: false,
-    users: false,
-    passwords: false,
-    tools: true,
-    customerSupport: true,
-    siteControl: false,
-    texts: false,
-    navigation: false,
-    contact: false,
-    design: false,
-    preview: true,
-    backup: false
-  };
+  const currentUser = AuthService.getCurrentUser();
+
+  const defaultPermissions = [
+    'overview', 'tools', 'customerSupport', 'preview'
+  ];
 
   const togglePasswordVisibility = (userId: number) => {
     setShowPasswords(prev => ({
@@ -64,6 +40,15 @@ const PasswordsTab = () => {
   };
 
   const handleAddUser = async () => {
+    if (!AuthService.hasPermission('مبرمج')) {
+      toast({
+        title: "خطأ في الصلاحية",
+        description: "ليس لديك صلاحية لإضافة مستخدمين جدد",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!newUser.username || !newUser.password) {
       toast({
         title: "خطأ",
@@ -91,7 +76,7 @@ const PasswordsTab = () => {
         name: newUser.username,
         email: newUser.email || `${newUser.username}@example.com`,
         isActive: true,
-        permissions: Object.keys(defaultPermissions)
+        permissions: defaultPermissions
       };
 
       await addUser(newUserData);
@@ -100,15 +85,29 @@ const PasswordsTab = () => {
         username: '', 
         password: '', 
         email: '',
-        role: 'مشرف',
-        permissions: defaultPermissions
+        role: 'مشرف'
+      });
+
+      toast({
+        title: "تم إضافة المستخدم",
+        description: "تم إضافة المستخدم الجديد بنجاح",
+        variant: "default"
       });
     } catch (error) {
-      // الخطأ سيتم التعامل معه في useSupabaseAdminUsers
+      console.error('Error adding user:', error);
     }
   };
 
   const handleUserChange = (userId: number, field: string, value: any) => {
+    if (!AuthService.hasPermission('مبرمج')) {
+      toast({
+        title: "خطأ في الصلاحية",
+        description: "ليس لديك صلاحية لتعديل المستخدمين",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setEditedUsers(prev => ({
       ...prev,
       [userId]: {
@@ -118,33 +117,67 @@ const PasswordsTab = () => {
     }));
   };
 
-  const handlePermissionChange = (userId: number, permission: string, value: boolean) => {
-    setEditedUsers(prev => ({
-      ...prev,
-      [userId]: {
-        ...prev[userId],
-        permissions: {
-          ...((prev[userId]?.permissions) || getUserValue(users.find(u => u.id === userId)!, 'permissions')),
-          [permission]: value
-        }
-      }
-    }));
-  };
-
   const saveUser = async (userId: number) => {
+    if (!AuthService.hasPermission('مبرمج')) {
+      toast({
+        title: "خطأ في الصلاحية",
+        description: "ليس لديك صلاحية لحفظ التعديلات",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const changes = editedUsers[userId];
     if (changes) {
-      await updateUser(userId, changes);
-      setEditedUsers(prev => {
-        const updated = { ...prev };
-        delete updated[userId];
-        return updated;
-      });
+      try {
+        await updateUser(userId, changes);
+        setEditedUsers(prev => {
+          const updated = { ...prev };
+          delete updated[userId];
+          return updated;
+        });
+
+        toast({
+          title: "تم حفظ التعديلات",
+          description: "تم حفظ تعديلات المستخدم بنجاح",
+          variant: "default"
+        });
+      } catch (error) {
+        console.error('Error saving user:', error);
+      }
     }
   };
 
   const handleDeleteUser = async (id: number) => {
-    await deleteUser(id);
+    if (!AuthService.hasPermission('مدير عام')) {
+      toast({
+        title: "خطأ في الصلاحية",
+        description: "ليس لديك صلاحية لحذف المستخدمين",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const userToDelete = users.find(u => u.id === id);
+    if (userToDelete?.username === 'dark') {
+      toast({
+        title: "لا يمكن الحذف",
+        description: "لا يمكن حذف مالك الخادم",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await deleteUser(id);
+      toast({
+        title: "تم حذف المستخدم",
+        description: "تم حذف المستخدم بنجاح",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
   };
 
   const getUserValue = (user: AdminUser, field: string) => {
@@ -182,6 +215,8 @@ const PasswordsTab = () => {
     backup: 'النسخ الاحتياطي'
   };
 
+  const isOwner = (username: string) => username === 'dark';
+
   if (isLoading) {
     return (
       <div className="space-y-8">
@@ -206,95 +241,102 @@ const PasswordsTab = () => {
           إدارة كلمات المرور والأذونات
         </h2>
         <p className="text-gray-400">تحكم كامل في المستخدمين وصلاحياتهم</p>
+        <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg max-w-2xl mx-auto">
+          <p className="text-blue-300 text-sm">
+            📊 جميع التعديلات محفوظة في قاعدة البيانات ومشتركة بين جميع المستخدمين
+          </p>
+        </div>
       </div>
       
       {/* Add New User */}
-      <div className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
-        <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
-            <Plus className="w-6 h-6 text-white" />
-          </div>
-          إضافة مستخدم جديد
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="space-y-2">
-            <label className="block text-blue-300 text-sm font-semibold">اسم المستخدم</label>
-            <div className="relative">
-              <User className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+      {AuthService.hasPermission('مبرمج') && (
+        <div className="bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-cyan-500/10 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+          <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
+              <Plus className="w-6 h-6 text-white" />
+            </div>
+            إضافة مستخدم جديد
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <label className="block text-blue-300 text-sm font-semibold">اسم المستخدم</label>
+              <div className="relative">
+                <User className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={newUser.username}
+                  onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                  className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-12 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+                  placeholder="admin"
+                  disabled={isSaving}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-blue-300 text-sm font-semibold">كلمة المرور</label>
+              <div className="relative">
+                <Lock className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                  className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-12 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+                  placeholder="password123"
+                  disabled={isSaving}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-blue-300 text-sm font-semibold">البريد الإلكتروني</label>
               <input
-                type="text"
-                value={newUser.username}
-                onChange={(e) => setNewUser({...newUser, username: e.target.value})}
-                className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-12 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                placeholder="admin"
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+                placeholder="admin@example.com"
                 disabled={isSaving}
               />
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <label className="block text-blue-300 text-sm font-semibold">كلمة المرور</label>
-            <div className="relative">
-              <Lock className="absolute right-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={newUser.password}
-                onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-12 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                placeholder="password123"
+            
+            <div className="space-y-2">
+              <label className="block text-blue-300 text-sm font-semibold">الدور</label>
+              <select
+                value={newUser.role}
+                onChange={(e) => setNewUser({...newUser, role: e.target.value as 'مدير عام' | 'مبرمج' | 'مشرف'})}
+                className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
                 disabled={isSaving}
-              />
+              >
+                <option value="مشرف" className="bg-gray-800 text-white">مشرف</option>
+                <option value="مبرمج" className="bg-gray-800 text-white">مبرمج</option>
+                <option value="مدير عام" className="bg-gray-800 text-white">مدير عام</option>
+              </select>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <label className="block text-blue-300 text-sm font-semibold">البريد الإلكتروني</label>
-            <input
-              type="email"
-              value={newUser.email}
-              onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-              className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-              placeholder="admin@example.com"
+          <div className="mt-6">
+            <button
+              onClick={handleAddUser}
               disabled={isSaving}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="block text-blue-300 text-sm font-semibold">الدور</label>
-            <select
-              value={newUser.role}
-              onChange={(e) => setNewUser({...newUser, role: e.target.value as 'مدير عام' | 'مبرمج' | 'مشرف'})}
-              className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-              disabled={isSaving}
+              className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="مشرف" className="bg-gray-800 text-white">مشرف</option>
-              <option value="مبرمج" className="bg-gray-800 text-white">مبرمج</option>
-              <option value="مدير عام" className="bg-gray-800 text-white">مدير عام</option>
-            </select>
+              {isSaving ? (
+                <>
+                  <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
+                  جاري الإضافة...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-5 h-5" />
+                  إضافة المستخدم
+                </>
+              )}
+            </button>
           </div>
         </div>
-        
-        <div className="mt-6">
-          <button
-            onClick={handleAddUser}
-            disabled={isSaving}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSaving ? (
-              <>
-                <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
-                جاري الإضافة...
-              </>
-            ) : (
-              <>
-                <Plus className="w-5 h-5" />
-                إضافة المستخدم
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Users List */}
       <div className="bg-gradient-to-br from-gray-900/50 via-black/50 to-gray-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
@@ -311,10 +353,19 @@ const PasswordsTab = () => {
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-white" />
+                    {isOwner(user.username) ? (
+                      <Lock className="w-6 h-6 text-white" />
+                    ) : (
+                      <User className="w-6 h-6 text-white" />
+                    )}
                   </div>
                   <div>
-                    <h4 className="text-white font-bold text-lg">المستخدم {user.id}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-white font-bold text-lg">{user.username}</h4>
+                      {isOwner(user.username) && (
+                        <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">مالك الخادم</span>
+                      )}
+                    </div>
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getRoleColor(getUserValue(user, 'role'))}`}>
                       {getUserValue(user, 'role')}
                     </span>
@@ -322,7 +373,7 @@ const PasswordsTab = () => {
                 </div>
                 
                 <div className="flex gap-2">
-                  {hasChanges(user.id) && (
+                  {hasChanges(user.id) && AuthService.hasPermission('مبرمج') && (
                     <button
                       onClick={() => saveUser(user.id)}
                       disabled={isSaving}
@@ -332,13 +383,15 @@ const PasswordsTab = () => {
                       حفظ التغييرات
                     </button>
                   )}
-                  <button
-                    onClick={() => handleDeleteUser(user.id)}
-                    disabled={isSaving}
-                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white p-2 rounded-lg transition-all duration-300 disabled:opacity-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {AuthService.hasPermission('مدير عام') && !isOwner(user.username) && (
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      disabled={isSaving}
+                      className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white p-2 rounded-lg transition-all duration-300 disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -350,7 +403,7 @@ const PasswordsTab = () => {
                     value={getUserValue(user, 'username')}
                     onChange={(e) => handleUserChange(user.id, 'username', e.target.value)}
                     className="w-full bg-black/20 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-400 transition-all"
-                    disabled={isSaving}
+                    disabled={isSaving || !AuthService.hasPermission('مبرمج') || isOwner(user.username)}
                   />
                 </div>
                 
@@ -362,7 +415,7 @@ const PasswordsTab = () => {
                       value={getUserValue(user, 'password')}
                       onChange={(e) => handleUserChange(user.id, 'password', e.target.value)}
                       className="w-full bg-black/20 text-white border border-white/20 rounded-lg px-4 py-2 pr-12 focus:outline-none focus:border-blue-400 transition-all"
-                      disabled={isSaving}
+                      disabled={isSaving || !AuthService.hasPermission('مبرمج')}
                     />
                     <button
                       type="button"
@@ -380,7 +433,7 @@ const PasswordsTab = () => {
                     value={getUserValue(user, 'role')}
                     onChange={(e) => handleUserChange(user.id, 'role', e.target.value)}
                     className="w-full bg-black/20 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-400 transition-all"
-                    disabled={isSaving}
+                    disabled={isSaving || !AuthService.hasPermission('مدير عام') || isOwner(user.username)}
                   >
                     <option value="مشرف" className="bg-gray-800 text-white">مشرف</option>
                     <option value="مبرمج" className="bg-gray-800 text-white">مبرمج</option>
@@ -389,42 +442,30 @@ const PasswordsTab = () => {
                 </div>
               </div>
 
-              {/* Permissions Section */}
+              {/* User Info */}
               <div className="border-t border-white/10 pt-4">
-                <button
-                  onClick={() => togglePermissionsExpansion(user.id)}
-                  className="flex items-center gap-2 text-blue-300 hover:text-blue-200 transition-colors mb-4"
-                >
-                  <Settings className="w-5 h-5" />
-                  <span className="font-semibold">إدارة الأذونات</span>
-                  <div className={`transform transition-transform ${expandedPermissions[user.id] ? 'rotate-180' : ''}`}>
-                    ▼
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-400">
+                  <div>
+                    <span className="text-blue-300">معرف المستخدم:</span>
+                    <p className="text-white">#{user.id}</p>
                   </div>
-                </button>
-                
-                {expandedPermissions[user.id] && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {Object.entries(permissionLabels).map(([key, label]) => {
-                      const currentPermissions = getUserValue(user, 'permissions') || defaultPermissions;
-                      const hasPermission = currentPermissions[key as keyof typeof defaultPermissions];
-                      
-                      return (
-                        <label key={key} className="flex items-center gap-2 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            checked={hasPermission}
-                            onChange={(e) => handlePermissionChange(user.id, key, e.target.checked)}
-                            className="w-4 h-4 accent-blue-500"
-                            disabled={isSaving}
-                          />
-                          <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                            {label}
-                          </span>
-                        </label>
-                      );
-                    })}
+                  <div>
+                    <span className="text-blue-300">تاريخ الإنشاء:</span>
+                    <p className="text-white">{new Date(user.createdAt).toLocaleDateString('ar')}</p>
                   </div>
-                )}
+                  <div>
+                    <span className="text-blue-300">آخر تسجيل دخول:</span>
+                    <p className="text-white">
+                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('ar') : 'لم يسجل دخول'}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-blue-300">الحالة:</span>
+                    <p className={`${user.isActive ? 'text-green-400' : 'text-red-400'}`}>
+                      {user.isActive ? 'نشط' : 'معطل'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
