@@ -3,13 +3,18 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+interface AuthResponse {
+  error?: AuthError | null;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, metadata?: any) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: any) => Promise<AuthResponse>;
+  signIn: (email: string, password: string) => Promise<AuthResponse>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  resendConfirmation: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,29 +67,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signUp = async (email: string, password: string, metadata?: any): Promise<AuthResponse> => {
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: metadata || {}
+          data: metadata || {},
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
 
-      if (error) throw error;
-
-      return data;
+      return { error };
     } catch (error) {
       console.error('Sign up error:', error);
-      throw error;
+      return { error: error as AuthError };
     } finally {
       setLoading(false);
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<AuthResponse> => {
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -92,12 +96,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
       });
 
-      if (error) throw error;
-
-      return data;
+      return { error };
     } catch (error) {
       console.error('Sign in error:', error);
-      throw error;
+      return { error: error as AuthError };
     } finally {
       setLoading(false);
     }
@@ -128,6 +130,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resendConfirmation = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      console.error('Resend confirmation error:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -135,6 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     resetPassword,
+    resendConfirmation,
   };
 
   return (
