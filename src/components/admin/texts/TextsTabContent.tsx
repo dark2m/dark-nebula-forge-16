@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { SiteSettings } from '../../../types/admin';
 import TextEditor from '../TextEditor';
+import { getTextContent } from '../../../utils/textUtils';
 
 interface TextsTabContentProps {
   activeSection: string;

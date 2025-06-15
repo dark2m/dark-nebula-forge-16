@@ -1,3 +1,4 @@
+
 // Main AdminStorage class that combines all services
 import AuthService from './auth';
 import CartService from './cartService';
@@ -59,8 +60,8 @@ class AdminStorage {
   static saveSiteSettings = SettingsService.saveSiteSettings;
 
   // إضافة method للحصول على الإعدادات الافتراضية
-  static getDefaultSiteSettings(): SiteSettings {
-    return {
+  static getDefaultSiteSettings() {
+    const defaultSettings = {
       title: 'DARK',
       titleSize: 'xl' as const,
       description: 'موقع DARK للخدمات التقنية',
