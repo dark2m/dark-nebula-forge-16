@@ -1,4 +1,5 @@
 
+
 export interface Product {
   id: number;
   name: string;
@@ -16,6 +17,7 @@ export interface Product {
   rating?: number;
   titleSize?: string;
   textSize?: string;
+  inStock?: boolean;
 }
 
 export interface CartItem {
@@ -24,6 +26,7 @@ export interface CartItem {
   price: number;
   quantity: number;
   image?: string;
+  category?: string;
 }
 
 export interface AdminUser {
@@ -34,6 +37,7 @@ export interface AdminUser {
   lastLogin: string;
   isActive: boolean;
   permissions?: string[];
+  password?: string;
 }
 
 export interface NavigationItem {
@@ -241,3 +245,4 @@ export interface SiteSettings {
   downloadsPassword: string;
   pageTexts: PageTexts;
 }
+
