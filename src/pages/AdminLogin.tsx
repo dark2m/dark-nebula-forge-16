@@ -19,7 +19,7 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const success = AuthService.login(email, password);
+      const success = AuthService.authenticateAdmin(email, password);
       if (success) {
         toast({
           title: "تم تسجيل الدخول بنجاح",
