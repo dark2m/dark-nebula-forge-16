@@ -262,6 +262,33 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     });
   };
 
+  const handleDeleteCustomerChat = (customerId: string) => {
+    const session = chatSessions.find(s => s.customerId === customerId);
+    if (!session) return;
+
+    const confirmDelete = window.confirm(`هل أنت متأكد أنك تريد حذف محادثة ${session.customerEmail}؟ هذا الإجراء لا يمكن التراجع عنه.`);
+    if (!confirmDelete) return;
+
+    const success = CustomerChatService.deleteCustomerSession(customerId);
+    if (success) {
+      loadChatSessions();
+      if (selectedSession === customerId) {
+        setSelectedSession(null);
+        setCurrentMessages([]);
+      }
+      toast({
+        title: "تم حذف المحادثة",
+        description: "تم حذف محادثة العميل بنجاح"
+      });
+    } else {
+      toast({
+        title: "خطأ في الحذف",
+        description: "حدث خطأ أثناء حذف المحادثة",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleBlockCustomer = (customerId: number) => {
     const customer = customers.find(c => c.id === customerId);
     if (!customer) return;
@@ -583,18 +610,32 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
               {filteredSessions.map((session) => (
                 <div
                   key={session.customerId}
-                  onClick={() => handleSelectSession(session)}
-                  className={`p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                  className={`p-3 rounded-lg transition-all duration-200 ${
                     selectedSession === session.customerId
                       ? 'bg-blue-500/30 border-blue-500/50'
                       : 'bg-white/5 hover:bg-white/10 border-white/10'
                   } border`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-white font-medium text-sm">{session.customerEmail}</p>
-                    {session.unreadCount > 0 && (
-                      <Badge variant="destructive" className="text-xs">{session.unreadCount}</Badge>
-                    )}
+                    <p 
+                      className="text-white font-medium text-sm cursor-pointer hover:text-blue-300 transition-colors"
+                      onClick={() => handleSelectSession(session)}
+                    >
+                      {session.customerEmail}
+                    </p>
+                    <div className="flex gap-1">
+                      {session.unreadCount > 0 && (
+                        <Badge variant="destructive" className="text-xs">{session.unreadCount}</Badge>
+                      )}
+                      <Button
+                        onClick={() => handleDeleteCustomerChat(session.customerId)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 hover:bg-red-500/20 text-red-400"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="text-gray-400 text-xs">{session.lastActivity}</p>
@@ -1008,6 +1049,15 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
                   {selectedCustomer.isOnline ? 'متصل' : selectedCustomer.isBlocked ? 'محظور' : 'غير متصل'}
                 </p>
               </div>
+            </div>
+            <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Lock className="w-4 h-4 text-yellow-400" />
+                <span className="text-yellow-400 font-medium">معلومات حساسة محمية</span>
+              </div>
+              <p className="text-yellow-300 text-sm">
+                كلمة السر وبيانات الأمان الأخرى محمية ولا يمكن عرضها لحماية خصوصية العميل.
+              </p>
             </div>
           </CardContent>
         </Card>
