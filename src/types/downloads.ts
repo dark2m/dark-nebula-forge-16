@@ -12,4 +12,6 @@ export interface DownloadItem {
   features: string[];
   status: string;
   icon: string;
+  downloadUrl?: string;
+  filename?: string;
 }
