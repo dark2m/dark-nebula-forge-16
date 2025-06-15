@@ -102,13 +102,14 @@ const Downloads = () => {
       setDownloads(data);
     } catch (error) {
       console.error('Error loading downloads:', error);
+      setDownloads([]); // تأكد من أن downloads هو مصفوفة فارغة في حالة الخطأ
     } finally {
       setIsLoading(false);
     }
   };
 
   const filterDownloads = () => {
-    let filtered = downloads;
+    let filtered = downloads || []; // تأكد من أن downloads ليس undefined
 
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(item => item.category === selectedCategory);
@@ -162,9 +163,13 @@ const Downloads = () => {
     document.body.removeChild(link);
   };
 
-  const totalDownloads = downloads.reduce((sum, item) => sum + item.downloads, 0);
-  const averageRating = downloads.length > 0 
-    ? (downloads.reduce((sum, item) => sum + item.rating, 0) / downloads.length).toFixed(1)
+  // حسابات آمنة للإحصائيات مع التحقق من وجود البيانات
+  const totalDownloads = Array.isArray(downloads) && downloads.length > 0 
+    ? downloads.reduce((sum, item) => sum + (item.downloads || 0), 0) 
+    : 0;
+    
+  const averageRating = Array.isArray(downloads) && downloads.length > 0 
+    ? (downloads.reduce((sum, item) => sum + (item.rating || 0), 0) / downloads.length).toFixed(1)
     : '0';
 
   // صفحة تسجيل الدخول المحدثة
@@ -325,7 +330,7 @@ const Downloads = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-400 text-sm">{mainPageTexts.stats.availableFiles}</p>
-                    <p className="text-2xl font-bold text-white">{downloads.length}</p>
+                    <p className="text-2xl font-bold text-white">{downloads.length || 0}</p>
                   </div>
                   <Package className="w-8 h-8 text-green-400" />
                 </div>
@@ -430,14 +435,14 @@ const Downloads = () => {
                       
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400">{mainPageTexts.labels.downloads}:</span>
-                        <span className="text-white">{item.downloads.toLocaleString()}</span>
+                        <span className="text-white">{(item.downloads || 0).toLocaleString()}</span>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400">{mainPageTexts.labels.rating}:</span>
                         <div className="flex items-center">
                           <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                          <span className="text-white ml-1">{item.rating}/5</span>
+                          <span className="text-white ml-1">{item.rating || 0}/5</span>
                         </div>
                       </div>
                       
