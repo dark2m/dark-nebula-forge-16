@@ -14,6 +14,23 @@ export interface Product {
   gallery?: string[];
 }
 
+export interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  email: string;
+  role: 'مدير عام' | 'مبرمج' | 'مشرف';
+  lastLogin: string;
+  isActive: boolean;
+}
+
 export interface NavigationItem {
   id: string;
   name: string;
