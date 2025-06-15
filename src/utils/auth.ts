@@ -1,30 +1,28 @@
 
 import { AdminUser } from '../types/admin';
-import SupabaseUserService from './supabaseUserService';
+import UserService from './userService';
 
 class AuthService {
   private static CURRENT_USER_KEY = 'current_admin_user';
 
-  static async authenticateAdmin(username: string, password: string): Promise<boolean> {
+  static authenticateAdmin(username: string, password: string): boolean {
     console.log('AuthService: Attempting login for:', username);
     
-    try {
-      const user = await SupabaseUserService.authenticateAdmin(username, password);
-      console.log('AuthService: Found user:', user);
-      
-      if (user) {
-        localStorage.setItem('adminToken', JSON.stringify({ userId: user.id, timestamp: Date.now() }));
-        localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(user));
-        console.log('AuthService: Login successful');
-        return true;
-      }
-      
-      console.log('AuthService: Login failed - invalid credentials');
-      return false;
-    } catch (error) {
-      console.error('AuthService: Authentication error:', error);
-      return false;
+    const users = UserService.getAdminUsers();
+    console.log('AuthService: Available users:', users);
+    
+    const user = users.find(u => u.username === username && u.password === password);
+    console.log('AuthService: Found user:', user);
+    
+    if (user) {
+      localStorage.setItem('adminToken', JSON.stringify({ userId: user.id, timestamp: Date.now() }));
+      localStorage.setItem(this.CURRENT_USER_KEY, JSON.stringify(user));
+      console.log('AuthService: Login successful');
+      return true;
     }
+    
+    console.log('AuthService: Login failed - invalid credentials');
+    return false;
   }
 
   static getCurrentUser(): AdminUser | null {
