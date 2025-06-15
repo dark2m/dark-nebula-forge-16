@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -33,13 +32,16 @@ const DiscordBots = () => {
         const formattedProducts: Product[] = (data || []).map(product => ({
           id: Number(product.id),
           name: product.name,
-          price: Number(product.price),
+          price: String(product.price),
           category: product.category,
           description: product.description || '',
-          features: Array.isArray(product.features) ? product.features : [],
+          features: Array.isArray(product.features) ? 
+            (product.features as string[]) : [],
           image: product.image || '',
-          images: Array.isArray(product.images) ? product.images : [],
-          videos: Array.isArray(product.videos) ? product.videos : [],
+          images: Array.isArray(product.images) ? 
+            (product.images as string[]) : [],
+          videos: Array.isArray(product.videos) ? 
+            (product.videos as string[]) : [],
           textSize: product.text_size || 'medium',
           titleSize: product.title_size || 'large',
           inStock: product.in_stock ?? true,

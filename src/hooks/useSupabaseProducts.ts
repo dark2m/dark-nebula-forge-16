@@ -25,13 +25,16 @@ export const useSupabaseProducts = () => {
       const formattedProducts: Product[] = (data || []).map(product => ({
         id: Number(product.id),
         name: product.name,
-        price: Number(product.price),
+        price: String(product.price),
         category: product.category,
         description: product.description || '',
-        features: Array.isArray(product.features) ? product.features : [],
+        features: Array.isArray(product.features) ? 
+          (product.features as string[]) : [],
         image: product.image || '',
-        images: Array.isArray(product.images) ? product.images : [],
-        videos: Array.isArray(product.videos) ? product.videos : [],
+        images: Array.isArray(product.images) ? 
+          (product.images as string[]) : [],
+        videos: Array.isArray(product.videos) ? 
+          (product.videos as string[]) : [],
         textSize: product.text_size || 'medium',
         titleSize: product.title_size || 'large',
         inStock: product.in_stock ?? true,
@@ -65,7 +68,19 @@ export const useSupabaseProducts = () => {
         other: 'خدمة'
       };
 
+      // الحصول على أعلى ID موجود وإضافة 1
+      const { data: existingProducts } = await supabase
+        .from('products')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1);
+
+      const nextId = existingProducts && existingProducts.length > 0 
+        ? existingProducts[0].id + 1 
+        : 1;
+
       const newProductData = {
+        id: nextId,
         name: `${categoryLabels[category] || 'منتج'} جديد`,
         price: 0,
         category: category,
