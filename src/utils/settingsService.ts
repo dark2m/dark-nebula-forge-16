@@ -134,6 +134,8 @@ class SettingsService {
         { id: 'customer-support', name: 'خدمة العملاء', path: '/sport', icon: 'MessageCircle', visible: true }
       ],
       contactInfo: {
+        telegram: '@dark_support',
+        discord: 'dark#1234',
         whatsapp: '+966 XX XXX XXXX',
         email: 'support@dark.com',
         phone: '+966 XX XXX XXXX',
@@ -164,42 +166,50 @@ class SettingsService {
       tools: [
         {
           id: 1,
+          name: 'مولد كلمات المرور',
           title: 'مولد كلمات المرور',
           description: 'أنشئ كلمات مرور قوية وآمنة',
           buttonText: 'إنشاء كلمة مرور',
           url: '',
           icon: '🔐',
           visible: true,
+          isActive: true,
           category: 'security'
         },
         {
           id: 2,
+          name: 'محول الألوان',
           title: 'محول الألوان',
           description: 'تحويل بين صيغ الألوان المختلفة',
           buttonText: 'استخدام المحول',
           url: '',
           icon: '🎨',
           visible: true,
+          isActive: true,
           category: 'design'
         },
         {
           id: 3,
+          name: 'ضاغط الصور',
           title: 'ضاغط الصور',
           description: 'قلل حجم الصور مع الحفاظ على الجودة',
           buttonText: 'ضغط الصور',
           url: '',
           icon: '📷',
           visible: true,
+          isActive: true,
           category: 'general'
         },
         {
           id: 4,
+          name: 'مولد الجيميل',
           title: 'مولد الجيميل',
           description: 'إنشاء جميع الاختلافات الممكنة لعناوين Gmail باستخدام النقاط',
           buttonText: 'استخدام المولد',
           url: '/gmail-generator',
           icon: '📧',
           visible: true,
+          isActive: true,
           category: 'general'
         }
       ],
@@ -247,8 +257,8 @@ class SettingsService {
           featuresTitle: 'مميزات بوتاتنا'
         },
         tools: {
-          pageTitle: 'أدوات الموقع',
-          pageSubtitle: 'مجموعة من الأدوات المفيدة والمتقدمة'
+          title: 'أدوات الموقع',
+          subtitle: 'مجموعة من الأدوات المفيدة والمتقدمة'
         },
         navigation: {
           homeTitle: 'الرئيسية',

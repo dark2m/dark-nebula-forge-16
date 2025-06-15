@@ -45,7 +45,7 @@ class CartService {
       const cartItem: CartItem = {
         id: product.id,
         name: product.name,
-        price: `${product.price}$`,
+        price: product.price,
         category: product.category
       };
       cart.push(cartItem);

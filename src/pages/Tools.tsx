@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
@@ -65,8 +64,8 @@ const Tools = () => {
 
   const tools = siteSettings.tools?.filter(tool => tool.visible) || [];
   const pageTexts = siteSettings.pageTexts?.tools || {
-    pageTitle: 'أدوات الموقع',
-    pageSubtitle: 'مجموعة من الأدوات المفيدة للموقع'
+    title: 'أدوات الموقع',
+    subtitle: 'مجموعة من الأدوات المفيدة للموقع'
   };
 
   const handleToolClick = (tool: Tool) => {
@@ -181,10 +180,10 @@ const Tools = () => {
         <div className="container mx-auto px-6 py-24">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-white mb-4">
-              {pageTexts.pageTitle}
+              {pageTexts.title}
             </h1>
             <p className="text-xl text-gray-300">
-              {pageTexts.pageSubtitle}
+              {pageTexts.subtitle}
             </p>
           </div>
 
