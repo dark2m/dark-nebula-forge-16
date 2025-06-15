@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          id: number
+          password: string
+          role: string
+          updated_at: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: number
+          password: string
+          role?: string
+          updated_at?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          password?: string
+          role?: string
+          updated_at?: string | null
+          username?: string
+        }
+        Relationships: []
+      }
+      customer_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: number
+          is_blocked: boolean | null
+          is_online: boolean | null
+          is_verified: boolean | null
+          last_seen: string | null
+          password: string
+          registration_date: string | null
+          username: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: number
+          is_blocked?: boolean | null
+          is_online?: boolean | null
+          is_verified?: boolean | null
+          last_seen?: string | null
+          password: string
+          registration_date?: string | null
+          username?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: number
+          is_blocked?: boolean | null
+          is_online?: boolean | null
+          is_verified?: boolean | null
+          last_seen?: string | null
+          password?: string
+          registration_date?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string
@@ -33,6 +99,81 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      login_attempts: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: number
+          ip_address: string | null
+          password: string
+          success: boolean | null
+          timestamp: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: number
+          ip_address?: string | null
+          password: string
+          success?: boolean | null
+          timestamp: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: number
+          ip_address?: string | null
+          password?: string
+          success?: boolean | null
+          timestamp?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          features: Json | null
+          id: number
+          images: Json | null
+          name: string
+          price: number
+          text_size: string | null
+          title_size: string | null
+          updated_at: string | null
+          videos: Json | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id: number
+          images?: Json | null
+          name: string
+          price?: number
+          text_size?: string | null
+          title_size?: string | null
+          updated_at?: string | null
+          videos?: Json | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          features?: Json | null
+          id?: number
+          images?: Json | null
+          name?: string
+          price?: number
+          text_size?: string | null
+          title_size?: string | null
+          updated_at?: string | null
+          videos?: Json | null
         }
         Relationships: []
       }
@@ -87,6 +228,27 @@ export type Database = {
           page_name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          settings_data: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          settings_data?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          settings_data?: Json
+          updated_at?: string | null
         }
         Relationships: []
       }
