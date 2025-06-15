@@ -1,4 +1,3 @@
-
 import { Product, CartItem } from '../types/admin';
 
 class CartService {
@@ -45,7 +44,7 @@ class CartService {
       const cartItem: CartItem = {
         id: product.id,
         name: product.name,
-        price: product.price,
+        price: typeof product.price === 'number' ? product.price.toString() : product.price, // Convert number to string
         quantity: 1,
         category: product.category
       };

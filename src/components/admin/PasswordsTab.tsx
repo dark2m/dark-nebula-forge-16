@@ -88,9 +88,11 @@ const PasswordsTab = () => {
 
     const newUserData = {
       ...newUser,
+      name: newUser.username, // Add missing name property
       email: newUser.email || `${newUser.username}@example.com`,
       isActive: true,
       lastLogin: new Date().toISOString(),
+      createdAt: new Date().toISOString(), // Add missing createdAt property
       permissions: Object.keys(defaultPermissions)
     };
 

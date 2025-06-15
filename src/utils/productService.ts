@@ -1,4 +1,3 @@
-
 import { Product } from '../types/admin';
 
 class ProductService {
@@ -43,6 +42,7 @@ class ProductService {
         name: 'هكر ESP المتقدم', 
         price: 25, 
         category: 'pubg',
+        image: '', // Add missing image property
         images: [],
         videos: [],
         description: 'رؤية الأعداء من خلال الجدران مع معلومات مفصلة',
@@ -50,13 +50,15 @@ class ProductService {
         textSize: 'medium',
         titleSize: 'large',
         inStock: true,
-        isActive: true
+        isActive: true,
+        createdAt: new Date().toISOString() // Add missing createdAt property
       },
       { 
         id: 2, 
         name: 'هكر الرؤية الليلية', 
         price: 30, 
         category: 'pubg',
+        image: '', // Add missing image property
         images: [],
         videos: [],
         description: 'رؤية واضحة في الظلام والأماكن المظلمة',
@@ -64,7 +66,8 @@ class ProductService {
         textSize: 'medium',
         titleSize: 'large',
         inStock: true,
-        isActive: true
+        isActive: true,
+        createdAt: new Date().toISOString() // Add missing createdAt property
       }
     ];
   }
@@ -81,10 +84,14 @@ class ProductService {
         category: product.category || 'other',
         description: product.description || '',
         features: Array.isArray(product.features) ? product.features : [],
+        image: product.image || '', // Ensure image is included
         images: Array.isArray(product.images) ? product.images : [],
         videos: Array.isArray(product.videos) ? product.videos : [],
         textSize: product.textSize || 'medium',
-        titleSize: product.titleSize || 'large'
+        titleSize: product.titleSize || 'large',
+        inStock: product.inStock ?? true,
+        isActive: product.isActive ?? true,
+        createdAt: product.createdAt || new Date().toISOString() // Ensure createdAt is included
       }));
       
       // حفظ فوري ومباشر
@@ -119,13 +126,15 @@ class ProductService {
     const newProduct: Product = {
       ...product,
       id: Date.now(),
+      image: product.image || '', // Ensure image is included
       images: product.images || [],
       videos: product.videos || [],
       features: product.features || [],
       textSize: product.textSize || 'medium',
       titleSize: product.titleSize || 'large',
       inStock: product.inStock ?? true,
-      isActive: product.isActive ?? true
+      isActive: product.isActive ?? true,
+      createdAt: product.createdAt || new Date().toISOString() // Ensure createdAt is included
     };
     
     const updatedProducts = [...products, newProduct];

@@ -21,10 +21,12 @@ class UserService {
         username: 'dark', 
         password: 'dark', 
         role: 'مدير عام',
+        name: 'Dark Admin', // Add missing name property
         email: 'admin@example.com',
         permissions: ['overview', 'products', 'users', 'passwords', 'tools', 'customerSupport', 'siteControl', 'texts', 'navigation', 'contact', 'design', 'preview', 'backup'],
         isActive: true,
-        lastLogin: new Date().toISOString()
+        lastLogin: new Date().toISOString(),
+        createdAt: new Date().toISOString() // Add missing createdAt property
       },
     ];
     
@@ -61,7 +63,9 @@ class UserService {
     const users = this.getAdminUsers();
     const newUser: AdminUser = {
       ...user,
-      id: Date.now()
+      id: Date.now(),
+      name: user.name || user.username, // Ensure name is included
+      createdAt: user.createdAt || new Date().toISOString() // Ensure createdAt is included
     };
     users.push(newUser);
     this.saveAdminUsers(users);

@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import ProductService from '../utils/productService';
 import type { Product } from '../types/admin';
@@ -49,6 +48,7 @@ export const useProductManagement = (
         name: 'منتج جديد',
         price: 0,
         category: 'pubg',
+        image: '', // Add missing image property
         images: [],
         videos: [],
         description: 'وصف المنتج',
@@ -56,7 +56,8 @@ export const useProductManagement = (
         textSize: 'medium',
         titleSize: 'large',
         inStock: true,
-        isActive: true
+        isActive: true,
+        createdAt: new Date().toISOString() // Add missing createdAt property
       });
       
       toast({
