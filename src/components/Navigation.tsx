@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench, MessageCircle } from 'lucide-react';
@@ -98,12 +99,28 @@ const Navigation = () => {
 
     const items = siteSettings.navigation
       .filter(item => item.visible !== false)
-      .map(item => ({
-        name: TranslationService.translate(`nav.${item.name.toLowerCase().replace(/\s+/g, '_')}`),
-        path: item.path,
-        icon: iconMap[item.icon] || Home,
-        id: item.id
-      }));
+      .map(item => {
+        // تنظيف النص من الرموز والنصوص الإنجليزية
+        let cleanName = TranslationService.translate(`nav.${item.name.toLowerCase().replace(/\s+/g, '_')}`);
+        
+        // إزالة الرموز غير المرغوب فيها
+        cleanName = cleanName.replace(/[_\.]/g, '').trim();
+        
+        // إزالة النصوص الإنجليزية إذا كانت موجودة
+        cleanName = cleanName.replace(/[a-zA-Z]/g, '').trim();
+        
+        // إذا أصبح النص فارغ، استخدم اسم افتراضي
+        if (!cleanName) {
+          cleanName = item.name.replace(/[_\.a-zA-Z]/g, '').trim() || 'صفحة';
+        }
+
+        return {
+          name: cleanName,
+          path: item.path,
+          icon: iconMap[item.icon] || Home,
+          id: item.id
+        };
+      });
 
     console.log('Navigation: Generated navigation items:', items);
     return items;
