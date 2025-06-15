@@ -11,7 +11,225 @@ export interface AdminUser {
   isActive: boolean;
 }
 
+export interface CartItem {
+  id: number;
+  name: string;
+  price: string;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+  features: string[];
+  category: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Tool {
+  id: number;
+  name: string;
+  title: string;
+  description: string;
+  buttonText: string;
+  url: string;
+  icon: string;
+  visible: boolean;
+  isActive: boolean;
+  category: 'security' | 'design' | 'general';
+}
+
+export interface NavigationItem {
+  id: string;
+  name: string;
+  path: string;
+  icon: string;
+  visible: boolean;
+}
+
+export interface BackgroundSettings {
+  type: 'color' | 'image';
+  value: string;
+  starCount: number;
+  starSize: 'small' | 'medium' | 'large';
+  starOpacity: number;
+  meteorCount: number;
+  meteorSize: 'small' | 'medium' | 'large';
+  meteorOpacity: number;
+  meteorDirection: 'down' | 'up' | 'mixed';
+  meteorColors: string[];
+  animationSpeed: 'slow' | 'normal' | 'fast';
+}
+
+export interface Colors {
+  primary: string;
+  secondary: string;
+  accent: string;
+}
+
+export interface Design {
+  borderRadius: 'none' | 'small' | 'medium' | 'large';
+  shadows: 'none' | 'small' | 'medium' | 'large';
+  spacing: 'compact' | 'normal' | 'relaxed';
+  animations: boolean;
+}
+
+export interface Typography {
+  fontFamily: 'system' | 'serif' | 'mono';
+  headingWeight: 'normal' | 'bold';
+  bodyWeight: 'normal' | 'bold';
+  lineHeight: 'tight' | 'normal' | 'relaxed';
+}
+
+export interface ContactInfo {
+  telegram: string;
+  discord: string;
+  whatsapp: string;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export interface HomePageTexts {
+  heroTitle: string;
+  heroSubtitle: string;
+  featuresTitle: string;
+  features: Array<{
+    title: string;
+    description: string;
+    icon: string;
+  }>;
+}
+
+export interface OfficialPageTexts {
+  pageTitle: string;
+  pageSubtitle: string;
+  aboutTitle: string;
+  aboutContent: string[];
+  whyChooseTitle: string;
+  whyChooseItems: Array<{
+    title: string;
+    description: string;
+    icon: string;
+  }>;
+  contactTitle: string;
+}
+
+export interface PubgHacksTexts {
+  pageTitle: string;
+  pageSubtitle: string;
+  safetyTitle: string;
+  safetyDescription: string;
+}
+
+export interface WebDevelopmentTexts {
+  pageTitle: string;
+  pageSubtitle: string;
+  servicesTitle: string;
+}
+
+export interface DiscordBotsTexts {
+  pageTitle: string;
+  pageSubtitle: string;
+  featuresTitle: string;
+}
+
+export interface NavigationTexts {
+  homeTitle: string;
+  pubgTitle: string;
+  webTitle: string;
+  discordTitle: string;
+  officialTitle: string;
+  adminTitle: string;
+}
+
+export interface CartTexts {
+  cartTitle: string;
+  emptyCartMessage: string;
+  purchaseButton: string;
+  purchaseNote: string;
+  addToCartButton: string;
+  removeButton: string;
+}
+
+export interface ToolsTexts {
+  title: string;
+  subtitle: string;
+}
+
+export interface DownloadsPageTexts {
+  loginPage: {
+    title: string;
+    subtitle: string;
+    passwordLabel: string;
+    passwordPlaceholder: string;
+    loginButton: string;
+    contactSupport: string;
+    errorMessage: string;
+  };
+  mainPage: {
+    title: string;
+    subtitle: string;
+    categories: {
+      all: string;
+      [key: string]: string; // Allow dynamic category names
+    };
+    buttons: {
+      download: string;
+      filter: string;
+    };
+    labels: {
+      size: string;
+      downloads: string;
+      rating: string;
+      version: string;
+    };
+    stats: {
+      totalDownloads: string;
+      availableFiles: string;
+      averageRating: string;
+    };
+    placeholders: {
+      search: string;
+      noResults: string;
+    };
+  };
+}
+
+export interface PageTexts {
+  home: HomePageTexts;
+  official: OfficialPageTexts;
+  pubgHacks: PubgHacksTexts;
+  webDevelopment: WebDevelopmentTexts;
+  discordBots: DiscordBotsTexts;
+  navigation: NavigationTexts;
+  cart: CartTexts;
+  tools: ToolsTexts;
+  downloads: DownloadsPageTexts;
+}
+
 export interface SiteSettings {
+  title: string;
+  titleSize: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  description: string;
+  colors: Colors;
+  globalTextSize: 'small' | 'medium' | 'large';
+  downloadsPassword: string;
+  backgroundSettings: BackgroundSettings;
+  navigation: NavigationItem[];
+  contactInfo: ContactInfo;
+  homePage: HomePageTexts;
+  typography: Typography;
+  design: Design;
+  tools: Tool[];
+  pageTexts: PageTexts;
+}
+
+// Legacy interface for backward compatibility - keeping the original complex structure
+export interface LegacySiteSettings {
   siteName: string;
   siteDescription: string;
   siteKeywords: string;
@@ -114,40 +332,6 @@ export interface SiteSettings {
   };
 }
 
-export interface HomePageTexts {
-  hero: {
-    title: string;
-    subtitle: string;
-    buttonText: string;
-    buttonUrl: string;
-  };
-  features: {
-    title: string;
-    subtitle: string;
-    items: {
-      title: string;
-      description: string;
-      icon: string;
-    }[];
-  };
-  cta: {
-    title: string;
-    subtitle: string;
-    buttonText: string;
-    buttonUrl: string;
-  };
-  testimonials: {
-    title: string;
-    subtitle: string;
-    items: {
-      name: string;
-      role: string;
-      text: string;
-      avatar: string;
-    }[];
-  };
-}
-
 export interface AboutPageTexts {
   hero: {
     title: string;
@@ -193,45 +377,6 @@ export interface ContactPageTexts {
       text: string;
       icon: string;
     }[];
-  };
-}
-
-export interface DownloadsPageTexts {
-  loginPage: {
-    title: string;
-    subtitle: string;
-    passwordLabel: string;
-    passwordPlaceholder: string;
-    loginButton: string;
-    contactSupport: string;
-    errorMessage: string;
-  };
-  mainPage: {
-    title: string;
-    subtitle: string;
-    categories: {
-      all: string;
-      [key: string]: string; // Allow dynamic category names
-    };
-    buttons: {
-      download: string;
-      filter: string;
-    };
-    labels: {
-      size: string;
-      downloads: string;
-      rating: string;
-      version: string;
-    };
-    stats: {
-      totalDownloads: string;
-      availableFiles: string;
-      averageRating: string;
-    };
-    placeholders: {
-      search: string;
-      noResults: string;
-    };
   };
 }
 
