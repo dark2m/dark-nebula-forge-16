@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, ExternalLink, MessageCircle, X, Trash2, Headphones, Package, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -206,16 +207,16 @@ const GlobalCart = () => {
                         <>
                           <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
                             {cartItems[category]?.map((item, index) => (
-                              <div key={index} className="flex items-center justify-between p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/15 transition-all duration-200 backdrop-blur-sm">
+                              <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 transition-all duration-200 backdrop-blur-sm">
                                 <div className="flex-1 min-w-0">
                                   <h4 className="font-semibold text-white text-sm truncate mb-2">
                                     {item.name}
                                   </h4>
                                   <div className="flex items-center gap-2">
-                                    <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                                    <Badge className="bg-white/10 text-white/90 border-white/20 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
                                       ${item.price}
                                     </Badge>
-                                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                                    <Badge className="bg-white/10 text-white/90 border-white/20 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
                                       الكمية: {item.quantity}
                                     </Badge>
                                   </div>
@@ -236,14 +237,14 @@ const GlobalCart = () => {
                           
                           {/* Payment Methods */}
                           <div className="space-y-4">
-                            <h4 className="text-center text-base font-bold text-white mb-3">
+                            <h4 className="text-center text-base font-bold text-white/90 mb-3">
                               طرق الدفع والتواصل
                             </h4>
                             
                             <div className="grid gap-3">
                               <Button
                                 onClick={handleDiscordPurchase}
-                                className="w-full bg-purple-600/80 hover:bg-purple-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
+                                className="w-full bg-white/10 hover:bg-white/20 text-white/90 border border-white/20 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
                               >
                                 <ExternalLink className="w-4 h-4" />
                                 الشراء عبر ديسكورد
@@ -251,7 +252,7 @@ const GlobalCart = () => {
                               
                               <Button
                                 onClick={handleWhatsAppPurchase}
-                                className="w-full bg-green-600/80 hover:bg-green-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
+                                className="w-full bg-white/10 hover:bg-white/20 text-white/90 border border-white/20 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
                               >
                                 <MessageCircle className="w-4 h-4" />
                                 الشراء عبر واتساب
@@ -259,7 +260,7 @@ const GlobalCart = () => {
 
                               <Button
                                 onClick={handleCustomerSupport}
-                                className="w-full bg-blue-600/80 hover:bg-blue-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
+                                className="w-full bg-white/10 hover:bg-white/20 text-white/90 border border-white/20 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
                               >
                                 <Headphones className="w-4 h-4" />
                                 خدمة العملاء
