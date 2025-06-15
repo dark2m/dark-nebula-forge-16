@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Book, Calendar, Mail, Phone, Search, Settings, Home, Key, Eye, EyeOff, Clock } from 'lucide-react';
+import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Book, Calendar, Mail, Phone, Search, Settings, Home, Key, Eye, EyeOff, Clock, Link, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
   const [editForm, setEditForm] = useState<Partial<DownloadItem>>({});
   const [showImageUploader, setShowImageUploader] = useState<number | null>(null);
   const [showVideoUploader, setShowVideoUploader] = useState<number | null>(null);
+  const [showFileUploader, setShowFileUploader] = useState<number | null>(null);
   
   // Password management states
   const [isEditingPassword, setIsEditingPassword] = useState<number | null>(null);
@@ -178,6 +179,39 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
     });
   };
 
+  const handleAddFile = (downloadId: number, fileUrl: string, filename: string) => {
+    const updatedDownloads = downloads.map(download =>
+      download.id === downloadId 
+        ? { ...download, downloadUrl: fileUrl, filename: filename }
+        : download
+    );
+    
+    setDownloads(updatedDownloads);
+    DownloadService.saveDownloads(updatedDownloads);
+    setShowFileUploader(null);
+    
+    toast({
+      title: "تم إضافة ملف التنزيل",
+      description: "تم إضافة ملف التنزيل بنجاح"
+    });
+  };
+
+  const handleRemoveFile = (downloadId: number) => {
+    const updatedDownloads = downloads.map(download =>
+      download.id === downloadId 
+        ? { ...download, downloadUrl: undefined, filename: undefined }
+        : download
+    );
+    
+    setDownloads(updatedDownloads);
+    DownloadService.saveDownloads(updatedDownloads);
+    
+    toast({
+      title: "تم حذف ملف التنزيل",
+      description: "تم حذف ملف التنزيل بنجاح"
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "جديد": return "bg-green-500/20 text-green-400 border-green-500/30";
@@ -192,7 +226,6 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
     return iconData ? iconData.component : Download;
   };
 
-  // Password management functions
   const handleAddPassword = () => {
     if (!canAccess('مبرمج')) {
       toast({
@@ -443,6 +476,95 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
                           />
                         </div>
 
+                        {/* Download Link and Manual URL Input */}
+                        <div className="space-y-4">
+                          <h4 className="text-white font-medium">رابط التنزيل</h4>
+                          
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">رابط التنزيل المباشر</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="url"
+                                value={editForm.downloadUrl || ''}
+                                onChange={(e) => setEditForm({...editForm, downloadUrl: e.target.value})}
+                                className="flex-1 p-2 bg-white/10 border border-white/20 rounded text-white"
+                                placeholder="https://example.com/file.zip"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditForm({...editForm, downloadUrl: '', filename: ''})}
+                                className="border-white/20 text-white hover:bg-white/10"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">اسم الملف</label>
+                            <input
+                              type="text"
+                              value={editForm.filename || ''}
+                              onChange={(e) => setEditForm({...editForm, filename: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                              placeholder="مثال: tool-v1.0.zip"
+                            />
+                          </div>
+
+                          <div className="border-t border-white/20 pt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-white text-sm font-medium">أو ارفع ملف</label>
+                              <Button
+                                size="sm"
+                                onClick={() => setShowFileUploader(showFileUploader === download.id ? null : download.id)}
+                                className="bg-orange-500 hover:bg-orange-600 text-xs"
+                              >
+                                <Upload className="w-3 h-3 mr-1" />
+                                رفع ملف
+                              </Button>
+                            </div>
+                            
+                            {showFileUploader === download.id && (
+                              <div className="mb-2">
+                                <FileUploader
+                                  onFileUploaded={(url) => {
+                                    const filename = url.split('/').pop() || 'file';
+                                    handleAddFile(download.id, url, filename);
+                                  }}
+                                  acceptedTypes={['.zip', '.rar', '.exe', '.apk', '.dmg', '.deb', '.msi', '.tar.gz']}
+                                  folder="downloads/files"
+                                />
+                              </div>
+                            )}
+
+                            {download.downloadUrl && (
+                              <div className="bg-white/5 p-3 rounded border border-white/20">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Link className="w-4 h-4 text-green-400" />
+                                    <span className="text-white text-sm">
+                                      {download.filename || 'ملف التنزيل'}
+                                    </span>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleRemoveFile(download.id)}
+                                    className="text-red-400 hover:text-red-300"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                                <p className="text-gray-400 text-xs mt-1 break-all">
+                                  {download.downloadUrl}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                         <div className="flex gap-2">
                           <Button onClick={handleSave} className="bg-green-500 hover:bg-green-600">
                             حفظ
@@ -549,6 +671,19 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
                     ) : (
                       <div className="space-y-3">
                         <p className="text-gray-300">{download.description}</p>
+                        
+                        {/* Download URL Display */}
+                        {download.downloadUrl && (
+                          <div className="bg-green-500/10 border border-green-500/20 rounded p-2">
+                            <div className="flex items-center gap-2 text-green-300 text-sm">
+                              <Link className="w-4 h-4" />
+                              <span>رابط التنزيل متوفر</span>
+                              {download.filename && (
+                                <span className="text-green-400">({download.filename})</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                         
                         {/* Features */}
                         <div className="flex flex-wrap gap-1">
