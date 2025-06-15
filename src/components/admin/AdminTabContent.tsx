@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProductsTab from './ProductsTab';
 import SiteControlTab from './SiteControlTab';
@@ -67,11 +66,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         return <PasswordsTab />;
 
       case 'tools':
-        return (
-          <ToolsTab
-            canAccess={canAccess}
-          />
-        );
+        return <ToolsTab />;
 
       case 'customer-support':
         return (

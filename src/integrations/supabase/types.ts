@@ -36,6 +36,157 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_login_attempts: {
+        Row: {
+          attempted_at: string | null
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean | null
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string | null
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      customer_support_messages: {
+        Row: {
+          attachments: Json | null
+          created_at: string | null
+          customer_id: string | null
+          files: Json | null
+          id: string
+          is_from_customer: boolean | null
+          is_read: boolean | null
+          message: string
+          updated_at: string | null
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string | null
+          customer_id?: string | null
+          files?: Json | null
+          id?: string
+          is_from_customer?: boolean | null
+          is_read?: boolean | null
+          message: string
+          updated_at?: string | null
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string | null
+          customer_id?: string | null
+          files?: Json | null
+          id?: string
+          is_from_customer?: boolean | null
+          is_read?: boolean | null
+          message?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_support_messages_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_support_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_support_sessions: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          last_activity: string | null
+          status: string | null
+          unread_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          last_activity?: string | null
+          status?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          last_activity?: string | null
+          status?: string | null
+          unread_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_support_sessions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_support_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_support_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          is_blocked: boolean | null
+          is_verified: boolean | null
+          last_login: string | null
+          password_hash: string | null
+          updated_at: string | null
+          username: string | null
+          verification_code: string | null
+          verification_expires_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          is_blocked?: boolean | null
+          is_verified?: boolean | null
+          last_login?: string | null
+          password_hash?: string | null
+          updated_at?: string | null
+          username?: string | null
+          verification_code?: string | null
+          verification_expires_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_blocked?: boolean | null
+          is_verified?: boolean | null
+          last_login?: string | null
+          password_hash?: string | null
+          updated_at?: string | null
+          username?: string | null
+          verification_code?: string | null
+          verification_expires_at?: string | null
+        }
+        Relationships: []
+      }
       customer_users: {
         Row: {
           created_at: string | null
