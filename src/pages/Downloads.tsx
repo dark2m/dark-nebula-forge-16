@@ -1,249 +1,266 @@
+
 import React, { useState, useEffect } from 'react';
-import { Download, FileText, Package, Star, Clock, Shield, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Video, Book, Calendar, Mail, Phone, Search, Settings, Home } from 'lucide-react';
-import StarryBackground from '../components/StarryBackground';
-import AdminStorage from '../utils/adminStorage';
-import GlobalCart from '../components/GlobalCart';
-import { getTextContent } from '../utils/textUtils';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, Download, Star, Filter, Package, TrendingUp, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import StarryBackground from '../components/StarryBackground';
+import ProtectedContent from '../components/ProtectedContent';
 import DownloadService from '../utils/downloadService';
+import AdminStorage from '../utils/adminStorage';
 import type { DownloadItem } from '../types/downloads';
 
 const Downloads = () => {
-  const [siteSettings, setSiteSettings] = useState(AdminStorage.getSiteSettings());
-  const [downloadItems, setDownloadItems] = useState<DownloadItem[]>([]);
+  const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+  const [filteredDownloads, setFilteredDownloads] = useState<DownloadItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const siteSettings = AdminStorage.getSiteSettings();
+  const texts = siteSettings.pageTexts.downloads || {};
 
   useEffect(() => {
-    const loadedSettings = AdminStorage.getSiteSettings();
-    setSiteSettings(loadedSettings);
-
-    // Load downloads from service
-    const downloads = DownloadService.getDownloads();
-    setDownloadItems(downloads);
-
-    const handleSettingsUpdate = (event: CustomEvent) => {
-      setSiteSettings(event.detail.settings);
-    };
-
-    const handleDownloadsUpdate = (event: CustomEvent) => {
-      setDownloadItems(event.detail.downloads);
-    };
-
-    window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-    window.addEventListener('downloadsUpdated', handleDownloadsUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
-      window.removeEventListener('downloadsUpdated', handleDownloadsUpdate as EventListener);
-    };
+    loadDownloads();
   }, []);
 
-  const categories = [
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.all) || "الكل",
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.games) || "ألعاب",
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.tools) || "أدوات",
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.design) || "تصميم",
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.programming) || "برمجة",
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.music) || "موسيقى",
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.video) || "فيديو",
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.books) || "كتب",
-    getTextContent(siteSettings.pageTexts.downloads?.categories?.security) || "أمان"
-  ];
+  useEffect(() => {
+    filterDownloads();
+  }, [downloads, searchTerm, selectedCategory]);
 
-  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
-
-  const filteredItems = selectedCategory === categories[0]
-    ? downloadItems 
-    : downloadItems.filter(item => {
-        const categoryMapping = {
-          [categories[1]]: "ألعاب",
-          [categories[2]]: "أدوات", 
-          [categories[3]]: "تصميم",
-          [categories[4]]: "برمجة",
-          [categories[5]]: "موسيقى",
-          [categories[6]]: "فيديو",
-          [categories[7]]: "كتب",
-          [categories[8]]: "أمان"
-        };
-        return item.category === categoryMapping[selectedCategory];
-      });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "جديد": return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "محدث": return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "شائع": return "bg-purple-500/20 text-purple-400 border-purple-500/30";
-      default: return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+  const loadDownloads = async () => {
+    try {
+      const data = DownloadService.getDownloads();
+      setDownloads(data);
+    } catch (error) {
+      console.error('Error loading downloads:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getIconComponent = (iconName: string) => {
-    const iconMap: Record<string, any> = {
-      'Download': Download,
-      'Shield': Shield,
-      'Package': Package,
-      'FileText': FileText,
-      'Star': Star,
-      'Wrench': Wrench,
-      'Code': Code,
-      'Users': Users,
-      'Globe': Globe,
-      'Lock': Lock,
-      'Heart': Heart,
-      'Zap': Zap,
-      'Camera': Camera,
-      'Music': Music,
-      'Video': Video,
-      'Book': Book,
-      'Calendar': Calendar,
-      'Mail': Mail,
-      'Phone': Phone,
-      'Search': Search,
-      'Settings': Settings,
-      'Home': Home
-    };
-    return iconMap[iconName] || Download;
+  const filterDownloads = () => {
+    let filtered = downloads;
+
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(item => item.category === selectedCategory);
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredDownloads(filtered);
   };
+
+  const handleDownload = (item: DownloadItem) => {
+    const updatedDownloads = downloads.map(download =>
+      download.id === item.id
+        ? { ...download, downloads: download.downloads + 1 }
+        : download
+    );
+    setDownloads(updatedDownloads);
+    DownloadService.saveDownloads(updatedDownloads);
+
+    // إنشاء رابط التنزيل
+    const link = document.createElement('a');
+    link.href = item.downloadUrl || '#';
+    link.download = item.filename || item.title;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const totalDownloads = downloads.reduce((sum, item) => sum + item.downloads, 0);
+  const averageRating = downloads.length > 0 
+    ? (downloads.reduce((sum, item) => sum + item.rating, 0) / downloads.length).toFixed(1)
+    : '0';
 
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
-      <GlobalCart />
       
-      {/* Header */}
-      <div className="relative z-10 pt-32 pb-20">
+      <div className="relative z-10 pt-20 pb-12">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-white via-blue-200 to-blue-400 bg-clip-text text-transparent">
-              {getTextContent(siteSettings.pageTexts.downloads?.title) || "مركز التنزيلات"}
-            </h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              {getTextContent(siteSettings.pageTexts.downloads?.subtitle) || "احصل على أفضل الأدوات والبرامج المتخصصة مجاناً"}
-            </p>
-          </div>
-
-          {/* Categories Filter */}
-          <div className="flex justify-center mb-8">
-            <div className="flex gap-2 p-2 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 flex-wrap">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "ghost"}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`${
-                    selectedCategory === category 
-                      ? 'bg-blue-500 text-white' 
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {category}
-                </Button>
-              ))}
+          
+          {/* Protected Content Wrapper */}
+          <ProtectedContent 
+            pageName="downloads"
+            fallbackMessage="يجب تسجيل الدخول للوصول إلى مركز التنزيلات"
+          >
+            
+            {/* Header */}
+            <div className="text-center mb-12">
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
+                {texts.title || 'مركز التنزيلات'}
+              </h1>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                {texts.subtitle || 'احصل على أفضل الأدوات والبرامج المتخصصة مجاناً'}
+              </p>
             </div>
-          </div>
 
-          {/* Downloads Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map((item) => {
-              const IconComponent = getIconComponent(item.icon);
-              return (
-                <Card key={item.id} className="bg-white/5 backdrop-blur-sm border-white/20 hover:bg-white/10 transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-500/20 rounded-lg">
-                          <IconComponent className="w-6 h-6 text-blue-400" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-white text-lg">{item.title}</CardTitle>
-                          <CardDescription className="text-gray-400">
-                            {item.category} • v{item.version}
+            {/* Stats Cards */}
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              <Card className="bg-white/5 border-white/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-400 text-sm">{texts.stats?.totalDownloads || 'إجمالي التنزيلات'}</p>
+                      <p className="text-2xl font-bold text-white">{totalDownloads.toLocaleString()}</p>
+                    </div>
+                    <TrendingUp className="w-8 h-8 text-blue-400" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/5 border-white/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-400 text-sm">{texts.stats?.availableFiles || 'ملفات متاحة'}</p>
+                      <p className="text-2xl font-bold text-white">{downloads.length}</p>
+                    </div>
+                    <Package className="w-8 h-8 text-green-400" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/5 border-white/20">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-400 text-sm">{texts.stats?.averageRating || 'متوسط التقييم'}</p>
+                      <p className="text-2xl font-bold text-white">{averageRating}/5</p>
+                    </div>
+                    <Award className="w-8 h-8 text-yellow-400" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Search and Filter */}
+            <div className="flex flex-col md:flex-row gap-4 mb-8">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder={texts.placeholders?.search || 'البحث في التنزيلات...'}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-white/5 border-white/20 text-white placeholder-gray-400"
+                />
+              </div>
+              
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="md:w-48 bg-white/5 border-white/20 text-white">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-white/20">
+                  <SelectItem value="all">{texts.categories?.all || 'الكل'}</SelectItem>
+                  <SelectItem value="games">{texts.categories?.games || 'ألعاب'}</SelectItem>
+                  <SelectItem value="tools">{texts.categories?.tools || 'أدوات'}</SelectItem>
+                  <SelectItem value="design">{texts.categories?.design || 'تصميم'}</SelectItem>
+                  <SelectItem value="programming">{texts.categories?.programming || 'برمجة'}</SelectItem>
+                  <SelectItem value="music">{texts.categories?.music || 'موسيقى'}</SelectItem>
+                  <SelectItem value="video">{texts.categories?.video || 'فيديو'}</SelectItem>
+                  <SelectItem value="books">{texts.categories?.books || 'كتب'}</SelectItem>
+                  <SelectItem value="security">{texts.categories?.security || 'أمان'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Downloads Grid */}
+            {isLoading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="bg-white/5 border-white/20 animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="h-6 bg-white/10 rounded mb-4"></div>
+                      <div className="h-4 bg-white/10 rounded mb-2"></div>
+                      <div className="h-4 bg-white/10 rounded mb-4"></div>
+                      <div className="h-10 bg-white/10 rounded"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : filteredDownloads.length === 0 ? (
+              <Card className="bg-white/5 border-white/20">
+                <CardContent className="p-12 text-center">
+                  <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    {texts.placeholders?.noResults || 'لا توجد نتائج'}
+                  </h3>
+                  <p className="text-gray-400">جرب تغيير مصطلحات البحث أو الفئة</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredDownloads.map((item) => (
+                  <Card key={item.id} className="bg-white/5 border-white/20 hover:bg-white/10 transition-all duration-300 group">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-white group-hover:text-blue-300 transition-colors">
+                            {item.title}
+                          </CardTitle>
+                          <CardDescription className="text-gray-400 mt-2">
+                            {item.description}
                           </CardDescription>
                         </div>
+                        <Badge variant="secondary" className="ml-2">
+                          {texts.categories?.[item.category as keyof typeof texts.categories] || item.category}
+                        </Badge>
                       </div>
-                      <Badge className={`${getStatusColor(item.status)} border`}>
-                        {item.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    <p className="text-gray-300 text-sm">{item.description}</p>
+                    </CardHeader>
                     
-                    {/* Features */}
-                    <div className="flex flex-wrap gap-1">
-                      {item.features.slice(0, 3).map((feature, index) => (
-                        <Badge key={index} variant="outline" className="text-xs border-white/20 text-gray-300">
-                          {feature}
-                        </Badge>
-                      ))}
-                      {item.features.length > 3 && (
-                        <Badge variant="outline" className="text-xs border-white/20 text-gray-300">
-                          +{item.features.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex justify-between text-sm text-gray-400">
-                      <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1">
-                          <Download className="w-4 h-4" />
-                          {item.downloads.toLocaleString()}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-400" />
-                          {item.rating}
-                        </span>
+                    <CardContent className="p-6 pt-0">
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">{texts.labels?.size || 'الحجم'}:</span>
+                          <span className="text-white">{item.size}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">{texts.labels?.downloads || 'التنزيلات'}:</span>
+                          <span className="text-white">{item.downloads.toLocaleString()}</span>
+                        </div>
+                        
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-400">{texts.labels?.rating || 'التقييم'}:</span>
+                          <div className="flex items-center">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            <span className="text-white ml-1">{item.rating}/5</span>
+                          </div>
+                        </div>
+                        
+                        {item.version && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-400">{texts.labels?.version || 'الإصدار'}:</span>
+                            <span className="text-white">{item.version}</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {item.lastUpdate}
-                      </div>
-                    </div>
-
-                    {/* Download Info */}
-                    <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                      <span className="text-sm text-gray-400">
-                        {getTextContent(siteSettings.pageTexts.downloads?.labels?.size) || "الحجم"}: {item.size}
-                      </span>
-                      <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
+                      
+                      <Button
+                        onClick={() => handleDownload(item)}
+                        className="w-full glow-button group-hover:scale-105 transition-transform"
+                      >
                         <Download className="w-4 h-4 mr-2" />
-                        {getTextContent(siteSettings.pageTexts.downloads?.buttons?.download) || "تنزيل"}
+                        {texts.buttons?.download || 'تنزيل'}
                       </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
-          {/* Stats Section */}
-          <div className="mt-16 grid md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20">
-              <div className="text-3xl font-bold text-blue-400 mb-2">
-                {downloadItems.reduce((total, item) => total + item.downloads, 0).toLocaleString()}
-              </div>
-              <div className="text-gray-300">
-                {getTextContent(siteSettings.pageTexts.downloads?.stats?.totalDownloads) || "إجمالي التنزيلات"}
-              </div>
-            </div>
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20">
-              <div className="text-3xl font-bold text-green-400 mb-2">{downloadItems.length}</div>
-              <div className="text-gray-300">
-                {getTextContent(siteSettings.pageTexts.downloads?.stats?.availableFiles) || "ملفات متاحة"}
-              </div>
-            </div>
-            <div className="text-center p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/20">
-              <div className="text-3xl font-bold text-purple-400 mb-2">
-                {downloadItems.length > 0 ? (downloadItems.reduce((total, item) => total + item.rating, 0) / downloadItems.length).toFixed(1) : '0'}
-              </div>
-              <div className="text-gray-300">
-                {getTextContent(siteSettings.pageTexts.downloads?.stats?.averageRating) || "متوسط التقييم"}
-              </div>
-            </div>
-          </div>
+          </ProtectedContent>
         </div>
       </div>
     </div>
