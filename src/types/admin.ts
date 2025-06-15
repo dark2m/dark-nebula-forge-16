@@ -1,6 +1,7 @@
 
+
 export interface AdminUser {
-  id: string;
+  id: number;
   username: string;
   password: string;
   role: 'مدير عام' | 'مبرمج' | 'مشرف';
@@ -34,6 +35,7 @@ export interface Product {
   rating?: number;
   titleSize?: string;
   textSize?: string;
+  inStock?: boolean;
 }
 
 export interface Tool {
@@ -106,6 +108,7 @@ export interface HomePageTexts {
   heroSubtitle: string;
   featuresTitle: string;
   features: Array<{
+    id?: string;
     title: string;
     description: string;
     icon: string;
@@ -547,3 +550,4 @@ export interface ErrorPageTexts {
     buttonText: string;
   };
 }
+
