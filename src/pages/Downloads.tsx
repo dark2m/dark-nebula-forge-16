@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock, MessageCircle, Users, Shield, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -79,6 +80,16 @@ const Downloads = () => {
   // التأكد من وجود stats مع fallback آمن
   const statsTexts = mainPageTexts.stats || defaultTexts.mainPage.stats;
 
+  // دالة تسجيل الخروج التلقائي
+  const autoLogout = () => {
+    localStorage.removeItem('downloadsAuth');
+    localStorage.removeItem('downloadsPasswordData');
+    setIsAuthenticated(false);
+    setUserPasswordData(null);
+    setPasswordInput('');
+    setError('');
+  };
+
   useEffect(() => {
     // التحقق من حالة تسجيل الدخول المحفوظة
     const savedAuth = localStorage.getItem('downloadsAuth');
@@ -95,6 +106,39 @@ const Downloads = () => {
     console.log('Loaded categories:', loadedCategories);
     
     loadDownloads();
+
+    // إضافة مستمعين للأحداث التي تؤدي إلى تسجيل الخروج التلقائي
+    const handleBeforeUnload = () => {
+      autoLogout();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        autoLogout();
+      }
+    };
+
+    const handlePageHide = () => {
+      autoLogout();
+    };
+
+    const handleBlur = () => {
+      autoLogout();
+    };
+
+    // إضافة المستمعين
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('blur', handleBlur);
+
+    // تنظيف المستمعين عند إلغاء تحميل المكون
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('blur', handleBlur);
+    };
   }, []);
 
   useEffect(() => {
@@ -140,6 +184,12 @@ const Downloads = () => {
 
     setFilteredDownloads(filtered);
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      filterDownloads();
+    }
+  }, [downloads, searchTerm, selectedCategory, isAuthenticated, userPasswordData]);
 
   const handleLogin = () => {
     const passwordData = DownloadPasswordService.validatePassword(passwordInput);
