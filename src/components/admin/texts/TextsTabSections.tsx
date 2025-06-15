@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Home, Navigation, ShoppingCart, Download, MessageCircle, FileText } from 'lucide-react';
 
@@ -43,3 +44,4 @@ const TextsTabSections: React.FC<TextsTabSectionsProps> = ({
 };
 
 export default TextsTabSections;
+
