@@ -1,10 +1,26 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Shield, UserCheck, Lock } from 'lucide-react';
-import { useSupabaseAdminUsers } from '../../hooks/useSupabaseAdminUsers';
+import UserService from '../../utils/userService';
+import { useToast } from '@/hooks/use-toast';
+import type { AdminUser } from '../../types/admin';
 
 const UsersTab = () => {
-  const { users, isLoading, updateUser } = useSupabaseAdminUsers();
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setUsers(UserService.getAdminUsers());
+  }, []);
+
+  const updateUser = (id: number, updates: Partial<AdminUser>) => {
+    UserService.updateAdminUser(id, updates);
+    setUsers(UserService.getAdminUsers());
+    toast({
+      title: "تم تحديث المستخدم",
+      description: "تم حفظ التغييرات بنجاح"
+    });
+  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -16,20 +32,6 @@ const UsersTab = () => {
   };
 
   const isOwner = (username: string) => username === 'dark';
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-3xl font-bold text-white">إدارة المستخدمين</h2>
-        <div className="admin-card rounded-xl p-6">
-          <div className="text-center py-8">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-400">جاري تحميل المستخدمين...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

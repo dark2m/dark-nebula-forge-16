@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import ProductImageViewer from '../components/ProductImageViewer';
 import ProductVideoViewer from '../components/ProductVideoViewer';
 import SettingsService from '../utils/settingsService';
-import { supabase } from '@/integrations/supabase/client';
+import ProductService from '../utils/productService';
 import TranslationService from '../utils/translationService';
 import { useCart } from '../hooks/useCart';
 import type { Product, SiteSettings } from '../types/admin';
@@ -13,65 +14,14 @@ import GlobalCart from '../components/GlobalCart';
 const DiscordBots = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { addToCart } = useCart();
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        // تحميل المنتجات من قاعدة البيانات
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('category', 'discord')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        const formattedProducts: Product[] = (data || []).map(product => ({
-          id: Number(product.id),
-          name: product.name,
-          price: String(product.price),
-          category: product.category,
-          description: product.description || '',
-          features: Array.isArray(product.features) ? 
-            (product.features as string[]) : [],
-          image: product.image || '',
-          images: Array.isArray(product.images) ? 
-            (product.images as string[]) : [],
-          videos: Array.isArray(product.videos) ? 
-            (product.videos as string[]) : [],
-          textSize: product.text_size || 'medium',
-          titleSize: product.title_size || 'large',
-          inStock: product.in_stock ?? true,
-          isActive: product.is_active ?? true,
-          rating: product.rating || 5,
-          createdAt: product.created_at || new Date().toISOString()
-        }));
-
-        setProducts(formattedProducts);
-        setSettings(SettingsService.getSiteSettings());
-      } catch (error) {
-        console.error('Error loading Discord products:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
+    setProducts(ProductService.getProducts().filter(p => p.category === 'discord'));
+    setSettings(SettingsService.getSiteSettings());
   }, []);
 
-  if (!settings || isLoading) {
-    return (
-      <div className="min-h-screen relative">
-        <StarryBackground />
-        <div className="relative z-10 flex items-center justify-center h-screen">
-          <div className="text-white text-xl">جاري التحميل...</div>
-        </div>
-      </div>
-    );
-  }
+  if (!settings) return null;
 
   const getTextSize = (size: string) => {
     switch (size) {
