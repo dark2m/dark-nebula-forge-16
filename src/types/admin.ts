@@ -6,12 +6,16 @@ export interface Product {
   price: number;
   category: string;
   image?: string;
+  images?: string[];
   features: string[];
   isActive: boolean;
   discount?: number;
   originalPrice?: number;
   videos?: string[];
   gallery?: string[];
+  rating?: number;
+  titleSize?: string;
+  textSize?: string;
 }
 
 export interface CartItem {
@@ -29,6 +33,7 @@ export interface AdminUser {
   role: 'مدير عام' | 'مبرمج' | 'مشرف';
   lastLogin: string;
   isActive: boolean;
+  permissions?: string[];
 }
 
 export interface NavigationItem {
@@ -64,7 +69,7 @@ export interface HomePage {
 }
 
 export interface BackgroundSettings {
-  type: 'color' | 'gradient' | 'stars' | 'meteors' | 'animated';
+  type: 'color' | 'gradient' | 'stars' | 'meteors' | 'animated' | 'image';
   value: string;
   starCount: number;
   meteorCount: number;
@@ -73,7 +78,7 @@ export interface BackgroundSettings {
   meteorOpacity: number;
   starSize: 'small' | 'medium' | 'large';
   meteorSize: 'small' | 'medium' | 'large';
-  meteorDirection: 'up' | 'down' | 'left' | 'right';
+  meteorDirection: 'up' | 'down' | 'left' | 'right' | 'mixed';
   meteorColors: string[];
 }
 
@@ -84,7 +89,7 @@ export interface Colors {
 }
 
 export interface Typography {
-  fontFamily: 'system' | 'inter' | 'roboto' | 'cairo';
+  fontFamily: 'system' | 'inter' | 'roboto' | 'cairo' | 'tajawal';
   headingWeight: 'normal' | 'medium' | 'semibold' | 'bold';
   bodyWeight: 'normal' | 'medium' | 'semibold';
   lineHeight: 'tight' | 'normal' | 'relaxed';
@@ -107,7 +112,8 @@ export interface Tool {
   icon: string;
   visible: boolean;
   isActive: boolean;
-  category: 'general' | 'security' | 'design' | 'development';
+  category: 'general' | 'security' | 'design' | 'development' | string;
+  customHtml?: string;
 }
 
 export interface DownloadsLoginPageTexts {
