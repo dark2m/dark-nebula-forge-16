@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import AuthService from '@/utils/auth';
 
 export const useFileUpload = () => {
   const { user } = useAuth();
@@ -10,7 +11,10 @@ export const useFileUpload = () => {
   const [uploading, setUploading] = useState(false);
 
   const uploadFile = async (file: File, folder: string = 'general'): Promise<string | null> => {
-    if (!user) {
+    // Check if user is admin first
+    const adminUser = AuthService.getCurrentUser();
+    
+    if (!user && !adminUser) {
       toast({
         title: "خطأ",
         description: "يجب تسجيل الدخول أولاً",
@@ -21,9 +25,10 @@ export const useFileUpload = () => {
 
     setUploading(true);
     try {
-      // Create unique filename
+      // Create unique filename - use admin ID if available, otherwise user ID
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${folder}/${Date.now()}.${fileExt}`;
+      const userId = adminUser?.id || user?.id || 'anonymous';
+      const fileName = `${userId}/${folder}/${Date.now()}.${fileExt}`;
 
       const { data, error } = await supabase.storage
         .from('user-files')
@@ -56,7 +61,9 @@ export const useFileUpload = () => {
   };
 
   const deleteFile = async (filePath: string): Promise<boolean> => {
-    if (!user) return false;
+    const adminUser = AuthService.getCurrentUser();
+    
+    if (!user && !adminUser) return false;
 
     try {
       const { error } = await supabase.storage
@@ -83,10 +90,13 @@ export const useFileUpload = () => {
   };
 
   const listUserFiles = async (folder: string = ''): Promise<any[]> => {
-    if (!user) return [];
+    const adminUser = AuthService.getCurrentUser();
+    
+    if (!user && !adminUser) return [];
 
     try {
-      const folderPath = folder ? `${user.id}/${folder}` : `${user.id}`;
+      const userId = adminUser?.id || user?.id || 'anonymous';
+      const folderPath = folder ? `${userId}/${folder}` : `${userId}`;
       
       const { data, error } = await supabase.storage
         .from('user-files')
