@@ -69,9 +69,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       case 'tools':
         return (
           <ToolsTab
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
-            saveSiteSettings={saveSiteSettings}
+            canAccess={canAccess}
           />
         );
 
