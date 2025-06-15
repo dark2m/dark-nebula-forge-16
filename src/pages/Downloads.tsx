@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock, MessageCircle, Users, Shield } from 'lucide-react';
+import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock, MessageCircle, Users, Shield, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -314,15 +314,69 @@ const Downloads = () => {
     );
   }
 
+  const handleLogout = () => {
+    // حذف بيانات تسجيل الدخول
+    localStorage.removeItem('downloadsAuth');
+    localStorage.removeItem('downloadsPasswordData');
+    
+    // إعادة تعيين المتغيرات
+    setIsAuthenticated(false);
+    setUserPasswordData(null);
+    setPasswordInput('');
+    setError('');
+    
+    // إضافة تأثير انتقال سلس
+    const content = document.querySelector('.downloads-content');
+    if (content) {
+      content.classList.add('animate-fade-out');
+      setTimeout(() => {
+        // إعادة تعيين الكلاسات للصفحة الجديدة
+        content.classList.remove('animate-fade-out');
+      }, 300);
+    }
+  };
+
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
       
-      <div className="relative z-10 pt-20 pb-12">
+      <div className="relative z-10 pt-20 pb-12 downloads-content">
         <div className="container mx-auto px-6">
           
+          {/* Logout Button - مميز ومتحرك */}
+          <div className="absolute top-6 right-6 z-20">
+            <div className="relative group">
+              {/* Background Glow Effect */}
+              <div className="absolute -inset-2 bg-gradient-to-r from-red-500/30 via-orange-500/20 to-red-500/30 rounded-xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-500 animate-pulse"></div>
+              
+              {/* Main Button */}
+              <Button
+                onClick={handleLogout}
+                className="relative bg-gradient-to-r from-red-600 via-red-500 to-orange-500 hover:from-red-500 hover:via-red-400 hover:to-orange-400 text-white font-bold py-3 px-6 rounded-xl shadow-2xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-red-500/50 border border-red-400/30"
+              >
+                {/* Inner Glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400/20 to-orange-400/20 rounded-xl"></div>
+                
+                {/* Button Content */}
+                <div className="relative flex items-center gap-2">
+                  <LogOut className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+                  <span className="font-semibold">خروج</span>
+                </div>
+                
+                {/* Animated Border */}
+                <div className="absolute inset-0 rounded-xl overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-400/30 to-orange-400/30 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                </div>
+              </Button>
+              
+              {/* Corner Decorations */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-red-400 to-orange-400 rounded-full blur-sm opacity-60 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-gradient-to-br from-orange-400 to-red-400 rounded-full blur-sm opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
+            </div>
+          </div>
+
           {/* Header with password info */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 pt-16">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
               {mainPageTexts.title}
             </h1>
