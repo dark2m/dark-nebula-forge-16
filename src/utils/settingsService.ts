@@ -1,3 +1,4 @@
+
 import { SiteSettings } from '../types/admin';
 
 class SettingsService {
@@ -275,16 +276,6 @@ class SettingsService {
           purchaseNote: 'سيتم توجيهك إلى الديسكورد لإتمام الشراء',
           addToCartButton: 'أضف للسلة',
           removeButton: 'حذف'
-        },
-        customerSupport: {
-          pageTitle: 'خدمة العملاء',
-          pageDescription: 'سجل دخولك للوصول إلى خدمة العملاء المتخصصة',
-          workingHoursTitle: 'ساعات العمل',
-          workingHours: {
-            weekdays: '9:00 ص - 11:00 م',
-            friday: '2:00 م - 11:00 م'
-          },
-          supportNote: '💡 الدعم الفني متاح 24/7 للحالات الطارئة'
         }
       }
     };

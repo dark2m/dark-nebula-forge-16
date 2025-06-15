@@ -46,6 +46,7 @@ class CartService {
         id: product.id,
         name: product.name,
         price: product.price,
+        quantity: 1,
         category: product.category
       };
       cart.push(cartItem);
