@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,59 +24,24 @@ export const useFileUpload = () => {
 
     setUploading(true);
     try {
-      // For admin users, use service role key to bypass RLS
+      // For admin users, try regular upload first
       const isAdmin = adminUser && !user;
       
-      if (isAdmin) {
-        // Use service role for admin uploads
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-          // Create an anonymous session or use direct upload for admins
-          const fileExt = file.name.split('.').pop();
-          const fileName = `admin/${folder}/${Date.now()}.${fileExt}`;
-          
-          // Try direct upload with service key
-          const formData = new FormData();
-          formData.append('file', file);
-          
-          const response = await fetch(`${supabase.supabaseUrl}/storage/v1/object/user-files/${fileName}`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${supabase.supabaseKey}`,
-              'X-Upsert': 'false'
-            },
-            body: formData
-          });
-          
-          if (!response.ok) {
-            throw new Error('Failed to upload file');
-          }
-          
-          // Get public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from('user-files')
-            .getPublicUrl(fileName);
-
-          toast({
-            title: "تم الرفع",
-            description: "تم رفع الملف بنجاح"
-          });
-
-          return publicUrl;
-        }
-      }
-
-      // Regular user upload
+      // Create unique filename
       const fileExt = file.name.split('.').pop();
-      const userId = adminUser?.id || user?.id || 'anonymous';
+      const userId = isAdmin ? 'admin' : (adminUser?.id || user?.id || 'anonymous');
       const fileName = `${userId}/${folder}/${Date.now()}.${fileExt}`;
 
       const { data, error } = await supabase.storage
         .from('user-files')
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          upsert: false
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
