@@ -37,7 +37,17 @@ export const useAdminOverviewData = () => {
       }
 
       if (data?.settings_data) {
-        setSalesData(data.settings_data as SalesOverviewData);
+        // تحويل آمن من Json إلى SalesOverviewData
+        const rawData = data.settings_data as unknown;
+        if (rawData && typeof rawData === 'object' && rawData !== null) {
+          const typedData = rawData as Record<string, unknown>;
+          setSalesData({
+            totalSales: typeof typedData.totalSales === 'number' ? typedData.totalSales : 0,
+            monthlyRevenue: typeof typedData.monthlyRevenue === 'number' ? typedData.monthlyRevenue : 0,
+            pendingOrders: typeof typedData.pendingOrders === 'number' ? typedData.pendingOrders : 0,
+            completedOrders: typeof typedData.completedOrders === 'number' ? typedData.completedOrders : 0
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading sales data:', error);
@@ -56,11 +66,19 @@ export const useAdminOverviewData = () => {
     try {
       setIsSaving(true);
       
+      // تحويل البيانات إلى Json متوافق مع Supabase
+      const jsonData = {
+        totalSales: newData.totalSales,
+        monthlyRevenue: newData.monthlyRevenue,
+        pendingOrders: newData.pendingOrders,
+        completedOrders: newData.completedOrders
+      } as const;
+
       const { error } = await supabase
         .from('site_settings')
         .upsert({
           id: 'sales_overview',
-          settings_data: newData
+          settings_data: jsonData
         }, {
           onConflict: 'id'
         });
