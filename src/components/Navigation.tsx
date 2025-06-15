@@ -142,7 +142,7 @@ const Navigation = () => {
             })}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button & Admin Login */}
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             {/* Mobile Hamburger Menu */}
             {(isMobile || window.innerWidth <= 1024) && (
@@ -153,6 +153,15 @@ const Navigation = () => {
                 {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             )}
+
+            {/* Admin Login */}
+            <Link
+              to="/admin/login"
+              className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
+            >
+              <User className="w-4 h-4" />
+              <span>الإدارة</span>
+            </Link>
           </div>
         </div>
 
@@ -178,16 +187,6 @@ const Navigation = () => {
                   </Link>
                 );
               })}
-              
-              {/* Admin Login in Mobile Menu */}
-              <Link
-                to="/admin/login"
-                onClick={closeMenu}
-                className="flex items-center space-x-3 rtl:space-x-reverse p-3 rounded-lg transition-colors text-white hover:bg-white/10"
-              >
-                <User className="w-5 h-5" />
-                <span>الإدارة</span>
-              </Link>
             </div>
           </div>
         )}
