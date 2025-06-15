@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useNavigate } from 'react-router-dom';
 import StarryBackground from '../components/StarryBackground';
 import DownloadService from '../utils/downloadService';
 import DownloadCategoriesService from '../utils/downloadCategoriesService';
@@ -14,6 +15,7 @@ import type { DownloadsPageTexts } from '../types/admin';
 import DownloadPasswordService from '../utils/downloadPasswordService';
 
 const Downloads = () => {
+  const navigate = useNavigate();
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [filteredDownloads, setFilteredDownloads] = useState<DownloadItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -227,12 +229,7 @@ const Downloads = () => {
   };
 
   const handleContactSupport = () => {
-    const contactInfo = siteSettings?.contactInfo;
-    if (contactInfo?.discord) {
-      window.open(`https://discord.com/users/${contactInfo.discord}`, '_blank');
-    } else if (contactInfo?.telegram) {
-      window.open(`https://t.me/${contactInfo.telegram.replace('@', '')}`, '_blank');
-    }
+    navigate('/sport');
   };
 
   const handleDownload = (item: DownloadItem) => {
