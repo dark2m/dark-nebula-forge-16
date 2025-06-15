@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock, MessageCircle, Users, Shield, LogOut, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,32 +8,31 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import StarryBackground from '../components/StarryBackground';
-import DownloadService from '../utils/downloadService';
-import DownloadCategoriesService from '../utils/downloadCategoriesService';
 import AdminStorage from '../utils/adminStorage';
 import type { DownloadItem } from '../types/downloads';
 import type { DownloadsPageTexts } from '../types/admin';
-import DownloadPasswordService from '../utils/downloadPasswordService';
+import { useSupabaseDownloads } from '../hooks/useSupabaseDownloads';
+import { useSupabaseDownloadPasswords } from '../hooks/useSupabaseDownloadPasswords';
+import { useSupabaseDownloadCategories } from '../hooks/useSupabaseDownloadCategories';
+import { useSupabaseProductUpdates } from '../hooks/useSupabaseProductUpdates';
 
 const Downloads = () => {
   const navigate = useNavigate();
-  const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+  const { downloads, isLoading: downloadsLoading, updateDownload } = useSupabaseDownloads();
+  const { validatePassword } = useSupabaseDownloadPasswords();
+  const { categories } = useSupabaseDownloadCategories();
+  const { updates: productUpdates } = useSupabaseProductUpdates();
+  
   const [filteredDownloads, setFilteredDownloads] = useState<DownloadItem[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
   const [userPasswordData, setUserPasswordData] = useState<any>(null);
-  const [productUpdates, setProductUpdates] = useState<any[]>([]);
   
   const siteSettings = AdminStorage.getSiteSettings();
   
-  // كلمة المرور الافتراضية إذا لم تكن محددة في الإعدادات
-  const downloadsPassword = siteSettings?.downloadsPassword || 'dark123';
-
   // النصوص الافتراضية المحدثة
   const defaultTexts: DownloadsPageTexts = {
     loginPage: {
@@ -72,14 +72,9 @@ const Downloads = () => {
     }
   };
 
-  // التأكد من وجود النصوص مع fallback آمن
   const texts = siteSettings?.pageTexts?.downloads || defaultTexts;
-  
-  // التأكد من وجود loginPage و mainPage مع fallbacks آمنة
   const loginPageTexts = texts.loginPage || defaultTexts.loginPage;
   const mainPageTexts = texts.mainPage || defaultTexts.mainPage;
-  
-  // التأكد من وجود stats مع fallback آمن
   const statsTexts = mainPageTexts.stats || defaultTexts.mainPage.stats;
 
   // دالة تسجيل الخروج التلقائي
@@ -101,14 +96,6 @@ const Downloads = () => {
       setIsAuthenticated(true);
       setUserPasswordData(JSON.parse(savedPasswordData));
     }
-    
-    // تحديث الفئات عند تحميل الصفحة
-    const loadedCategories = DownloadCategoriesService.getCategories();
-    setCategories(loadedCategories);
-    console.log('Loaded categories:', loadedCategories);
-    
-    loadDownloads();
-    loadProductUpdates();
 
     // إضافة مستمعين للأحداث التي تؤدي إلى تسجيل الخروج التلقائي
     const handleBeforeUnload = () => {
@@ -135,7 +122,6 @@ const Downloads = () => {
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('blur', handleBlur);
 
-    // تنظيف المستمعين عند إلغاء تحميل المكون
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -149,28 +135,6 @@ const Downloads = () => {
       filterDownloads();
     }
   }, [downloads, searchTerm, selectedCategory, isAuthenticated, userPasswordData]);
-
-  const loadDownloads = async () => {
-    try {
-      const data = DownloadService.getDownloads();
-      setDownloads(data);
-    } catch (error) {
-      console.error('Error loading downloads:', error);
-      setDownloads([]); // تأكد من أن downloads هو مصفوفة فارغة في حالة الخطأ
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadProductUpdates = () => {
-    try {
-      const updates = JSON.parse(localStorage.getItem('productUpdates') || '[]');
-      setProductUpdates(updates.filter((update: any) => update.isActive));
-    } catch (error) {
-      console.error('Error loading product updates:', error);
-      setProductUpdates([]);
-    }
-  };
 
   const filterDownloads = () => {
     let filtered = downloads || [];
@@ -206,14 +170,8 @@ const Downloads = () => {
     setFilteredDownloads(filtered);
   };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      filterDownloads();
-    }
-  }, [downloads, searchTerm, selectedCategory, isAuthenticated, userPasswordData]);
-
-  const handleLogin = () => {
-    const passwordData = DownloadPasswordService.validatePassword(passwordInput);
+  const handleLogin = async () => {
+    const passwordData = await validatePassword(passwordInput);
     
     if (passwordData) {
       console.log('Login successful with password data:', passwordData);
@@ -222,7 +180,6 @@ const Downloads = () => {
       setError('');
       localStorage.setItem('downloadsAuth', 'true');
       localStorage.setItem('downloadsPasswordData', JSON.stringify(passwordData));
-      loadProductUpdates(); // تحميل التحديثات بعد تسجيل الدخول
     } else {
       setError(loginPageTexts.errorMessage);
     }
@@ -232,14 +189,11 @@ const Downloads = () => {
     navigate('/sport');
   };
 
-  const handleDownload = (item: DownloadItem) => {
-    const updatedDownloads = downloads.map(download =>
-      download.id === item.id
-        ? { ...download, downloads: download.downloads + 1 }
-        : download
-    );
-    setDownloads(updatedDownloads);
-    DownloadService.saveDownloads(updatedDownloads);
+  const handleDownload = async (item: DownloadItem) => {
+    // تحديث عداد التنزيلات في قاعدة البيانات
+    await updateDownload(item.id, {
+      downloads: (item.downloads || 0) + 1
+    });
 
     // إنشاء رابط التنزيل
     const link = document.createElement('a');
@@ -249,6 +203,27 @@ const Downloads = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleLogout = () => {
+    // حذف بيانات تسجيل الدخول
+    localStorage.removeItem('downloadsAuth');
+    localStorage.removeItem('downloadsPasswordData');
+    
+    // إعادة تعيين المتغيرات
+    setIsAuthenticated(false);
+    setUserPasswordData(null);
+    setPasswordInput('');
+    setError('');
+    
+    // إضافة تأثير انتقال سلس
+    const content = document.querySelector('.downloads-content');
+    if (content) {
+      content.classList.add('animate-fade-out');
+      setTimeout(() => {
+        content.classList.remove('animate-fade-out');
+      }, 300);
+    }
   };
 
   // حسابات آمنة للإحصائيات مع التحقق من وجود البيانات
@@ -381,28 +356,6 @@ const Downloads = () => {
     );
   }
 
-  const handleLogout = () => {
-    // حذف بيانات تسجيل الدخول
-    localStorage.removeItem('downloadsAuth');
-    localStorage.removeItem('downloadsPasswordData');
-    
-    // إعادة تعيين المتغيرات
-    setIsAuthenticated(false);
-    setUserPasswordData(null);
-    setPasswordInput('');
-    setError('');
-    
-    // إضافة تأثير انتقال سلس
-    const content = document.querySelector('.downloads-content');
-    if (content) {
-      content.classList.add('animate-fade-out');
-      setTimeout(() => {
-        // إعادة تعيين الكلاسات للصفحة الجديدة
-        content.classList.remove('animate-fade-out');
-      }, 300);
-    }
-  };
-
   return (
     <div className="min-h-screen relative">
       <StarryBackground />
@@ -484,7 +437,7 @@ const Downloads = () => {
           </div>
 
           {/* Product Updates Section */}
-          {productUpdates.length > 0 && (
+          {productUpdates.filter(update => update.isActive).length > 0 && (
             <div className="mb-8">
               <Card className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 border-blue-400/30">
                 <CardHeader>
@@ -495,7 +448,7 @@ const Downloads = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {productUpdates.map((update) => (
+                    {productUpdates.filter(update => update.isActive).map((update) => (
                       <div 
                         key={update.id}
                         className="bg-white/5 border border-white/20 rounded-lg p-4 hover:bg-white/10 transition-all duration-300"
@@ -588,7 +541,7 @@ const Downloads = () => {
           </div>
 
           {/* Downloads Grid */}
-          {isLoading ? (
+          {downloadsLoading ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <Card key={i} className="bg-white/5 border-white/20 animate-pulse">

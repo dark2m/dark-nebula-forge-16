@@ -102,6 +102,132 @@ export type Database = {
         }
         Relationships: []
       }
+      download_categories: {
+        Row: {
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      download_passwords: {
+        Row: {
+          allowed_categories: Json | null
+          created_at: string | null
+          description: string | null
+          id: number
+          is_active: boolean | null
+          last_used: string | null
+          name: string
+          password: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          allowed_categories?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id: number
+          is_active?: boolean | null
+          last_used?: string | null
+          name: string
+          password: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          allowed_categories?: Json | null
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          is_active?: boolean | null
+          last_used?: string | null
+          name?: string
+          password?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      downloads: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          download_url: string | null
+          downloads: number | null
+          features: Json | null
+          filename: string | null
+          icon: string | null
+          id: number
+          images: Json | null
+          last_update: string | null
+          password_category: string | null
+          rating: number | null
+          size: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          version: string | null
+          videos: Json | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          download_url?: string | null
+          downloads?: number | null
+          features?: Json | null
+          filename?: string | null
+          icon?: string | null
+          id: number
+          images?: Json | null
+          last_update?: string | null
+          password_category?: string | null
+          rating?: number | null
+          size?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          version?: string | null
+          videos?: Json | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          download_url?: string | null
+          downloads?: number | null
+          features?: Json | null
+          filename?: string | null
+          icon?: string | null
+          id?: number
+          images?: Json | null
+          last_update?: string | null
+          password_category?: string | null
+          rating?: number | null
+          size?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          version?: string | null
+          videos?: Json | null
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string | null
@@ -129,6 +255,63 @@ export type Database = {
           password?: string
           success?: boolean | null
           timestamp?: string
+        }
+        Relationships: []
+      }
+      page_texts: {
+        Row: {
+          created_at: string | null
+          id: string
+          page_name: string
+          section_name: string
+          text_key: string
+          text_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          page_name: string
+          section_name: string
+          text_key: string
+          text_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          page_name?: string
+          section_name?: string
+          text_key?: string
+          text_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      product_updates: {
+        Row: {
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          message: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          is_active?: boolean | null
+          message: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          is_active?: boolean | null
+          message?: string
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
