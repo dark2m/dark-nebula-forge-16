@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Package, DollarSign, Users, ShoppingCart, Eye, Edit, Save, X } from 'lucide-react';
-import AdminStorage from '../../utils/adminStorage';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from 'react';
+import { BarChart3, TrendingUp, Package, DollarSign, Users, ShoppingCart, Eye, Edit, Save, X, Loader2 } from 'lucide-react';
+import { useAdminOverviewData } from '../../hooks/useAdminOverviewData';
 import type { Product } from '../../types/admin';
 
 interface OverviewTabProps {
@@ -10,34 +9,25 @@ interface OverviewTabProps {
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({ products }) => {
-  const [salesData, setSalesData] = useState({
-    totalSales: 0,
-    monthlyRevenue: 0,
-    pendingOrders: 0,
-    completedOrders: 0
-  });
+  const { 
+    salesData, 
+    isLoading, 
+    isSaving, 
+    updateSalesData 
+  } = useAdminOverviewData();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState(salesData);
-  const { toast } = useToast();
 
-  useEffect(() => {
-    // تحميل بيانات المبيعات من التخزين المحلي
-    const savedData = localStorage.getItem('sales_overview');
-    if (savedData) {
-      const data = JSON.parse(savedData);
-      setSalesData(data);
-      setEditedData(data);
+  React.useEffect(() => {
+    setEditedData(salesData);
+  }, [salesData]);
+
+  const handleSave = async () => {
+    const success = await updateSalesData(editedData);
+    if (success) {
+      setIsEditing(false);
     }
-  }, []);
-
-  const saveSalesData = () => {
-    localStorage.setItem('sales_overview', JSON.stringify(editedData));
-    setSalesData(editedData);
-    setIsEditing(false);
-    toast({
-      title: "تم حفظ البيانات",
-      description: "تم تحديث بيانات المبيعات بنجاح"
-    });
   };
 
   const cancelEdit = () => {
@@ -51,6 +41,17 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ products }) => {
       [field]: value
     }));
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
+          <p className="text-white">جاري تحميل بيانات النظرة العامة...</p>
+        </div>
+      </div>
+    );
+  }
 
   const stats = [
     {
@@ -95,14 +96,25 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ products }) => {
           {isEditing ? (
             <>
               <button
-                onClick={saveSalesData}
+                onClick={handleSave}
+                disabled={isSaving}
                 className="glow-button flex items-center gap-2"
               >
-                <Save className="w-4 h-4" />
-                حفظ
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    جاري الحفظ...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    حفظ للجميع
+                  </>
+                )}
               </button>
               <button
                 onClick={cancelEdit}
+                disabled={isSaving}
                 className="bg-red-500/20 border border-red-500/30 text-red-400 px-4 py-2 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
               >
                 <X className="w-4 h-4" />
@@ -136,6 +148,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ products }) => {
                       value={editedData[stat.field as keyof typeof editedData]}
                       onChange={(e) => handleInputChange(stat.field, Number(e.target.value))}
                       className="text-2xl font-bold text-white bg-white/10 border border-white/20 rounded px-2 py-1 mt-1 w-full"
+                      disabled={isSaving}
                     />
                   ) : (
                     <p className="text-2xl font-bold text-white">{stat.value.toLocaleString()}</p>
@@ -190,8 +203,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ products }) => {
               <Package className="w-4 h-4 text-green-400" />
             </div>
             <div>
-              <p className="text-white text-sm">تم إضافة منتج جديد</p>
-              <p className="text-gray-400 text-xs">منذ دقائق</p>
+              <p className="text-white text-sm">تم تحديث بيانات المبيعات</p>
+              <p className="text-gray-400 text-xs">محفوظة في قاعدة البيانات</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 rtl:space-x-reverse p-3 bg-white/5 rounded-lg">
@@ -214,6 +227,15 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ products }) => {
           </div>
         </div>
       </div>
+
+      {isSaving && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 flex items-center gap-3">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+            <span className="text-white">جاري الحفظ في قاعدة البيانات...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
