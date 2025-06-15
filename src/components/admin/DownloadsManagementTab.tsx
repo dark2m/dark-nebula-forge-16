@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,9 +9,10 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Download, Plus, Edit, Trash2, Eye, EyeOff, Lock, Unlock, Save, RotateCcw, Settings, FileText, Users } from 'lucide-react';
+import { Download, Plus, Edit, Trash2, Eye, EyeOff, Lock, Unlock, Save, RotateCcw, Settings, FileText, Users, Key, Shield } from 'lucide-react';
 import DownloadService from '../../utils/downloadService';
-import type { DownloadItem } from '../../types/downloads';
+import DownloadPasswordService from '../../utils/downloadPasswordService';
+import type { DownloadItem, DownloadPassword } from '../../types/downloads';
 import type { SiteSettings } from '../../types/admin';
 
 interface DownloadsManagementTabProps {
@@ -28,8 +28,11 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
 }) => {
   const { toast } = useToast();
   const [downloads, setDownloads] = useState<DownloadItem[]>(DownloadService.getDownloads());
+  const [passwords, setPasswords] = useState<DownloadPassword[]>(DownloadPasswordService.getDownloadPasswords());
   const [editingItem, setEditingItem] = useState<DownloadItem | null>(null);
+  const [editingPassword, setEditingPassword] = useState<DownloadPassword | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddPasswordForm, setShowAddPasswordForm] = useState(false);
   
   // Form states
   const [formData, setFormData] = useState<Partial<DownloadItem>>({
@@ -46,7 +49,25 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
     status: 'جديد'
   });
 
+  const [passwordFormData, setPasswordFormData] = useState<Partial<DownloadPassword>>({
+    name: '',
+    password: '',
+    allowedCategories: ['ألعاب'],
+    isActive: true,
+    description: ''
+  });
+
   const [newFeature, setNewFeature] = useState('');
+
+  // Set default password on component mount if not already set
+  React.useEffect(() => {
+    if (!siteSettings.downloadsPassword || siteSettings.downloadsPassword === '') {
+      setSiteSettings({
+        ...siteSettings,
+        downloadsPassword: 'dark'
+      });
+    }
+  }, []);
 
   const handleSaveDownloads = () => {
     try {
@@ -59,6 +80,82 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
       toast({
         title: "خطأ في الحفظ",
         description: "حدث خطأ أثناء حفظ التنزيلات",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addPassword = () => {
+    if (!passwordFormData.name || !passwordFormData.password) {
+      toast({
+        title: "بيانات ناقصة",
+        description: "يرجى ملء الاسم وكلمة المرور",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const newPassword = DownloadPasswordService.addPassword({
+        name: passwordFormData.name!,
+        password: passwordFormData.password!,
+        allowedCategories: passwordFormData.allowedCategories || ['ألعاب'],
+        isActive: passwordFormData.isActive || true,
+        description: passwordFormData.description || ''
+      });
+
+      setPasswords(DownloadPasswordService.getDownloadPasswords());
+      setPasswordFormData({
+        name: '',
+        password: '',
+        allowedCategories: ['ألعاب'],
+        isActive: true,
+        description: ''
+      });
+      setShowAddPasswordForm(false);
+
+      toast({
+        title: "تم إضافة كلمة المرور",
+        description: "تم إضافة كلمة مرور جديدة بنجاح"
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في الإضافة",
+        description: "حدث خطأ أثناء إضافة كلمة المرور",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updatePassword = (id: number, updates: Partial<DownloadPassword>) => {
+    try {
+      DownloadPasswordService.updatePassword(id, updates);
+      setPasswords(DownloadPasswordService.getDownloadPasswords());
+      toast({
+        title: "تم التحديث",
+        description: "تم تحديث كلمة المرور بنجاح"
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في التحديث",
+        description: "حدث خطأ أثناء تحديث كلمة المرور",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deletePassword = (id: number) => {
+    try {
+      DownloadPasswordService.deletePassword(id);
+      setPasswords(DownloadPasswordService.getDownloadPasswords());
+      toast({
+        title: "تم الحذف",
+        description: "تم حذف كلمة المرور بنجاح"
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في الحذف",
+        description: "حدث خطأ أثناء حذف كلمة المرور",
         variant: "destructive"
       });
     }
@@ -95,7 +192,6 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
     setDownloads(updatedDownloads);
     DownloadService.saveDownloads(updatedDownloads);
     
-    // Reset form
     setFormData({
       title: '',
       description: '',
@@ -176,6 +272,23 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
     });
   };
 
+  const getStatusColor = (isActive: boolean) => {
+    return isActive 
+      ? "bg-green-500/20 text-green-400 border-green-500/30"
+      : "bg-red-500/20 text-red-400 border-red-500/30";
+  };
+
+  const handleCategoryToggle = (category: string, isChecked: boolean) => {
+    if (editingPassword) {
+      const current = editingPassword.allowedCategories || [];
+      if (isChecked) {
+        setEditingPassword({...editingPassword, allowedCategories: [...current, category]});
+      } else {
+        setEditingPassword({...editingPassword, allowedCategories: current.filter(c => c !== category)});
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -193,16 +306,20 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
       </div>
 
       <Tabs defaultValue="content" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-white/5">
+        <TabsList className="grid w-full grid-cols-4 bg-white/5">
           <TabsTrigger value="content" className="data-[state=active]:bg-blue-500/20">
             <Download className="w-4 h-4 mr-2" />
             إدارة المحتوى
           </TabsTrigger>
-          <TabsTrigger value="texts" className="data-[state=active]:bg-blue-500/20">
+          <TabsTrigger value="passwords" className="data-[state=active]:bg-purple-500/20">
+            <Key className="w-4 h-4 mr-2" />
+            كلمات المرور
+          </TabsTrigger>
+          <TabsTrigger value="texts" className="data-[state=active]:bg-green-500/20">
             <FileText className="w-4 h-4 mr-2" />
             النصوص
           </TabsTrigger>
-          <TabsTrigger value="settings" className="data-[state=active]:bg-blue-500/20">
+          <TabsTrigger value="settings" className="data-[state=active]:bg-orange-500/20">
             <Settings className="w-4 h-4 mr-2" />
             الإعدادات
           </TabsTrigger>
@@ -210,7 +327,6 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
 
         {/* Content Management */}
         <TabsContent value="content" className="space-y-6">
-          {/* Add New Item */}
           <Card className="bg-white/5 border-white/20">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -271,90 +387,6 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
                   />
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-white">الحجم</Label>
-                    <Input
-                      value={formData.size}
-                      onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                      className="bg-white/5 border-white/20 text-white"
-                      placeholder="مثال: 15.2 MB"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-white">الإصدار</Label>
-                    <Input
-                      value={formData.version}
-                      onChange={(e) => setFormData({ ...formData, version: e.target.value })}
-                      className="bg-white/5 border-white/20 text-white"
-                      placeholder="مثال: 1.0.0"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-white">التقييم</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="5"
-                      step="0.1"
-                      value={formData.rating}
-                      onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) })}
-                      className="bg-white/5 border-white/20 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-white">رابط التنزيل</Label>
-                    <Input
-                      value={formData.downloadUrl}
-                      onChange={(e) => setFormData({ ...formData, downloadUrl: e.target.value })}
-                      className="bg-white/5 border-white/20 text-white"
-                      placeholder="https://example.com/file.zip"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-white">اسم الملف</Label>
-                    <Input
-                      value={formData.filename}
-                      onChange={(e) => setFormData({ ...formData, filename: e.target.value })}
-                      className="bg-white/5 border-white/20 text-white"
-                      placeholder="filename.zip"
-                    />
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div>
-                  <Label className="text-white">المميزات</Label>
-                  <div className="flex space-x-2 mb-2">
-                    <Input
-                      value={newFeature}
-                      onChange={(e) => setNewFeature(e.target.value)}
-                      className="bg-white/5 border-white/20 text-white"
-                      placeholder="إضافة ميزة جديدة"
-                      onKeyPress={(e) => e.key === 'Enter' && addFeature()}
-                    />
-                    <Button onClick={addFeature} size="sm">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.features?.map((feature, index) => (
-                      <Badge key={index} variant="secondary" className="flex items-center space-x-1">
-                        <span>{feature}</span>
-                        <button
-                          onClick={() => removeFeature(index)}
-                          className="ml-1 text-red-400 hover:text-red-300"
-                        >
-                          ×
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
                 <Button onClick={addDownloadItem} className="w-full glow-button">
                   <Plus className="w-4 h-4 mr-2" />
                   إضافة العنصر
@@ -363,7 +395,6 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
             )}
           </Card>
 
-          {/* Downloads List */}
           <Card className="bg-white/5 border-white/20">
             <CardHeader>
               <CardTitle className="text-white">قائمة التنزيلات</CardTitle>
@@ -406,6 +437,355 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Password Management */}
+        <TabsContent value="passwords" className="space-y-6">
+          {/* Current Default Password */}
+          <Card className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-purple-400" />
+                كلمة المرور الافتراضية المؤقتة
+              </CardTitle>
+              <CardDescription className="text-purple-200">
+                كلمة المرور الحالية للوصول لصفحة التنزيلات
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-black/20 p-4 rounded-lg border border-purple-500/20">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-purple-300 text-sm">كلمة المرور الحالية</Label>
+                    <div className="text-2xl font-bold text-white mt-1">
+                      {siteSettings.downloadsPassword || 'dark'}
+                    </div>
+                  </div>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                    نشطة
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <Label className="text-white">تغيير كلمة المرور الافتراضية</Label>
+                <div className="flex space-x-2 mt-2">
+                  <Input
+                    type="password"
+                    value={siteSettings.downloadsPassword || ''}
+                    onChange={(e) => updateDownloadsPassword(e.target.value)}
+                    className="bg-white/5 border-white/20 text-white"
+                    placeholder="كلمة المرور الجديدة"
+                  />
+                  <Button onClick={saveSiteSettings} className="bg-purple-500 hover:bg-purple-600">
+                    <Save className="w-4 h-4 mr-2" />
+                    حفظ
+                  </Button>
+                </div>
+                <p className="text-gray-400 text-sm mt-1">
+                  ⚠️ هذه كلمة مرور مؤقتة - ننصح بإنشاء نظام كلمات مرور متقدم أدناه
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Advanced Password System */}
+          <Card className="bg-white/5 border-white/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-white flex items-center">
+                    <Key className="w-5 h-5 mr-2 text-blue-400" />
+                    نظام كلمات المرور المتقدم
+                  </CardTitle>
+                  <CardDescription className="text-gray-400">
+                    إنشاء كلمات مرور مخصصة لفئات مختلفة
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={() => setShowAddPasswordForm(!showAddPasswordForm)}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  إضافة كلمة مرور
+                </Button>
+              </div>
+            </CardHeader>
+            
+            {showAddPasswordForm && (
+              <CardContent className="space-y-4 border-t border-white/10 pt-4">
+                <div className="bg-blue-500/5 p-4 rounded-lg border border-blue-500/20">
+                  <h4 className="text-blue-300 font-medium mb-3">إضافة كلمة مرور جديدة</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-white">اسم كلمة المرور</Label>
+                      <Input
+                        value={passwordFormData.name}
+                        onChange={(e) => setPasswordFormData({ ...passwordFormData, name: e.target.value })}
+                        className="bg-white/5 border-white/20 text-white"
+                        placeholder="مثال: كلمة مرور الألعاب"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-white">كلمة المرور</Label>
+                      <Input
+                        value={passwordFormData.password}
+                        onChange={(e) => setPasswordFormData({ ...passwordFormData, password: e.target.value })}
+                        className="bg-white/5 border-white/20 text-white"
+                        placeholder="مثال: games123"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <Label className="text-white">الوصف</Label>
+                    <Textarea
+                      value={passwordFormData.description}
+                      onChange={(e) => setPasswordFormData({ ...passwordFormData, description: e.target.value })}
+                      className="bg-white/5 border-white/20 text-white h-20 resize-none"
+                      placeholder="وصف استخدام كلمة المرور"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <Label className="text-white">الفئات المسموحة</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                      {['ألعاب', 'أدوات', 'تصميم', 'برمجة', 'موسيقى', 'فيديو', 'كتب', 'أمان'].map(category => (
+                        <div key={category} className="flex items-center space-x-2 bg-white/5 p-2 rounded border border-white/10">
+                          <input
+                            type="checkbox"
+                            id={`new-cat-${category}`}
+                            checked={passwordFormData.allowedCategories?.includes(category) || false}
+                            onChange={(e) => {
+                              const current = passwordFormData.allowedCategories || [];
+                              if (e.target.checked) {
+                                setPasswordFormData({...passwordFormData, allowedCategories: [...current, category]});
+                              } else {
+                                setPasswordFormData({...passwordFormData, allowedCategories: current.filter(c => c !== category)});
+                              }
+                            }}
+                            className="rounded border-white/20"
+                          />
+                          <label htmlFor={`new-cat-${category}`} className="text-white text-sm cursor-pointer">
+                            {category}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2 mt-4">
+                    <Button onClick={addPassword} className="bg-green-500 hover:bg-green-600">
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة
+                    </Button>
+                    <Button 
+                      onClick={() => setShowAddPasswordForm(false)} 
+                      variant="outline" 
+                      className="border-white/20 text-white hover:bg-white/10"
+                    >
+                      إلغاء
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            )}
+
+            <CardContent className="space-y-4">
+              {passwords.length > 0 ? (
+                <div className="space-y-3">
+                  {passwords.map((password) => (
+                    <div key={password.id} className="p-4 bg-white/5 rounded-lg border border-white/10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h4 className="text-white font-medium">{password.name}</h4>
+                            <Badge className={password.isActive 
+                              ? "bg-green-500/20 text-green-400 border-green-500/30"
+                              : "bg-red-500/20 text-red-400 border-red-500/30"
+                            }>
+                              {password.isActive ? 'نشط' : 'معطل'}
+                            </Badge>
+                          </div>
+                          <p className="text-gray-400 text-sm mb-2">{password.description}</p>
+                          <div className="flex items-center space-x-4 text-sm text-gray-300">
+                            <span>كلمة المرور: ••••••••</span>
+                            <span>الاستخدامات: {password.usageCount}</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {password.allowedCategories.map((category, index) => (
+                              <Badge key={index} variant="outline" className="text-xs border-blue-500/30 text-blue-300 bg-blue-500/10">
+                                {category}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingPassword(password)}
+                            className="border-white/20"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => deletePassword(password.id)}
+                            className="border-red-500/20 text-red-400 hover:bg-red-500/20"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Key className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-white font-medium mb-2">لا توجد كلمات مرور متقدمة</h3>
+                  <p className="text-gray-400 text-sm">قم بإضافة كلمة مرور جديدة للبدء</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Password Edit Modal */}
+          {editingPassword && (
+            <Card className="bg-white/5 border-white/20 mt-6">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white">تعديل كلمة المرور</CardTitle>
+                  <Button
+                    variant="outline"
+                    className="border-white/20 text-white hover:bg-white/10"
+                    onClick={() => setEditingPassword(null)}
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-white">اسم كلمة المرور</Label>
+                    <Input
+                      value={editingPassword.name}
+                      onChange={(e) => setEditingPassword({...editingPassword, name: e.target.value})}
+                      className="bg-white/5 border-white/20 text-white"
+                      placeholder="مثال: كلمة مرور الألعاب"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white">كلمة المرور</Label>
+                    <Input
+                      value={editingPassword.password}
+                      onChange={(e) => setEditingPassword({...editingPassword, password: e.target.value})}
+                      className="bg-white/5 border-white/20 text-white"
+                      placeholder="مثال: games123"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label className="text-white">الوصف</Label>
+                  <Textarea
+                    value={editingPassword.description}
+                    onChange={(e) => setEditingPassword({...editingPassword, description: e.target.value})}
+                    className="bg-white/5 border-white/20 text-white h-20 resize-none"
+                    placeholder="وصف استخدام كلمة المرور"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-white">الفئات المسموحة (يمكن اختيار أكثر من فئة)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                    {['ألعاب', 'أدوات', 'تصميم', 'برمجة', 'موسيقى', 'فيديو', 'كتب', 'أمان'].map(category => (
+                      <div key={category} className="flex items-center space-x-2 bg-white/5 p-2 rounded border border-white/10">
+                        <input
+                          type="checkbox"
+                          id={`edit-cat-${category}`}
+                          checked={editingPassword.allowedCategories?.includes(category) || false}
+                          onChange={(e) => handleCategoryToggle(category, e.target.checked)}
+                          className="rounded border-white/20"
+                        />
+                        <label htmlFor={`edit-cat-${category}`} className="text-white text-sm cursor-pointer">
+                          {category}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 bg-white/5 p-3 rounded border border-white/10">
+                  <input
+                    type="checkbox"
+                    id="active-status-edit"
+                    checked={editingPassword.isActive || false}
+                    onChange={(e) => setEditingPassword({...editingPassword, isActive: e.target.checked})}
+                    className="rounded border-white/20"
+                  />
+                  <label htmlFor="active-status-edit" className="text-white cursor-pointer">
+                    كلمة مرور نشطة
+                  </label>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      if (editingPassword) {
+                        updatePassword(editingPassword.id, editingPassword);
+                        setEditingPassword(null);
+                      }
+                    }}
+                    className="bg-green-500 hover:bg-green-600"
+                  >
+                    حفظ
+                  </Button>
+                  <Button 
+                    onClick={() => setEditingPassword(null)} 
+                    variant="outline" 
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    إلغاء
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Password Statistics */}
+          <Card className="bg-white/5 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Users className="w-5 h-5 mr-2" />
+                إحصائيات كلمات المرور
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-400">
+                    {passwords.length + 1}
+                  </div>
+                  <div className="text-gray-400 text-sm">إجمالي كلمات المرور</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-400">
+                    {passwords.filter(p => p.isActive).length + 1}
+                  </div>
+                  <div className="text-gray-400 text-sm">كلمات المرور النشطة</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {passwords.reduce((sum, p) => sum + p.usageCount, 0)}
+                  </div>
+                  <div className="text-gray-400 text-sm">إجمالي الاستخدامات</div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -507,62 +887,14 @@ const DownloadsManagementTab: React.FC<DownloadsManagementTabProps> = ({
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <Lock className="w-5 h-5 mr-2" />
-                إعدادات كلمة المرور
+                إعدادات عامة
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label className="text-white">كلمة مرور التنزيلات</Label>
-                <Input
-                  type="password"
-                  value={siteSettings.downloadsPassword || ''}
-                  onChange={(e) => updateDownloadsPassword(e.target.value)}
-                  className="bg-white/5 border-white/20 text-white"
-                  placeholder="كلمة المرور للوصول للتنزيلات"
-                />
-                <p className="text-gray-400 text-sm mt-1">
-                  هذه الكلمة مطلوبة للوصول لصفحة التنزيلات
-                </p>
-              </div>
-
-              <Button onClick={saveSiteSettings} className="glow-button">
+              <Button onClick={saveSiteSettings} className="glow-button w-full">
                 <Save className="w-4 h-4 mr-2" />
-                حفظ الإعدادات
+                حفظ جميع الإعدادات
               </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/5 border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
-                <Users className="w-5 h-5 mr-2" />
-                إحصائيات التنزيلات
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">
-                    {downloads.length}
-                  </div>
-                  <div className="text-gray-400 text-sm">إجمالي العناصر</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">
-                    {downloads.reduce((sum, item) => sum + item.downloads, 0)}
-                  </div>
-                  <div className="text-gray-400 text-sm">إجمالي التنزيلات</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {downloads.length > 0 
-                      ? (downloads.reduce((sum, item) => sum + item.rating, 0) / downloads.length).toFixed(1)
-                      : '0'
-                    }
-                  </div>
-                  <div className="text-gray-400 text-sm">متوسط التقييم</div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
