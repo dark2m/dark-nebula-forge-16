@@ -477,6 +477,54 @@ export type Database = {
         }
         Relationships: []
       }
+      site_tools: {
+        Row: {
+          button_text: string
+          category: string | null
+          created_at: string | null
+          custom_html: string | null
+          description: string | null
+          icon: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+          title: string
+          updated_at: string | null
+          url: string | null
+          visible: boolean | null
+        }
+        Insert: {
+          button_text?: string
+          category?: string | null
+          created_at?: string | null
+          custom_html?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+          title: string
+          updated_at?: string | null
+          url?: string | null
+          visible?: boolean | null
+        }
+        Update: {
+          button_text?: string
+          category?: string | null
+          created_at?: string | null
+          custom_html?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+          title?: string
+          updated_at?: string | null
+          url?: string | null
+          visible?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

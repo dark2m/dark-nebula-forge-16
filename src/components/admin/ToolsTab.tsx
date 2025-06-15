@@ -1,38 +1,12 @@
 
 import React, { useState } from 'react';
 import { Plus, Edit, Trash2, Eye, EyeOff, Save, Wrench, Code, Star, Zap, Shield, Globe, Package } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { passwordGeneratorToolCode } from '../../utils/passwordGeneratorTool';
-import type { SiteSettings, Tool } from '../../types/admin';
+import { useSupabaseTools } from '../../hooks/useSupabaseTools';
+import type { Tool } from '../../types/admin';
 
-interface ToolsTabProps {
-  siteSettings: SiteSettings;
-  setSiteSettings: (settings: SiteSettings) => void;
-  saveSiteSettings: () => void;
-}
-
-const ToolsTab: React.FC<ToolsTabProps> = ({
-  siteSettings,
-  setSiteSettings,
-  saveSiteSettings
-}) => {
-  const [editingTool, setEditingTool] = useState<Tool | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-
-  // التأكد من وجود tools في الإعدادات
-  const tools = siteSettings.tools || [];
-  const toolsPageSettings = siteSettings.pageTexts?.tools || {
-    title: 'أدوات الموقع',
-    subtitle: 'مجموعة من الأدوات المفيدة للموقع'
-  };
+const ToolsTab = () => {
+  const { tools, isLoading, isSaving, addTool, updateTool, deleteTool } = useSupabaseTools();
 
   const categories = [
     { value: 'general', label: 'عام', color: 'bg-gradient-to-r from-blue-500 to-blue-600', icon: '🔧' },
@@ -41,31 +15,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
     { value: 'design', label: 'تصميم', color: 'bg-gradient-to-r from-orange-500 to-orange-600', icon: '🎨' }
   ];
 
-  const addTool = () => {
-    const newTool: Tool = {
-      id: Date.now(),
-      name: 'أداة جديدة',
-      title: 'أداة جديدة',
-      description: 'وصف الأداة',
-      buttonText: 'استخدام الأداة',
-      url: '',
-      icon: '🔧',
-      visible: true,
-      isActive: true,
-      category: 'general',
-      customHtml: ''
-    };
-
-    const updatedSettings = {
-      ...siteSettings,
-      tools: [...tools, newTool]
-    };
-    setSiteSettings(updatedSettings);
-    setEditingTool(newTool);
-    setIsAddDialogOpen(true);
-  };
-
-  const addToolByCategory = (category: string) => {
+  const addToolByCategory = async (category: string) => {
     const categoryLabels: { [key: string]: string } = {
       general: 'أداة عامة',
       security: 'أداة أمان',
@@ -80,9 +30,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
       design: '🎨'
     };
 
-    const newTool: Tool = {
-      id: Date.now(),
-      name: `${categoryLabels[category]} جديدة`,
+    const newToolData = {
+      name: `${categoryLabels[category]}-${Date.now()}`,
       title: `${categoryLabels[category]} جديدة`,
       description: 'وصف الأداة',
       buttonText: 'استخدام الأداة',
@@ -94,17 +43,16 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
       customHtml: ''
     };
 
-    const updatedSettings = {
-      ...siteSettings,
-      tools: [...tools, newTool]
-    };
-    setSiteSettings(updatedSettings);
+    try {
+      await addTool(newToolData);
+    } catch (error) {
+      console.error('Error adding tool:', error);
+    }
   };
 
-  const addPasswordGeneratorTool = () => {
-    const passwordTool: Tool = {
-      id: Date.now(),
-      name: 'مولد كلمات المرور',
+  const addPasswordGeneratorTool = async () => {
+    const passwordToolData = {
+      name: 'password-generator',
       title: 'مولد كلمات المرور',
       description: 'أداة لتوليد كلمات مرور قوية وآمنة مع خيارات متقدمة',
       buttonText: 'استخدام المولد',
@@ -116,56 +64,57 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
       customHtml: passwordGeneratorToolCode
     };
 
-    const updatedSettings = {
-      ...siteSettings,
-      tools: [...tools, passwordTool]
-    };
-    setSiteSettings(updatedSettings);
-  };
-
-  const updateTool = (toolId: number, updates: Partial<Tool>) => {
-    const updatedTools = tools.map(tool =>
-      tool.id === toolId ? { ...tool, ...updates } : tool
-    );
-    
-    setSiteSettings({
-      ...siteSettings,
-      tools: updatedTools
-    });
-  };
-
-  const deleteTool = (toolId: number) => {
-    const updatedTools = tools.filter(tool => tool.id !== toolId);
-    setSiteSettings({
-      ...siteSettings,
-      tools: updatedTools
-    });
-  };
-
-  const toggleToolVisibility = (toolId: number) => {
-    const tool = tools.find(t => t.id === toolId);
-    if (tool) {
-      updateTool(toolId, { visible: !tool.visible });
+    try {
+      await addTool(passwordToolData);
+    } catch (error) {
+      console.error('Error adding password generator tool:', error);
     }
   };
 
-  const updatePageTexts = (field: string, value: string) => {
-    setSiteSettings({
-      ...siteSettings,
-      pageTexts: {
-        ...siteSettings.pageTexts,
-        tools: {
-          ...toolsPageSettings,
-          [field]: value
-        }
-      }
-    });
+  const handleInputChange = async (toolId: number, field: string, value: any) => {
+    console.log('Immediate save for tool:', toolId, field, value);
+    try {
+      await updateTool(toolId, { [field]: value });
+    } catch (error) {
+      console.error('Error updating tool:', error);
+    }
   };
 
-  const handleInputChange = (toolId: number, field: string, value: any) => {
-    console.log('Immediate save for tool:', toolId, field, value);
-    updateTool(toolId, { [field]: value });
+  const toggleToolVisibility = async (toolId: number) => {
+    const tool = tools.find(t => t.id === toolId);
+    if (tool) {
+      try {
+        await updateTool(toolId, { visible: !tool.visible });
+      } catch (error) {
+        console.error('Error toggling tool visibility:', error);
+      }
+    }
   };
+
+  const handleDeleteTool = async (id: number) => {
+    try {
+      await deleteTool(id);
+    } catch (error) {
+      console.error('Error deleting tool:', error);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+            إدارة الأدوات
+          </h2>
+          <p className="text-gray-400">أضف وعدل أدوات موقعك بسهولة</p>
+        </div>
+        <div className="text-center py-8">
+          <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-400">جاري تحميل الأدوات...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -194,7 +143,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
           <button
             key={cat.value}
             onClick={() => addToolByCategory(cat.value)}
-            className={`${cat.color} p-6 rounded-2xl hover:scale-105 transition-all duration-300 group shadow-lg hover:shadow-xl`}
+            disabled={isSaving}
+            className={`${cat.color} p-6 rounded-2xl hover:scale-105 transition-all duration-300 group shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <div className="flex flex-col items-center space-y-3">
               <div className="text-3xl group-hover:scale-110 transition-transform duration-300">
@@ -209,44 +159,21 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
         ))}
       </div>
 
-      {/* إعدادات صفحة الأدوات */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
-        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6">
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            <div className="text-3xl bg-white/20 rounded-xl p-3">⚙️</div>
-            <div>
-              <h3 className="text-xl font-bold text-white">إعدادات صفحة الأدوات</h3>
-              <p className="text-white/80">تخصيص النصوص الرئيسية لصفحة الأدوات</p>
-            </div>
+      {/* زر إضافة مولد كلمات المرور */}
+      <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-white mb-2">أدوات خاصة</h3>
+            <p className="text-gray-400">أدوات معدة مسبقاً جاهزة للاستخدام</p>
           </div>
-        </div>
-        
-        <div className="p-8 space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-orange-300 text-sm font-medium mb-3">
-                عنوان الصفحة
-              </label>
-              <input
-                type="text"
-                value={toolsPageSettings.title || ''}
-                onChange={(e) => updatePageTexts('title', e.target.value)}
-                className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-orange-400 transition-colors"
-                placeholder="عنوان الصفحة..."
-              />
-            </div>
-            
-            <div>
-              <label className="block text-yellow-300 text-sm font-medium mb-3">وصف الصفحة</label>
-              <textarea
-                value={toolsPageSettings.subtitle || ''}
-                onChange={(e) => updatePageTexts('subtitle', e.target.value)}
-                rows={3}
-                className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-yellow-400 transition-colors resize-none"
-                placeholder="وصف الصفحة..."
-              />
-            </div>
-          </div>
+          <button
+            onClick={addPasswordGeneratorTool}
+            disabled={isSaving}
+            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Shield className="w-5 h-5" />
+            إضافة مولد كلمات المرور
+          </button>
         </div>
       </div>
 
@@ -284,7 +211,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                     <div className="flex items-center space-x-2 rtl:space-x-reverse">
                       <button
                         onClick={() => toggleToolVisibility(tool.id)}
-                        className={`p-3 rounded-xl transition-colors ${
+                        disabled={isSaving}
+                        className={`p-3 rounded-xl transition-colors disabled:opacity-50 ${
                           tool.visible 
                             ? 'bg-green-500/20 hover:bg-green-500/40' 
                             : 'bg-red-500/20 hover:bg-red-500/40'
@@ -298,8 +226,9 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                       </button>
                     </div>
                     <button
-                      onClick={() => deleteTool(tool.id)}
-                      className="bg-orange-500/20 hover:bg-orange-500/40 rounded-xl p-3 transition-colors"
+                      onClick={() => handleDeleteTool(tool.id)}
+                      disabled={isSaving}
+                      className="bg-orange-500/20 hover:bg-orange-500/40 rounded-xl p-3 transition-colors disabled:opacity-50"
                     >
                       <Trash2 className="w-5 h-5 text-orange-300" />
                     </button>
@@ -317,7 +246,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                       type="text"
                       value={tool.title}
                       onChange={(e) => handleInputChange(tool.id, 'title', e.target.value)}
-                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 transition-colors"
+                      disabled={isSaving}
+                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 transition-colors disabled:opacity-50"
                       placeholder="اسم الأداة..."
                     />
                   </div>
@@ -327,7 +257,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                     <select
                       value={tool.category}
                       onChange={(e) => handleInputChange(tool.id, 'category', e.target.value)}
-                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400 transition-colors"
+                      disabled={isSaving}
+                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400 transition-colors disabled:opacity-50"
                     >
                       {categories.map((cat) => (
                         <option key={cat.value} value={cat.value} className="bg-gray-800">
@@ -343,7 +274,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                       type="text"
                       value={tool.icon}
                       onChange={(e) => handleInputChange(tool.id, 'icon', e.target.value)}
-                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-green-400 transition-colors"
+                      disabled={isSaving}
+                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-green-400 transition-colors disabled:opacity-50"
                       placeholder="🔧"
                     />
                   </div>
@@ -355,7 +287,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                   <textarea
                     value={tool.description}
                     onChange={(e) => handleInputChange(tool.id, 'description', e.target.value)}
-                    className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-4 focus:outline-none focus:border-cyan-400 transition-colors h-24 resize-none"
+                    disabled={isSaving}
+                    className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-4 focus:outline-none focus:border-cyan-400 transition-colors h-24 resize-none disabled:opacity-50"
                     placeholder="وصف الأداة..."
                   />
                 </div>
@@ -368,7 +301,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                       type="text"
                       value={tool.buttonText}
                       onChange={(e) => handleInputChange(tool.id, 'buttonText', e.target.value)}
-                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-yellow-400 transition-colors"
+                      disabled={isSaving}
+                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-yellow-400 transition-colors disabled:opacity-50"
                       placeholder="نص الزر..."
                     />
                   </div>
@@ -379,7 +313,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                       type="text"
                       value={tool.url}
                       onChange={(e) => handleInputChange(tool.id, 'url', e.target.value)}
-                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-pink-400 transition-colors"
+                      disabled={isSaving}
+                      className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-pink-400 transition-colors disabled:opacity-50"
                       placeholder="https://..."
                     />
                   </div>
@@ -395,7 +330,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                   <textarea
                     value={tool.customHtml || ''}
                     onChange={(e) => handleInputChange(tool.id, 'customHtml', e.target.value)}
-                    className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-4 focus:outline-none focus:border-blue-400 transition-colors h-32 resize-none font-mono text-sm"
+                    disabled={isSaving}
+                    className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-4 focus:outline-none focus:border-blue-400 transition-colors h-32 resize-none font-mono text-sm disabled:opacity-50"
                     placeholder="<!DOCTYPE html>&#10;<html>&#10;<head>&#10;    <title>أداتي المخصصة</title>&#10;</head>&#10;<body>&#10;    <!-- أضف كودك هنا -->&#10;</body>&#10;</html>"
                   />
                   
@@ -421,7 +357,8 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
                 <button
                   key={cat.value}
                   onClick={() => addToolByCategory(cat.value)}
-                  className={`${cat.color} px-6 py-3 rounded-xl text-white font-medium hover:scale-105 transition-transform shadow-lg`}
+                  disabled={isSaving}
+                  className={`${cat.color} px-6 py-3 rounded-xl text-white font-medium hover:scale-105 transition-transform shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {cat.icon} {cat.label}
                 </button>
@@ -435,4 +372,3 @@ const ToolsTab: React.FC<ToolsTabProps> = ({
 };
 
 export default ToolsTab;
-
