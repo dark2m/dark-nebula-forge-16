@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SiteSettings } from '../../types/admin';
 import { 
   MessageCircle, 
@@ -23,7 +22,10 @@ import {
   Reply,
   Paperclip,
   Lock,
-  Search
+  Search,
+  Image as ImageIcon,
+  Video,
+  Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CustomerChatService, { type ChatSession, type ChatMessage, type AdminMessage } from '../../utils/customerChatService';
 import CustomerAuthService, { type CustomerUser, type LoginAttempt } from '../../utils/customerAuthService';
 import { useToast } from '@/hooks/use-toast';
+import { useFileUpload } from '@/hooks/useFileUpload';
 
 interface CustomerSupportTabProps {
   siteSettings: SiteSettings;
@@ -59,13 +62,24 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'waiting' | 'closed'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [currentMessages, setCurrentMessages] = useState<(ChatMessage | AdminMessage)[]>([]);
+  const [adminAttachments, setAdminAttachments] = useState<{ type: 'image' | 'video', data: string }[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { uploadFile, uploading } = useFileUpload();
 
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [currentMessages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const loadData = () => {
     loadChatSessions();
@@ -95,6 +109,113 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
     setLoginAttempts(CustomerAuthService.getLoginAttempts());
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsLoading(true);
+    const newAttachments: { type: 'image' | 'video', data: string }[] = [];
+
+    for (const file of Array.from(files)) {
+      try {
+        let processedFile: string;
+        const isVideo = file.type.startsWith('video/');
+        const isImage = file.type.startsWith('image/');
+        
+        if (isImage) {
+          processedFile = await compressImage(file, 0.7);
+          newAttachments.push({ type: 'image', data: processedFile });
+        } else if (isVideo) {
+          processedFile = await compressVideo(file, 0.6);
+          newAttachments.push({ type: 'video', data: processedFile });
+        }
+      } catch (error) {
+        console.error('Error processing file:', error);
+      }
+    }
+
+    if (newAttachments.length > 0) {
+      setAdminAttachments(prev => [...prev, ...newAttachments]);
+    }
+    
+    setIsLoading(false);
+    event.target.value = '';
+  };
+
+  const compressImage = (file: File, quality: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new window.Image();
+
+      img.onload = () => {
+        const maxWidth = 800;
+        const maxHeight = 600;
+        let { width, height } = img;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedDataUrl);
+        } else {
+          reject(new Error('Failed to get canvas context'));
+        }
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const compressVideo = (file: File, quality: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      video.onloadedmetadata = () => {
+        canvas.width = Math.min(video.videoWidth, 640);
+        canvas.height = Math.min(video.videoHeight, 480);
+        
+        video.currentTime = 0;
+        video.onseeked = () => {
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const thumbnailDataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(thumbnailDataUrl);
+          } else {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target?.result as string);
+            reader.onerror = () => reject(new Error('Failed to read video'));
+            reader.readAsDataURL(file);
+          }
+        };
+      };
+
+      video.onerror = () => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target?.result as string);
+        reader.onerror = () => reject(new Error('Failed to read video'));
+        reader.readAsDataURL(file);
+      };
+
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const removeAdminAttachment = (index: number) => {
+    setAdminAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
   const filteredSessions = chatSessions.filter(session => {
     const matchesSearch = session.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          session.customerId.toLowerCase().includes(searchTerm.toLowerCase());
@@ -107,13 +228,14 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
   );
 
   const handleSendReply = async () => {
-    if (!selectedSession || !newMessage.trim()) return;
+    if (!selectedSession || (!newMessage.trim() && adminAttachments.length === 0)) return;
 
     setIsLoading(true);
-    const success = CustomerChatService.sendAdminMessage(selectedSession, newMessage);
+    const success = CustomerChatService.sendAdminMessage(selectedSession, newMessage, adminAttachments);
     
     if (success) {
       setNewMessage('');
+      setAdminAttachments([]);
       loadChatSessions();
       const messages = CustomerChatService.getCustomerMessages(selectedSession);
       setCurrentMessages(messages);
@@ -194,6 +316,42 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
 
   const getResponseTimeAverage = () => {
     return "2.5 دقيقة";
+  };
+
+  // دالة لعرض المرفقات في الرسائل
+  const renderMessageAttachments = (message: ChatMessage | AdminMessage) => {
+    const attachments = message.attachments || [];
+    if (attachments.length === 0) return null;
+
+    return (
+      <div className="mt-2 space-y-2">
+        {attachments.map((attachment, index) => (
+          <div key={index} className="border border-white/20 rounded p-2 bg-white/5">
+            {attachment.type === 'image' ? (
+              <img 
+                src={attachment.data} 
+                alt={`مرفق ${index + 1}`}
+                className="max-w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => window.open(attachment.data, '_blank')}
+              />
+            ) : (
+              <div className="space-y-2">
+                <video 
+                  src={attachment.data} 
+                  controls 
+                  className="max-w-full h-32 rounded"
+                  preload="metadata"
+                />
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm text-gray-300">فيديو</span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const renderOverview = () => (
@@ -386,7 +544,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
   );
 
   const renderMessages = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[700px]">
       {/* قائمة المحادثات */}
       <Card className="bg-white/5 backdrop-blur-md border-white/20">
         <CardHeader>
@@ -485,30 +643,76 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
                 </div>
               </CardHeader>
               
-              <CardContent className="flex-1 flex flex-col p-4">
-                <ScrollArea className="flex-1 mb-4">
-                  <div className="space-y-3">
+              <CardContent className="flex-1 flex flex-col p-4 overflow-hidden">
+                <ScrollArea className="flex-1 mb-4 max-h-96">
+                  <div className="space-y-3 pr-4">
                     {currentMessages.map((message) => (
-                      <div key={message.id} className={`flex ${message.sender === 'support' ? 'justify-start' : 'justify-end'}`}>
+                      <div key={message.id} className={`flex ${('isFromAdmin' in message || message.sender === 'support') ? 'justify-start' : 'justify-end'}`}>
                         <div className={`max-w-[70%] p-3 rounded-lg ${
-                          message.sender === 'support' 
+                          ('isFromAdmin' in message || message.sender === 'support')
                             ? 'bg-green-500/20 border-green-500/30' 
                             : 'bg-blue-500/20 border-blue-500/30'
                         } border`}>
                           <div className="flex items-center gap-2 mb-1">
-                            {message.sender === 'support' ? (
+                            {('isFromAdmin' in message || message.sender === 'support') ? (
                               <UserCheck className="w-4 h-4 text-green-400" />
                             ) : (
                               <Users className="w-4 h-4 text-blue-400" />
                             )}
                             <span className="text-xs text-gray-400">{message.timestamp}</span>
                           </div>
-                          <p className="text-white text-sm">{message.message}</p>
+                          <p className="text-white text-sm break-words">{message.message}</p>
+                          {renderMessageAttachments(message)}
                         </div>
                       </div>
                     ))}
+                    <div ref={messagesEndRef} />
                   </div>
                 </ScrollArea>
+                
+                {/* منطقة المرفقات */}
+                {adminAttachments.length > 0 && (
+                  <div className="border border-white/20 rounded-lg p-3 bg-white/5 mb-3">
+                    <div className="flex flex-wrap gap-2">
+                      {adminAttachments.map((attachment, index) => (
+                        <div key={index} className="relative">
+                          {attachment.type === 'image' ? (
+                            <div className="relative">
+                              <img 
+                                src={attachment.data} 
+                                alt={`Preview ${index + 1}`}
+                                className="w-16 h-16 object-cover rounded border border-white/20"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => removeAdminAttachment(index)}
+                                className="absolute -top-1 -right-1 p-1 w-5 h-5"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="relative flex items-center gap-2 bg-white/10 rounded p-2">
+                              <Video className="w-4 h-4 text-blue-400" />
+                              <span className="text-xs text-gray-300">فيديو</span>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => removeAdminAttachment(index)}
+                                className="p-1 w-5 h-5"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="space-y-3">
                   <Textarea
@@ -518,10 +722,36 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
                     className="bg-white/10 border-white/20 text-white resize-none"
                     rows={3}
                   />
-                  <div className="flex justify-end">
+                  <div className="flex justify-between items-center">
+                    <div className="flex gap-2">
+                      <input
+                        type="file"
+                        accept="image/*,video/*"
+                        multiple
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="admin-media-upload"
+                        disabled={isLoading}
+                      />
+                      <label htmlFor="admin-media-upload">
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          size="sm"
+                          disabled={isLoading}
+                          className="bg-white/10 border-white/20 hover:bg-white/20"
+                          asChild
+                        >
+                          <span className="cursor-pointer flex items-center gap-2">
+                            <Upload className="w-4 h-4" />
+                            رفع ملف
+                          </span>
+                        </Button>
+                      </label>
+                    </div>
                     <Button 
                       onClick={handleSendReply}
-                      disabled={!newMessage.trim() || isLoading}
+                      disabled={(!newMessage.trim() && adminAttachments.length === 0) || isLoading}
                       className="bg-blue-500 hover:bg-blue-600"
                     >
                       <Send className="w-4 h-4 ml-2" />
