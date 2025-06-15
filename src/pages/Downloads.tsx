@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock } from 'lucide-react';
+import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock, MessageCircle, Users, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,46 +25,50 @@ const Downloads = () => {
   // كلمة المرور الافتراضية إذا لم تكن محددة في الإعدادات
   const downloadsPassword = siteSettings?.downloadsPassword || 'dark123';
 
-  // النصوص الافتراضية
+  // النصوص الافتراضية المحدثة
   const defaultTexts = {
-    title: 'مركز التنزيلات',
-    subtitle: 'احصل على أفضل الأدوات والبرامج المتخصصة مجاناً',
-    categories: {
-      all: 'الكل',
-      games: 'ألعاب',
-      tools: 'أدوات',
-      design: 'تصميم',
-      programming: 'برمجة',
-      music: 'موسيقى',
-      video: 'فيديو',
-      books: 'كتب',
-      security: 'أمان'
+    loginPage: {
+      title: 'المشتركين فقط',
+      subtitle: 'تواصل مع خدمة العملاء للحصول على رمز الدخول',
+      passwordLabel: 'رمز الدخول',
+      passwordPlaceholder: 'أدخل رمز الدخول',
+      loginButton: 'دخول',
+      contactSupport: 'تواصل مع خدمة العملاء',
+      errorMessage: 'رمز دخول خاطئ'
     },
-    buttons: {
-      download: 'تنزيل',
-      filter: 'تصفية',
-      login: 'دخول'
-    },
-    labels: {
-      size: 'الحجم',
-      downloads: 'التنزيلات',
-      rating: 'التقييم',
-      version: 'الإصدار',
-      password: 'كلمة المرور'
-    },
-    stats: {
-      totalDownloads: 'إجمالي التنزيلات',
-      availableFiles: 'ملفات متاحة',
-      averageRating: 'متوسط التقييم'
-    },
-    placeholders: {
-      search: 'البحث في التنزيلات...',
-      noResults: 'لا توجد نتائج',
-      password: 'أدخل كلمة المرور'
-    },
-    messages: {
-      loginRequired: 'يجب إدخال كلمة المرور للوصول للتنزيلات',
-      wrongPassword: 'كلمة مرور خاطئة'
+    mainPage: {
+      title: 'مركز التنزيلات',
+      subtitle: 'احصل على أفضل الأدوات والبرامج المتخصصة',
+      categories: {
+        all: 'الكل',
+        games: 'ألعاب',
+        tools: 'أدوات',
+        design: 'تصميم',
+        programming: 'برمجة',
+        music: 'موسيقى',
+        video: 'فيديو',
+        books: 'كتب',
+        security: 'أمان'
+      },
+      buttons: {
+        download: 'تنزيل',
+        filter: 'تصفية'
+      },
+      labels: {
+        size: 'الحجم',
+        downloads: 'التنزيلات',
+        rating: 'التقييم',
+        version: 'الإصدار'
+      },
+      stats: {
+        totalDownloads: 'إجمالي التنزيلات',
+        availableFiles: 'ملفات متاحة',
+        averageRating: 'متوسط التقييم'
+      },
+      placeholders: {
+        search: 'البحث في التنزيلات...',
+        noResults: 'لا توجد نتائج'
+      }
     }
   };
 
@@ -120,7 +123,16 @@ const Downloads = () => {
       setError('');
       localStorage.setItem('downloadsAuth', 'true');
     } else {
-      setError(texts?.messages?.wrongPassword || 'كلمة مرور خاطئة');
+      setError(texts?.loginPage?.errorMessage || 'رمز دخول خاطئ');
+    }
+  };
+
+  const handleContactSupport = () => {
+    const contactInfo = siteSettings?.contactInfo;
+    if (contactInfo?.discord) {
+      window.open(`https://discord.com/users/${contactInfo.discord}`, '_blank');
+    } else if (contactInfo?.telegram) {
+      window.open(`https://t.me/${contactInfo.telegram.replace('@', '')}`, '_blank');
     }
   };
 
@@ -148,56 +160,123 @@ const Downloads = () => {
     ? (downloads.reduce((sum, item) => sum + item.rating, 0) / downloads.length).toFixed(1)
     : '0';
 
-  // صفحة تسجيل الدخول
+  // صفحة تسجيل الدخول المحدثة
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen relative">
+      <div className="min-h-screen relative overflow-hidden">
         <StarryBackground />
         
-        <div className="relative z-10 min-h-screen flex items-center justify-center">
-          <Card className="w-full max-w-md mx-auto bg-white/5 border-white/20">
-            <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
-                <Lock className="w-8 h-8 text-blue-400" />
-              </div>
-              <CardTitle className="text-2xl text-white">
-                {texts?.title || 'مركز التنزيلات'}
-              </CardTitle>
-              <CardDescription className="text-gray-300">
-                {texts?.messages?.loginRequired || 'يجب إدخال كلمة المرور للوصول للتنزيلات'}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  {texts?.labels?.password || 'كلمة المرور'}
-                </label>
-                <Input
-                  type="password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder={texts?.placeholders?.password || 'أدخل كلمة المرور'}
-                  className="bg-white/5 border-white/20 text-white placeholder-gray-400"
-                  onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-                />
-              </div>
-              
-              {error && (
-                <div className="text-red-400 text-sm text-center">
-                  {error}
+        {/* Enhanced Background Effects */}
+        <div className="absolute inset-0 z-[1]">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+
+        {/* Floating Particles */}
+        <div className="absolute inset-0 z-[1]">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-white/20 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`,
+                transform: `scale(${0.5 + Math.random() * 0.5})`
+              }}
+            ></div>
+          ))}
+        </div>
+        
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
+          <div className="w-full max-w-md">
+            <Card className="bg-white/5 backdrop-blur-xl border border-white/20 shadow-2xl">
+              <CardHeader className="text-center pb-6">
+                {/* Enhanced Icon Section */}
+                <div className="relative mx-auto w-20 h-20 mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full blur-lg opacity-60 animate-pulse"></div>
+                  <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 rounded-full p-4 border border-white/20">
+                    <Users className="w-12 h-12 text-white" />
+                    <Shield className="absolute -top-1 -right-1 w-6 h-6 text-yellow-400 animate-bounce" />
+                  </div>
                 </div>
-              )}
+                
+                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-3">
+                  {texts?.loginPage?.title || 'المشتركين فقط'}
+                </CardTitle>
+                <CardDescription className="text-gray-300 text-lg leading-relaxed">
+                  {texts?.loginPage?.subtitle || 'تواصل مع خدمة العملاء للحصول على رمز الدخول'}
+                </CardDescription>
+              </CardHeader>
               
-              <Button
-                onClick={handleLogin}
-                className="w-full glow-button"
-                disabled={!passwordInput}
-              >
-                {texts?.buttons?.login || 'دخول'}
-              </Button>
-            </CardContent>
-          </Card>
+              <CardContent className="space-y-6">
+                {/* Enhanced Password Input */}
+                <div className="relative group">
+                  <label className="block text-sm font-medium text-gray-300 mb-3 group-focus-within:text-blue-300 transition-colors duration-300">
+                    {texts?.loginPage?.passwordLabel || 'رمز الدخول'}
+                  </label>
+                  <div className="relative">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl opacity-0 group-focus-within:opacity-30 transition-opacity duration-300 blur-sm"></div>
+                    <div className="relative flex items-center">
+                      <Lock className="absolute right-4 w-5 h-5 text-gray-400 group-focus-within:text-blue-400 transition-colors duration-300" />
+                      <Input
+                        type="password"
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        placeholder={texts?.loginPage?.passwordPlaceholder || 'أدخل رمز الدخول'}
+                        className="bg-white/5 border-white/20 text-white placeholder-gray-400 pr-12 py-4 rounded-xl focus:border-blue-400/50 focus:bg-white/10 transition-all duration-300"
+                        onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                    <div className="text-red-400 text-sm text-center flex items-center justify-center">
+                      <Shield className="w-4 h-4 mr-2" />
+                      {error}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Enhanced Login Button */}
+                <Button
+                  onClick={handleLogin}
+                  className="w-full relative group overflow-hidden py-4 rounded-xl"
+                  disabled={!passwordInput}
+                >
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+                  <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 text-white font-bold text-lg transition-all duration-300 group-hover:from-blue-500 group-hover:via-purple-500 group-hover:to-cyan-500 py-1 px-6 rounded-xl">
+                    <Lock className="w-5 h-5 mr-2 inline" />
+                    {texts?.loginPage?.loginButton || 'دخول'}
+                  </div>
+                </Button>
+                
+                {/* Contact Support Button */}
+                <Button
+                  onClick={handleContactSupport}
+                  variant="outline"
+                  className="w-full bg-white/5 border-white/20 text-white hover:bg-white/10 py-4 rounded-xl transition-all duration-300"
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  {texts?.loginPage?.contactSupport || 'تواصل مع خدمة العملاء'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Enhanced Footer */}
+            <div className="text-center mt-6">
+              <div className="relative inline-block">
+                <div className="absolute -inset-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg blur-lg animate-pulse"></div>
+                <p className="relative text-gray-400/80 text-sm bg-black/20 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
+                  🔒 محتوى حصري للمشتركين فقط
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -213,10 +292,10 @@ const Downloads = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
-              {texts?.title || 'مركز التنزيلات'}
+              {texts?.mainPage?.title || 'مركز التنزيلات'}
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              {texts?.subtitle || 'احصل على أفضل الأدوات والبرامج المتخصصة مجاناً'}
+              {texts?.mainPage?.subtitle || 'احصل على أفضل الأدوات والبرامج المتخصصة'}
             </p>
           </div>
 
@@ -226,7 +305,7 @@ const Downloads = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">{texts?.stats?.totalDownloads || 'إجمالي التنزيلات'}</p>
+                    <p className="text-gray-400 text-sm">{texts?.mainPage?.stats?.totalDownloads || 'إجمالي التنزيلات'}</p>
                     <p className="text-2xl font-bold text-white">{totalDownloads.toLocaleString()}</p>
                   </div>
                   <TrendingUp className="w-8 h-8 text-blue-400" />
@@ -238,7 +317,7 @@ const Downloads = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">{texts?.stats?.availableFiles || 'ملفات متاحة'}</p>
+                    <p className="text-gray-400 text-sm">{texts?.mainPage?.stats?.availableFiles || 'ملفات متاحة'}</p>
                     <p className="text-2xl font-bold text-white">{downloads.length}</p>
                   </div>
                   <Package className="w-8 h-8 text-green-400" />
@@ -250,7 +329,7 @@ const Downloads = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-400 text-sm">{texts?.stats?.averageRating || 'متوسط التقييم'}</p>
+                    <p className="text-gray-400 text-sm">{texts?.mainPage?.stats?.averageRating || 'متوسط التقييم'}</p>
                     <p className="text-2xl font-bold text-white">{averageRating}/5</p>
                   </div>
                   <Award className="w-8 h-8 text-yellow-400" />
@@ -265,7 +344,7 @@ const Downloads = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <Input
                 type="text"
-                placeholder={texts?.placeholders?.search || 'البحث في التنزيلات...'}
+                placeholder={texts?.mainPage?.placeholders?.search || 'البحث في التنزيلات...'}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 bg-white/5 border-white/20 text-white placeholder-gray-400"
@@ -278,15 +357,15 @@ const Downloads = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-white/20">
-                <SelectItem value="all">{texts?.categories?.all || 'الكل'}</SelectItem>
-                <SelectItem value="games">{texts?.categories?.games || 'ألعاب'}</SelectItem>
-                <SelectItem value="tools">{texts?.categories?.tools || 'أدوات'}</SelectItem>
-                <SelectItem value="design">{texts?.categories?.design || 'تصميم'}</SelectItem>
-                <SelectItem value="programming">{texts?.categories?.programming || 'برمجة'}</SelectItem>
-                <SelectItem value="music">{texts?.categories?.music || 'موسيقى'}</SelectItem>
-                <SelectItem value="video">{texts?.categories?.video || 'فيديو'}</SelectItem>
-                <SelectItem value="books">{texts?.categories?.books || 'كتب'}</SelectItem>
-                <SelectItem value="security">{texts?.categories?.security || 'أمان'}</SelectItem>
+                <SelectItem value="all">{texts?.mainPage?.categories?.all || 'الكل'}</SelectItem>
+                <SelectItem value="games">{texts?.mainPage?.categories?.games || 'ألعاب'}</SelectItem>
+                <SelectItem value="tools">{texts?.mainPage?.categories?.tools || 'أدوات'}</SelectItem>
+                <SelectItem value="design">{texts?.mainPage?.categories?.design || 'تصميم'}</SelectItem>
+                <SelectItem value="programming">{texts?.mainPage?.categories?.programming || 'برمجة'}</SelectItem>
+                <SelectItem value="music">{texts?.mainPage?.categories?.music || 'موسيقى'}</SelectItem>
+                <SelectItem value="video">{texts?.mainPage?.categories?.video || 'فيديو'}</SelectItem>
+                <SelectItem value="books">{texts?.mainPage?.categories?.books || 'كتب'}</SelectItem>
+                <SelectItem value="security">{texts?.mainPage?.categories?.security || 'أمان'}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -310,7 +389,7 @@ const Downloads = () => {
               <CardContent className="p-12 text-center">
                 <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">
-                  {texts?.placeholders?.noResults || 'لا توجد نتائج'}
+                  {texts?.mainPage?.placeholders?.noResults || 'لا توجد نتائج'}
                 </h3>
                 <p className="text-gray-400">جرب تغيير مصطلحات البحث أو الفئة</p>
               </CardContent>
@@ -330,7 +409,7 @@ const Downloads = () => {
                         </CardDescription>
                       </div>
                       <Badge variant="secondary" className="ml-2">
-                        {texts?.categories?.[item.category as keyof typeof texts.categories] || item.category}
+                        {texts?.mainPage?.categories?.[item.category as keyof typeof texts.mainPage.categories] || item.category}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -338,17 +417,17 @@ const Downloads = () => {
                   <CardContent className="p-6 pt-0">
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">{texts?.labels?.size || 'الحجم'}:</span>
+                        <span className="text-gray-400">{texts?.mainPage?.labels?.size || 'الحجم'}:</span>
                         <span className="text-white">{item.size}</span>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">{texts?.labels?.downloads || 'التنزيلات'}:</span>
+                        <span className="text-gray-400">{texts?.mainPage?.labels?.downloads || 'التنزيلات'}:</span>
                         <span className="text-white">{item.downloads.toLocaleString()}</span>
                       </div>
                       
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-400">{texts?.labels?.rating || 'التقييم'}:</span>
+                        <span className="text-gray-400">{texts?.mainPage?.labels?.rating || 'التقييم'}:</span>
                         <div className="flex items-center">
                           <Star className="w-4 h-4 text-yellow-400 fill-current" />
                           <span className="text-white ml-1">{item.rating}/5</span>
@@ -357,7 +436,7 @@ const Downloads = () => {
                       
                       {item.version && (
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-400">{texts?.labels?.version || 'الإصدار'}:</span>
+                          <span className="text-gray-400">{texts?.mainPage?.labels?.version || 'الإصدار'}:</span>
                           <span className="text-white">{item.version}</span>
                         </div>
                       )}
@@ -368,7 +447,7 @@ const Downloads = () => {
                       className="w-full glow-button group-hover:scale-105 transition-transform"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      {texts?.buttons?.download || 'تنزيل'}
+                      {texts?.mainPage?.buttons?.download || 'تنزيل'}
                     </Button>
                   </CardContent>
                 </Card>

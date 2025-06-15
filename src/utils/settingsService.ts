@@ -1,3 +1,4 @@
+
 import { SiteSettings } from '../types/admin';
 
 class SettingsService {
@@ -212,6 +213,7 @@ class SettingsService {
           category: 'general'
         }
       ],
+      downloadsPassword: 'dark123',
       pageTexts: {
         home: {
           heroTitle: 'DARK',
@@ -258,6 +260,51 @@ class SettingsService {
         tools: {
           title: 'أدوات الموقع',
           subtitle: 'مجموعة من الأدوات المفيدة والمتقدمة'
+        },
+        downloads: {
+          loginPage: {
+            title: 'المشتركين فقط',
+            subtitle: 'تواصل مع خدمة العملاء للحصول على رمز الدخول',
+            passwordLabel: 'رمز الدخول',
+            passwordPlaceholder: 'أدخل رمز الدخول',
+            loginButton: 'دخول',
+            contactSupport: 'تواصل مع خدمة العملاء',
+            errorMessage: 'رمز دخول خاطئ'
+          },
+          mainPage: {
+            title: 'مركز التنزيلات',
+            subtitle: 'احصل على أفضل الأدوات والبرامج المتخصصة',
+            categories: {
+              all: 'الكل',
+              games: 'ألعاب',
+              tools: 'أدوات',
+              design: 'تصميم',
+              programming: 'برمجة',
+              music: 'موسيقى',
+              video: 'فيديو',
+              books: 'كتب',
+              security: 'أمان'
+            },
+            buttons: {
+              download: 'تنزيل',
+              filter: 'تصفية'
+            },
+            labels: {
+              size: 'الحجم',
+              downloads: 'التنزيلات',
+              rating: 'التقييم',
+              version: 'الإصدار'
+            },
+            stats: {
+              totalDownloads: 'إجمالي التنزيلات',
+              availableFiles: 'ملفات متاحة',
+              averageRating: 'متوسط التقييم'
+            },
+            placeholders: {
+              search: 'البحث في التنزيلات...',
+              noResults: 'لا توجد نتائج'
+            }
+          }
         },
         navigation: {
           homeTitle: 'الرئيسية',

@@ -14,6 +14,7 @@ import PasswordsTab from './PasswordsTab';
 import ToolsTab from './ToolsTab';
 import CustomerSupportTab from './CustomerSupportTab';
 import DownloadsTab from './DownloadsTab';
+import DownloadsManagementTab from './DownloadsManagementTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -57,6 +58,15 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         return (
           <DownloadsTab
             canAccess={canAccess}
+          />
+        );
+
+      case 'downloads-management':
+        return (
+          <DownloadsManagementTab
+            siteSettings={siteSettings}
+            setSiteSettings={setSiteSettings}
+            saveSiteSettings={saveSiteSettings}
           />
         );
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { User, Users, Settings, Palette, Eye, Save, Package, MessageSquare, Lock, Shield, Wrench, Download } from 'lucide-react';
+import { User, Users, Settings, Palette, Eye, Save, Package, MessageSquare, Lock, Shield, Wrench, Download, FileDown } from 'lucide-react';
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -19,6 +19,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'overview', label: 'نظرة عامة', icon: Eye, roles: ['مدير عام', 'مبرمج', 'مشرف'] },
     { id: 'products', label: 'المنتجات', icon: Package, roles: ['مدير عام', 'مبرمج'] },
     { id: 'downloads', label: 'التنزيلات', icon: Download, roles: ['مدير عام', 'مبرمج'] },
+    { id: 'downloads-management', label: 'إدارة التنزيلات', icon: FileDown, roles: ['مدير عام', 'مبرمج'] },
     { id: 'users', label: 'المستخدمين', icon: Users, roles: ['مدير عام'] },
     { id: 'passwords', label: 'كلمات المرور', icon: Lock, roles: ['مدير عام'] },
     { id: 'tools', label: 'الأدوات', icon: Wrench, roles: ['مدير عام', 'مبرمج', 'مشرف'] },
