@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { SiteSettings } from '../../types/admin';
 import { 
   MessageCircle, 
   Users, 
@@ -42,17 +41,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { useSupabaseCustomerSupport } from '@/hooks/useSupabaseCustomerSupport';
 import type { CustomerSupportUser, CustomerSupportMessage } from '@/utils/supabaseCustomerSupportService';
 
-interface CustomerSupportTabWithSupabaseProps {
-  siteSettings: SiteSettings;
-  setSiteSettings: (settings: SiteSettings) => void;
-  saveSiteSettings: () => void;
-}
-
-const CustomerSupportTabWithSupabase: React.FC<CustomerSupportTabWithSupabaseProps> = ({ 
-  siteSettings, 
-  setSiteSettings, 
-  saveSiteSettings 
-}) => {
+const CustomerSupportTabWithSupabase: React.FC = () => {
   const [activeView, setActiveView] = useState<'overview' | 'messages' | 'customers' | 'analytics' | 'settings'>('overview');
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSupportUser | null>(null);
@@ -562,10 +551,6 @@ const CustomerSupportTabWithSupabase: React.FC<CustomerSupportTabWithSupabasePro
                   </label>
                 </div>
               </div>
-
-              <Button onClick={saveSiteSettings} className="bg-green-500 hover:bg-green-600">
-                حفظ الإعدادات
-              </Button>
             </CardContent>
           </Card>
         )}

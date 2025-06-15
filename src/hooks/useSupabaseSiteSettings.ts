@@ -24,7 +24,9 @@ export const useSupabaseSiteSettings = () => {
       if (error) throw error;
 
       if (data && data.settings_data) {
-        setSettings(data.settings_data as SiteSettings);
+        // تحويل Json إلى SiteSettings بطريقة آمنة
+        const settingsData = data.settings_data as unknown as SiteSettings;
+        setSettings(settingsData);
       } else {
         // إذا لم توجد إعدادات، حفظ الافتراضية
         const defaultSettings = AdminStorage.getDefaultSiteSettings();
@@ -50,7 +52,7 @@ export const useSupabaseSiteSettings = () => {
       const { error } = await supabase
         .from('site_settings')
         .insert({
-          settings_data: newSettings
+          settings_data: newSettings as any // تحويل إلى Json
         });
 
       if (error) throw error;
