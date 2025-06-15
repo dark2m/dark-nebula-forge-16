@@ -110,140 +110,170 @@ const GlobalCart = () => {
         </Button>
       </div>
 
-      {/* White Glass Cart Dialog */}
+      {/* Cart Dialog with Site Background */}
       <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-2xl">
-          <DialogHeader className="pb-4 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                <div className="p-2 bg-blue-50 rounded-full">
-                  <ShoppingCart className="w-5 h-5 text-blue-600" />
-                </div>
-                {cartTexts?.cartTitle || 'السلة'}
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsCartOpen(false)}
-                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full"
-              >
-                <X className="w-5 h-5" />
-              </Button>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden bg-transparent border-0 shadow-none rounded-2xl">
+          {/* Starry Background Container */}
+          <div className="absolute inset-0 rounded-2xl overflow-hidden">
+            {/* Background gradient like the site */}
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-slate-900" />
+            
+            {/* Animated stars */}
+            <div className="absolute inset-0">
+              {[...Array(50)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute bg-white rounded-full animate-pulse"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    width: `${Math.random() * 3 + 1}px`,
+                    height: `${Math.random() * 3 + 1}px`,
+                    animationDelay: `${Math.random() * 3}s`,
+                    animationDuration: `${Math.random() * 2 + 1}s`
+                  }}
+                />
+              ))}
             </div>
-            {totalItems > 0 && (
-              <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1 text-sm w-fit rounded-full">
-                {totalItems} منتج
-              </Badge>
-            )}
-          </DialogHeader>
-          
-          {totalItems === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="p-4 bg-gray-50 rounded-full mb-4">
-                <ShoppingCart className="w-8 h-8 text-gray-400" />
-              </div>
-              <p className="text-gray-600 text-base font-medium">
-                {cartTexts?.emptyCartMessage || 'السلة فارغة'}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <Tabs defaultValue="pubg" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3 bg-gray-50 border border-gray-200 p-1 rounded-xl">
-                  {Object.entries(categoryNames).map(([key, name]) => (
-                    <TabsTrigger 
-                      key={key} 
-                      value={key} 
-                      className="relative data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm text-gray-600 text-sm py-2 rounded-lg font-medium transition-all duration-200"
-                    >
-                      <span className="mr-2">{categoryIcons[key as keyof typeof categoryIcons]}</span>
-                      {name}
-                      {cartItems[key]?.length > 0 && (
-                        <Badge className="absolute -top-1 -right-1 bg-blue-600 text-white rounded-full min-w-4 h-4 text-xs flex items-center justify-center">
-                          {cartItems[key].length}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+            
+            {/* Glass overlay */}
+            <div className="absolute inset-0 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl" />
+          </div>
 
-                {Object.entries(categoryNames).map(([category, name]) => (
-                  <TabsContent key={category} value={category} className="space-y-3 mt-4">
-                    {cartItems[category]?.length === 0 ? (
-                      <div className="text-center py-8 bg-gray-50 rounded-xl border border-gray-100">
-                        <p className="text-gray-500 text-sm">لا توجد منتجات في {name}</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
-                          {cartItems[category]?.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-all duration-200">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-gray-800 text-sm truncate mb-2">
-                                  {item.name}
-                                </h4>
-                                <div className="flex items-center gap-2">
-                                  <Badge className="bg-green-100 text-green-800 border-green-200 text-xs px-2 py-1 rounded-full">
-                                    ${item.price}
-                                  </Badge>
-                                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs px-2 py-1 rounded-full">
-                                    الكمية: {item.quantity}
-                                  </Badge>
+          {/* Content */}
+          <div className="relative z-10">
+            <DialogHeader className="pb-4 border-b border-white/20">
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-xl font-bold text-white flex items-center gap-3">
+                  <div className="p-2 bg-white/10 rounded-full backdrop-blur-sm">
+                    <ShoppingCart className="w-5 h-5 text-white" />
+                  </div>
+                  {cartTexts?.cartTitle || 'السلة'}
+                </DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsCartOpen(false)}
+                  className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              {totalItems > 0 && (
+                <Badge className="bg-blue-500/20 text-white border-blue-400/30 px-3 py-1 text-sm w-fit rounded-full backdrop-blur-sm">
+                  {totalItems} منتج
+                </Badge>
+              )}
+            </DialogHeader>
+            
+            {totalItems === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="p-4 bg-white/10 rounded-full mb-4 backdrop-blur-sm">
+                  <ShoppingCart className="w-8 h-8 text-white/70" />
+                </div>
+                <p className="text-white/80 text-base font-medium">
+                  {cartTexts?.emptyCartMessage || 'السلة فارغة'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Tabs defaultValue="pubg" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-3 bg-white/10 backdrop-blur-sm border border-white/20 p-1 rounded-xl">
+                    {Object.entries(categoryNames).map(([key, name]) => (
+                      <TabsTrigger 
+                        key={key} 
+                        value={key} 
+                        className="relative data-[state=active]:bg-white/20 data-[state=active]:text-white data-[state=active]:shadow-sm text-white/70 text-sm py-2 rounded-lg font-medium transition-all duration-200"
+                      >
+                        <span className="mr-2">{categoryIcons[key as keyof typeof categoryIcons]}</span>
+                        {name}
+                        {cartItems[key]?.length > 0 && (
+                          <Badge className="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full min-w-4 h-4 text-xs flex items-center justify-center">
+                            {cartItems[key].length}
+                          </Badge>
+                        )}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+
+                  {Object.entries(categoryNames).map(([category, name]) => (
+                    <TabsContent key={category} value={category} className="space-y-3 mt-4">
+                      {cartItems[category]?.length === 0 ? (
+                        <div className="text-center py-8 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
+                          <p className="text-white/70 text-sm">لا توجد منتجات في {name}</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
+                            {cartItems[category]?.map((item, index) => (
+                              <div key={index} className="flex items-center justify-between p-4 bg-white/10 rounded-xl border border-white/10 hover:bg-white/15 transition-all duration-200 backdrop-blur-sm">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-white text-sm truncate mb-2">
+                                    {item.name}
+                                  </h4>
+                                  <div className="flex items-center gap-2">
+                                    <Badge className="bg-green-500/20 text-green-300 border-green-400/30 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                                      ${item.price}
+                                    </Badge>
+                                    <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                                      الكمية: {item.quantity}
+                                    </Badge>
+                                  </div>
                                 </div>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => removeFromCart(item.id, category)}
+                                  className="ml-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 border-0 p-2 rounded-full backdrop-blur-sm"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
                               </div>
+                            ))}
+                          </div>
+                          
+                          <Separator className="bg-white/20 my-4" />
+                          
+                          {/* Payment Methods */}
+                          <div className="space-y-4">
+                            <h4 className="text-center text-base font-bold text-white mb-3">
+                              طرق الدفع والتواصل
+                            </h4>
+                            
+                            <div className="grid gap-3">
                               <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => removeFromCart(item.id, category)}
-                                className="ml-3 bg-red-100 hover:bg-red-200 text-red-600 border-0 p-2 rounded-full"
+                                onClick={handleDiscordPurchase}
+                                className="w-full bg-purple-600/80 hover:bg-purple-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <ExternalLink className="w-4 h-4" />
+                                الشراء عبر ديسكورد
+                              </Button>
+                              
+                              <Button
+                                onClick={handleWhatsAppPurchase}
+                                className="w-full bg-green-600/80 hover:bg-green-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
+                              >
+                                <MessageCircle className="w-4 h-4" />
+                                الشراء عبر واتساب
+                              </Button>
+
+                              <Button
+                                onClick={handleCustomerSupport}
+                                className="w-full bg-blue-600/80 hover:bg-blue-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2 backdrop-blur-sm"
+                              >
+                                <Headphones className="w-4 h-4" />
+                                خدمة العملاء
                               </Button>
                             </div>
-                          ))}
-                        </div>
-                        
-                        <Separator className="bg-gray-200 my-4" />
-                        
-                        {/* Payment Methods */}
-                        <div className="space-y-4">
-                          <h4 className="text-center text-base font-bold text-gray-800 mb-3">
-                            طرق الدفع والتواصل
-                          </h4>
-                          
-                          <div className="grid gap-3">
-                            <Button
-                              onClick={handleDiscordPurchase}
-                              className="w-full bg-purple-600 hover:bg-purple-700 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                              الشراء عبر ديسكورد
-                            </Button>
-                            
-                            <Button
-                              onClick={handleWhatsAppPurchase}
-                              className="w-full bg-green-600 hover:bg-green-700 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2"
-                            >
-                              <MessageCircle className="w-4 h-4" />
-                              الشراء عبر واتساب
-                            </Button>
-
-                            <Button
-                              onClick={handleCustomerSupport}
-                              className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2"
-                            >
-                              <Headphones className="w-4 h-4" />
-                              خدمة العملاء
-                            </Button>
                           </div>
-                        </div>
-                      </>
-                    )}
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </div>
-          )}
+                        </>
+                      )}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>
