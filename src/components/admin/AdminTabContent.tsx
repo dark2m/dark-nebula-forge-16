@@ -2,7 +2,7 @@
 import React from 'react';
 import ProductsTab from './ProductsTab';
 import SiteControlTabWithSupabase from './SiteControlTabWithSupabase';
-import TextsTab from './TextsTab';
+import TextsTabWithSupabase from './TextsTabWithSupabase';
 import NavigationTabWithSupabase from './NavigationTabWithSupabase';
 import ContactTab from './ContactTab';
 import DesignTabWithSupabase from './DesignTabWithSupabase';
@@ -76,13 +76,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         return <SiteControlTabWithSupabase />;
 
       case 'texts':
-        return (
-          <TextsTab
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
-            saveSiteSettings={saveSiteSettings}
-          />
-        );
+        return <TextsTabWithSupabase />;
 
       case 'navigation':
         return <NavigationTabWithSupabase />;

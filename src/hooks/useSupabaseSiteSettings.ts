@@ -85,6 +85,24 @@ export const useSupabaseSiteSettings = () => {
     }, 1000);
   };
 
+  // تحديث النصوص مع الحفظ التلقائي
+  const updatePageTexts = (page: string, field: string, value: any) => {
+    console.log('Updating page texts:', page, field, value);
+    const updatedSettings = {
+      ...settings,
+      pageTexts: {
+        ...settings.pageTexts,
+        [page]: {
+          ...settings.pageTexts[page as keyof typeof settings.pageTexts],
+          [field]: value
+        }
+      }
+    };
+    
+    // حفظ فوري للنصوص
+    autoSave(updatedSettings);
+  };
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -96,6 +114,7 @@ export const useSupabaseSiteSettings = () => {
     saveSettings,
     autoSave,
     loadSettings,
-    updateSettings: setSettings
+    updateSettings: setSettings,
+    updatePageTexts
   };
 };
