@@ -1,4 +1,3 @@
-
 import { SiteSettings } from '../types/admin';
 
 class SettingsService {
@@ -259,39 +258,6 @@ class SettingsService {
         tools: {
           title: 'أدوات الموقع',
           subtitle: 'مجموعة من الأدوات المفيدة والمتقدمة'
-        },
-        downloads: {
-          title: 'التنزيلات',
-          subtitle: 'تحميل أفضل الملفات والبرامج',
-          categories: {
-            all: 'الكل',
-            games: 'الألعاب',
-            tools: 'الأدوات',
-            design: 'التصميم',
-            programming: 'البرمجة',
-            music: 'الموسيقى',
-            video: 'الفيديو',
-            books: 'الكتب',
-            security: 'الأمان'
-          },
-          buttons: {
-            download: 'تحميل',
-            filter: 'تصفية'
-          },
-          labels: {
-            size: 'الحجم',
-            downloads: 'التنزيلات',
-            rating: 'التقييم',
-            version: 'الإصدار',
-            lastUpdate: 'آخر تحديث',
-            features: 'المميزات',
-            status: 'الحالة'
-          },
-          stats: {
-            totalDownloads: 'إجمالي التنزيلات',
-            availableFiles: 'الملفات المتاحة',
-            averageRating: 'متوسط التقييم'
-          }
         },
         navigation: {
           homeTitle: 'الرئيسية',

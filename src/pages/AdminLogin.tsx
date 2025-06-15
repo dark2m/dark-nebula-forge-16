@@ -1,13 +1,17 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff, Shield, Zap } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, X, Shield, Crown } from 'lucide-react';
 import StarryBackground from '../components/StarryBackground';
 import AuthService from '../utils/auth';
+import TranslationService from '../utils/translationService';
 import { useToast } from '@/hooks/use-toast';
+import AnimatedParticles from '../components/admin/AnimatedParticles';
+import FloatingElements from '../components/admin/FloatingElements';
+import EnhancedCard from '../components/admin/EnhancedCard';
+import TypingAnimation from '../components/admin/TypingAnimation';
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,23 +23,24 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const success = AuthService.authenticateAdmin(email, password);
-      if (success) {
+      const isAuthenticated = AuthService.authenticateAdmin(username, password);
+      
+      if (isAuthenticated) {
         toast({
           title: "تم تسجيل الدخول بنجاح",
           description: "مرحباً بك في لوحة التحكم"
         });
-        navigate('/admin');
+        navigate('/admin/dashboard');
       } else {
         toast({
           title: "خطأ في تسجيل الدخول",
-          description: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+          description: "اسم المستخدم أو كلمة المرور غير صحيحة",
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "خطأ في النظام",
+        title: "خطأ",
         description: "حدث خطأ أثناء تسجيل الدخول",
         variant: "destructive"
       });
@@ -44,156 +49,193 @@ const AdminLogin = () => {
     }
   };
 
+  const handleBackToHome = () => {
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       <StarryBackground />
+      <AnimatedParticles />
+      <FloatingElements />
       
-      {/* Animated Background Elements */}
+      {/* Enhanced Background Elements */}
       <div className="absolute inset-0 z-[1]">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/10 rounded-full blur-2xl animate-ping"></div>
+        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-cyan-600/10 to-blue-600/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+        
+        {/* Additional Animated Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-48 h-48 bg-gradient-conic from-yellow-400/10 via-orange-500/10 to-red-500/10 rounded-full blur-2xl animate-spin" style={{ animationDuration: '20s' }}></div>
+        <div className="absolute bottom-1/4 right-1/4 w-36 h-36 bg-gradient-to-r from-green-500/15 to-emerald-500/15 rounded-full blur-xl animate-bounce" style={{ animationDuration: '3s' }}></div>
       </div>
 
-      {/* Floating Icons */}
-      <div className="absolute inset-0 z-[2] pointer-events-none">
-        <Shield className="absolute top-20 left-10 w-8 h-8 text-blue-400/30 animate-bounce delay-300" />
-        <Lock className="absolute top-40 right-20 w-6 h-6 text-purple-400/30 animate-bounce delay-700" />
-        <Zap className="absolute bottom-32 left-32 w-10 h-10 text-cyan-400/30 animate-bounce delay-1000" />
-        <User className="absolute bottom-20 right-10 w-7 h-7 text-pink-400/30 animate-bounce delay-500" />
+      {/* Enhanced Floating Particles */}
+      <div className="absolute inset-0 z-[1]">
+        {[...Array(30)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-white/20 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${2 + Math.random() * 2}s`,
+              transform: `scale(${0.5 + Math.random() * 0.5})`
+            }}
+          ></div>
+        ))}
       </div>
-
+      
+      {/* Enhanced Back Button */}
+      <button
+        onClick={handleBackToHome}
+        className="fixed top-8 right-8 z-30 group"
+        title={TranslationService.translate('admin.back_to_site')}
+      >
+        <div className="relative p-4 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:scale-110">
+          <X className="w-6 h-6 text-white group-hover:text-blue-300 transition-colors duration-300" />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+        </div>
+      </button>
+      
       <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
         <div className="w-full max-w-md">
-          {/* Logo Section with Animation */}
-          <div className="text-center mb-8 animate-fade-in">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full mb-4 animate-scale-in">
-              <Shield className="w-10 h-10 text-white animate-pulse" />
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              لوحة التحكم الإدارية
-            </h1>
-            <p className="text-gray-400 mt-2">تسجيل دخول المديرين والمطورين</p>
-          </div>
-
-          {/* Login Form with Glass Effect */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl animate-slide-in-right">
-            <form onSubmit={handleLogin} className="space-y-6">
-              {/* Email Field */}
-              <div className="group">
-                <label className="block text-white text-sm font-medium mb-2 group-hover:text-blue-300 transition-colors">
-                  البريد الإلكتروني
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white/10 transition-all duration-300"
-                    placeholder="أدخل البريد الإلكتروني"
-                    required
-                  />
+          
+          {/* Main Enhanced Login Card */}
+          <EnhancedCard glowColor="blue" className="transform hover:scale-105 transition-transform duration-500">
+            <div className="p-8">
+              
+              {/* Enhanced Header */}
+              <div className="text-center mb-8">
+                {/* Enhanced Crown Icon */}
+                <div className="relative inline-flex mb-6">
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 rounded-full blur-lg opacity-60 animate-pulse"></div>
+                  <div className="absolute -inset-2 bg-gradient-conic from-yellow-400/20 via-orange-500/20 to-red-500/20 rounded-full blur-xl animate-spin" style={{ animationDuration: '10s' }}></div>
+                  <div className="relative p-6 bg-gradient-to-r from-yellow-400/20 via-orange-500/20 to-red-500/20 rounded-full border border-yellow-400/30">
+                    <Crown className="w-10 h-10 text-yellow-300 animate-pulse" />
+                    <Shield className="absolute -top-1 -right-1 w-6 h-6 text-blue-400 animate-bounce" />
+                  </div>
                 </div>
+                
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent mb-3">
+                  <TypingAnimation text={TranslationService.translate('admin.login')} speed={150} />
+                </h1>
+                <p className="text-gray-300/80 text-lg">
+                  <TypingAnimation 
+                    text={TranslationService.translate('admin.login_description')} 
+                    speed={50}
+                    className="opacity-80"
+                  />
+                </p>
               </div>
 
-              {/* Password Field */}
-              <div className="group">
-                <label className="block text-white text-sm font-medium mb-2 group-hover:text-blue-300 transition-colors">
-                  كلمة المرور
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white/10 transition-all duration-300"
-                    placeholder="أدخل كلمة المرور"
-                    required
-                  />
+              <form onSubmit={handleLogin} className="space-y-6">
+                {/* Enhanced Username Field */}
+                <div className="relative group">
+                  <label className="block text-gray-200 text-sm font-semibold mb-3 group-focus-within:text-blue-300 transition-colors duration-300">
+                    <TypingAnimation text={TranslationService.translate('admin.username')} speed={80} />
+                  </label>
+                  <div className="relative">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl opacity-0 group-focus-within:opacity-30 transition-opacity duration-300 blur-sm"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                    <div className="relative flex items-center">
+                      <User className="absolute right-4 w-5 h-5 text-gray-400 group-focus-within:text-blue-400 transition-colors duration-300 animate-pulse" />
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="w-full bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl pl-4 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:border-blue-400/50 focus:bg-white/10 transition-all duration-300 group-hover:border-white/30"
+                        placeholder={TranslationService.translate('admin.enter_username')}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Enhanced Password Field */}
+                <div className="relative group">
+                  <label className="block text-gray-200 text-sm font-semibold mb-3 group-focus-within:text-purple-300 transition-colors duration-300">
+                    <TypingAnimation text={TranslationService.translate('admin.password')} speed={80} />
+                  </label>
+                  <div className="relative">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl opacity-0 group-focus-within:opacity-30 transition-opacity duration-300 blur-sm"></div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                    <div className="relative flex items-center">
+                      <Lock className="absolute right-4 w-5 h-5 text-gray-400 group-focus-within:text-purple-400 transition-colors duration-300 animate-pulse" />
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full bg-white/5 backdrop-blur-sm border border-white/20 rounded-xl pl-12 pr-12 py-4 text-white placeholder-gray-400 focus:outline-none focus:border-purple-400/50 focus:bg-white/10 transition-all duration-300 group-hover:border-white/30"
+                        placeholder={TranslationService.translate('admin.enter_password')}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute left-4 text-gray-400 hover:text-gray-200 transition-colors duration-300 focus:outline-none group hover:scale-110 transform"
+                      >
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Enhanced Login Button */}
+                <div className="pt-4">
                   <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    type="submit"
+                    disabled={isLoading}
+                    className="relative w-full group overflow-hidden"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {/* Enhanced Button Glow Effect */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300 animate-pulse"></div>
+                    <div className="absolute -inset-2 bg-gradient-conic from-blue-500/30 via-purple-500/30 to-cyan-500/30 rounded-xl blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-500"></div>
+                    
+                    {/* Button Content */}
+                    <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 group-hover:from-blue-500 group-hover:via-purple-500 group-hover:to-cyan-500 group-hover:shadow-2xl group-hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transform">
+                      {isLoading ? (
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span className="mr-2">
+                            <TypingAnimation text={TranslationService.translate('admin.logging_in')} speed={100} />
+                          </span>
+                        </div>
+                      ) : (
+                        <span>
+                          <TypingAnimation text={TranslationService.translate('admin.login_button')} speed={100} />
+                        </span>
+                      )}
+                      
+                      {/* Enhanced Button Inner Glow */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent transform skew-x-12 translate-x-full group-hover:-translate-x-full transition-transform duration-1000 delay-200"></div>
+                    </div>
                   </button>
                 </div>
-              </div>
+              </form>
 
-              {/* Login Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full group relative overflow-hidden bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <div className="relative z-10 flex items-center justify-center">
-                  {isLoading ? (
-                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  ) : (
-                    <>
-                      <Shield className="w-5 h-5 mr-2" />
-                      تسجيل الدخول
-                    </>
-                  )}
-                </div>
-                {/* Animated Background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                {/* Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-              </button>
-            </form>
+              {/* Enhanced Decorative Elements */}
+              <div className="absolute top-4 left-4 w-20 h-20 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-xl animate-pulse"></div>
+              <div className="absolute bottom-4 right-4 w-16 h-16 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-xl animate-pulse delay-1000"></div>
+              <div className="absolute top-1/2 right-4 w-12 h-12 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-lg animate-bounce" style={{ animationDuration: '2s' }}></div>
+            </div>
+          </EnhancedCard>
 
-            {/* Security Notice */}
-            <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <div className="flex items-center text-blue-300 text-sm">
-                <Shield className="w-4 h-4 mr-2" />
-                <span>تسجيل دخول آمن ومشفر</span>
-              </div>
+          {/* Enhanced Footer */}
+          <div className="text-center mt-8">
+            <div className="relative inline-block">
+              <div className="absolute -inset-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-lg blur-lg animate-pulse"></div>
+              <p className="relative text-gray-400/60 text-sm bg-black/20 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/10">
+                <TypingAnimation text="🔒 نظام آمن ومحمي بأحدث التقنيات" speed={80} />
+              </p>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="text-center mt-8 text-gray-400 text-sm animate-fade-in delay-500">
-            <p>محمي بأحدث تقنيات الأمان</p>
-          </div>
         </div>
       </div>
-
-      {/* Custom Animations */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes scaleIn {
-          from { opacity: 0; transform: scale(0.8); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(30px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        
-        .animate-fade-in {
-          animation: fadeIn 0.6s ease-out;
-        }
-        
-        .animate-scale-in {
-          animation: scaleIn 0.5s ease-out;
-        }
-        
-        .animate-slide-in-right {
-          animation: slideInRight 0.7s ease-out;
-        }
-        
-        .delay-500 {
-          animation-delay: 0.5s;
-        }
-      `}</style>
     </div>
   );
 };
