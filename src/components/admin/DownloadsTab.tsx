@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Book, Calendar, Mail, Phone, Search, Settings, Home } from 'lucide-react';
+import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Book, Calendar, Mail, Phone, Search, Settings, Home, Key, Eye, EyeOff, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import FileUploader from '../FileUploader';
 import DownloadService from '../../utils/downloadService';
 import DownloadCategoriesService from '../../utils/downloadCategoriesService';
+import DownloadPasswordService from '../../utils/downloadPasswordService';
 import DownloadCategoriesManager from './DownloadCategoriesManager';
-import type { DownloadItem } from '../../types/downloads';
+import type { DownloadItem, DownloadPassword } from '../../types/downloads';
 
 interface DownloadsTabProps {
   canAccess: (role: 'مدير عام' | 'مبرمج' | 'مشرف') => boolean;
@@ -17,11 +19,17 @@ interface DownloadsTabProps {
 const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
   const { toast } = useToast();
   const [downloads, setDownloads] = useState<DownloadItem[]>(DownloadService.getDownloads());
+  const [passwords, setPasswords] = useState<DownloadPassword[]>(DownloadPasswordService.getDownloadPasswords());
   const [categories, setCategories] = useState<string[]>(DownloadCategoriesService.getCategories());
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<DownloadItem>>({});
   const [showImageUploader, setShowImageUploader] = useState<number | null>(null);
   const [showVideoUploader, setShowVideoUploader] = useState<number | null>(null);
+  
+  // Password management states
+  const [isEditingPassword, setIsEditingPassword] = useState<number | null>(null);
+  const [passwordEditForm, setPasswordEditForm] = useState<Partial<DownloadPassword>>({});
+  const [showPassword, setShowPassword] = useState<number | null>(null);
 
   const availableIcons = [
     { name: 'Download', component: Download, label: 'تنزيل' },
@@ -184,299 +192,602 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
     return iconData ? iconData.component : Download;
   };
 
+  // Password management functions
+  const handleAddPassword = () => {
+    if (!canAccess('مبرمج')) {
+      toast({
+        title: "خطأ في الصلاحية",
+        description: "ليس لديك صلاحية لإضافة كلمات مرور",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newPassword = DownloadPasswordService.addPassword({
+      name: "كلمة مرور جديدة",
+      password: `pass_${Date.now()}`,
+      allowedCategories: [categories[0] || "أدوات"],
+      isActive: true,
+      description: "وصف كلمة المرور"
+    });
+
+    setPasswords(DownloadPasswordService.getDownloadPasswords());
+    
+    toast({
+      title: "تم إضافة كلمة المرور",
+      description: "تم إضافة كلمة مرور جديدة بنجاح"
+    });
+  };
+
+  const handleEditPassword = (password: DownloadPassword) => {
+    setIsEditingPassword(password.id);
+    setPasswordEditForm(password);
+  };
+
+  const handleSavePassword = () => {
+    if (!passwordEditForm || isEditingPassword === null) return;
+
+    DownloadPasswordService.updatePassword(isEditingPassword, passwordEditForm);
+    setPasswords(DownloadPasswordService.getDownloadPasswords());
+    setIsEditingPassword(null);
+    setPasswordEditForm({});
+
+    toast({
+      title: "تم حفظ التغييرات",
+      description: "تم تحديث كلمة المرور بنجاح"
+    });
+  };
+
+  const handleDeletePassword = (id: number) => {
+    if (!canAccess('مدير عام')) {
+      toast({
+        title: "خطأ في الصلاحية",
+        description: "ليس لديك صلاحية لحذف كلمات المرور",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    DownloadPasswordService.deletePassword(id);
+    setPasswords(DownloadPasswordService.getDownloadPasswords());
+
+    toast({
+      title: "تم حذف كلمة المرور",
+      description: "تم حذف كلمة المرور بنجاح"
+    });
+  };
+
+  const togglePasswordVisibility = (id: number) => {
+    setShowPassword(showPassword === id ? null : id);
+  };
+
+  const handleCategoryToggle = (category: string, isChecked: boolean) => {
+    const current = passwordEditForm.allowedCategories || [];
+    if (isChecked) {
+      setPasswordEditForm({...passwordEditForm, allowedCategories: [...current, category]});
+    } else {
+      setPasswordEditForm({...passwordEditForm, allowedCategories: current.filter(c => c !== category)});
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">إدارة التنزيلات</h2>
-          <p className="text-gray-400">إضافة وتعديل منتجات التنزيل</p>
+          <p className="text-gray-400">إضافة وتعديل منتجات التنزيل وكلمات المرور</p>
         </div>
-        {canAccess('مبرمج') && (
-          <Button onClick={handleAdd} className="bg-blue-500 hover:bg-blue-600">
-            <Plus className="w-4 h-4 mr-2" />
-            إضافة منتج
-          </Button>
-        )}
       </div>
 
-      {/* Categories Management */}
-      <DownloadCategoriesManager
-        categories={categories}
-        onCategoriesChange={setCategories}
-      />
+      <Tabs defaultValue="downloads" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-white/10">
+          <TabsTrigger value="downloads" className="text-white data-[state=active]:bg-blue-500">
+            المنتجات
+          </TabsTrigger>
+          <TabsTrigger value="passwords" className="text-white data-[state=active]:bg-blue-500">
+            كلمات المرور
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid gap-4">
-        {downloads.map((download) => {
-          const IconComponent = getIconComponent(download.icon);
-          const isCurrentlyEditing = isEditing === download.id;
+        <TabsContent value="downloads" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-white">إدارة المنتجات</h3>
+            {canAccess('مبرمج') && (
+              <Button onClick={handleAdd} className="bg-blue-500 hover:bg-blue-600">
+                <Plus className="w-4 h-4 mr-2" />
+                إضافة منتج
+              </Button>
+            )}
+          </div>
 
-          return (
-            <Card key={download.id} className="bg-white/5 border-white/20">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                      <IconComponent className="w-6 h-6 text-blue-400" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-white text-lg">{download.title}</CardTitle>
-                      <p className="text-gray-400 text-sm">{download.category} • v{download.version}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={`${getStatusColor(download.status)} border`}>
-                      {download.status}
-                    </Badge>
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEdit(download)}
-                        className="text-white hover:bg-white/10"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      {canAccess('مبرمج') && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(download.id)}
-                          className="text-red-400 hover:bg-red-500/20"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
+          {/* Categories Management */}
+          <DownloadCategoriesManager
+            categories={categories}
+            onCategoriesChange={setCategories}
+          />
 
-              <CardContent>
-                {isCurrentlyEditing ? (
-                  <div className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-2">العنوان</label>
-                        <input
-                          type="text"
-                          value={editForm.title || ''}
-                          onChange={(e) => setEditForm({...editForm, title: e.target.value})}
-                          className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-2">الفئة</label>
-                        <select
-                          value={editForm.category || ''}
-                          onChange={(e) => setEditForm({...editForm, category: e.target.value})}
-                          className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
-                        >
-                          {categories.map(cat => (
-                            <option key={cat} value={cat} className="bg-gray-800">{cat}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-2">الحالة</label>
-                        <select
-                          value={editForm.status || ''}
-                          onChange={(e) => setEditForm({...editForm, status: e.target.value})}
-                          className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
-                        >
-                          {statusOptions.map(status => (
-                            <option key={status} value={status} className="bg-gray-800">{status}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-2">الأيقونة</label>
-                        <select
-                          value={editForm.icon || ''}
-                          onChange={(e) => setEditForm({...editForm, icon: e.target.value})}
-                          className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
-                        >
-                          {availableIcons.map(icon => (
-                            <option key={icon.name} value={icon.name} className="bg-gray-800">{icon.label} ({icon.name})</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-2">الحجم</label>
-                        <input
-                          type="text"
-                          value={editForm.size || ''}
-                          onChange={(e) => setEditForm({...editForm, size: e.target.value})}
-                          className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
-                          placeholder="مثال: 15.2 MB"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white text-sm font-medium mb-2">الإصدار</label>
-                        <input
-                          type="text"
-                          value={editForm.version || ''}
-                          onChange={(e) => setEditForm({...editForm, version: e.target.value})}
-                          className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
-                          placeholder="مثال: 2.0.1"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-white text-sm font-medium mb-2">الوصف</label>
-                      <textarea
-                        value={editForm.description || ''}
-                        onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                        className="w-full p-2 bg-white/10 border border-white/20 rounded text-white h-24 resize-none"
-                      />
-                    </div>
+          <div className="grid gap-4">
+            {downloads.map((download) => {
+              const IconComponent = getIconComponent(download.icon);
+              const isCurrentlyEditing = isEditing === download.id;
 
-                    <div>
-                      <label className="block text-white text-sm font-medium mb-2">الميزات (مفصولة بفاصلة)</label>
-                      <input
-                        type="text"
-                        value={editForm.features?.join(', ') || ''}
-                        onChange={(e) => setEditForm({...editForm, features: e.target.value.split(', ').filter(f => f.trim())})}
-                        className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
-                        placeholder="ميزة 1, ميزة 2, ميزة 3"
-                      />
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button onClick={handleSave} className="bg-green-500 hover:bg-green-600">
-                        حفظ
-                      </Button>
-                      <Button 
-                        onClick={() => {setIsEditing(null); setEditForm({});}} 
-                        variant="outline" 
-                        className="border-white/20 text-white hover:bg-white/10"
-                      >
-                        إلغاء
-                      </Button>
-                    </div>
-
-                    {/* Media Management */}
-                    <div className="space-y-4">
-                      <h4 className="text-white font-medium">إدارة الوسائط</h4>
-                      
-                      {/* Images Section */}
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="block text-white text-sm font-medium">الصور</label>
+              return (
+                <Card key={download.id} className="bg-white/5 border-white/20">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                          <IconComponent className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-white text-lg">{download.title}</CardTitle>
+                          <p className="text-gray-400 text-sm">{download.category} • v{download.version}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={`${getStatusColor(download.status)} border`}>
+                          {download.status}
+                        </Badge>
+                        <div className="flex gap-1">
                           <Button
                             size="sm"
-                            onClick={() => setShowImageUploader(showImageUploader === download.id ? null : download.id)}
-                            className="bg-green-500 hover:bg-green-600 text-xs"
+                            variant="ghost"
+                            onClick={() => handleEdit(download)}
+                            className="text-white hover:bg-white/10"
                           >
-                            <Image className="w-3 h-3 mr-1" />
-                            إضافة صورة
+                            <Edit className="w-4 h-4" />
                           </Button>
+                          {canAccess('مبرمج') && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(download.id)}
+                              className="text-red-400 hover:bg-red-500/20"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
-                        
-                        {showImageUploader === download.id && (
-                          <div className="mb-2">
-                            <FileUploader
-                              onFileUploaded={(url) => handleAddImage(download.id, url)}
-                              acceptedTypes={['image/*']}
-                              maxSize={10}
-                              folder="downloads/images"
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent>
+                    {isCurrentlyEditing ? (
+                      <div className="space-y-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">العنوان</label>
+                            <input
+                              type="text"
+                              value={editForm.title || ''}
+                              onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
                             />
                           </div>
-                        )}
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">الفئة</label>
+                            <select
+                              value={editForm.category || ''}
+                              onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                            >
+                              {categories.map(cat => (
+                                <option key={cat} value={cat} className="bg-gray-800">{cat}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">الحالة</label>
+                            <select
+                              value={editForm.status || ''}
+                              onChange={(e) => setEditForm({...editForm, status: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                            >
+                              {statusOptions.map(status => (
+                                <option key={status} value={status} className="bg-gray-800">{status}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">الأيقونة</label>
+                            <select
+                              value={editForm.icon || ''}
+                              onChange={(e) => setEditForm({...editForm, icon: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                            >
+                              {availableIcons.map(icon => (
+                                <option key={icon.name} value={icon.name} className="bg-gray-800">{icon.label} ({icon.name})</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">الحجم</label>
+                            <input
+                              type="text"
+                              value={editForm.size || ''}
+                              onChange={(e) => setEditForm({...editForm, size: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                              placeholder="مثال: 15.2 MB"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">الإصدار</label>
+                            <input
+                              type="text"
+                              value={editForm.version || ''}
+                              onChange={(e) => setEditForm({...editForm, version: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                              placeholder="مثال: 2.0.1"
+                            />
+                          </div>
+                        </div>
                         
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                          {(download.images || []).map((image, index) => (
-                            <div key={index} className="relative group">
-                              <img
-                                src={image}
-                                alt={`صورة ${index + 1}`}
-                                className="w-full h-20 object-cover rounded border border-white/20"
-                              />
-                              <button
-                                onClick={() => handleRemoveImage(download.id, image)}
-                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        <div>
+                          <label className="block text-white text-sm font-medium mb-2">الوصف</label>
+                          <textarea
+                            value={editForm.description || ''}
+                            onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                            className="w-full p-2 bg-white/10 border border-white/20 rounded text-white h-24 resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-white text-sm font-medium mb-2">الميزات (مفصولة بفاصلة)</label>
+                          <input
+                            type="text"
+                            value={editForm.features?.join(', ') || ''}
+                            onChange={(e) => setEditForm({...editForm, features: e.target.value.split(', ').filter(f => f.trim())})}
+                            className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                            placeholder="ميزة 1, ميزة 2, ميزة 3"
+                          />
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button onClick={handleSave} className="bg-green-500 hover:bg-green-600">
+                            حفظ
+                          </Button>
+                          <Button 
+                            onClick={() => {setIsEditing(null); setEditForm({});}} 
+                            variant="outline" 
+                            className="border-white/20 text-white hover:bg-white/10"
+                          >
+                            إلغاء
+                          </Button>
+                        </div>
+
+                        {/* Media Management */}
+                        <div className="space-y-4">
+                          <h4 className="text-white font-medium">إدارة الوسائط</h4>
+                          
+                          {/* Images Section */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-white text-sm font-medium">الصور</label>
+                              <Button
+                                size="sm"
+                                onClick={() => setShowImageUploader(showImageUploader === download.id ? null : download.id)}
+                                className="bg-green-500 hover:bg-green-600 text-xs"
                               >
-                                <X className="w-3 h-3" />
-                              </button>
+                                <Image className="w-3 h-3 mr-1" />
+                                إضافة صورة
+                              </Button>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Videos Section */}
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="block text-white text-sm font-medium">الفيديوهات</label>
-                          <Button
-                            size="sm"
-                            onClick={() => setShowVideoUploader(showVideoUploader === download.id ? null : download.id)}
-                            className="bg-purple-500 hover:bg-purple-600 text-xs"
-                          >
-                            <Video className="w-3 h-3 mr-1" />
-                            إضافة فيديو
-                          </Button>
-                        </div>
-                        
-                        {showVideoUploader === download.id && (
-                          <div className="mb-2">
-                            <FileUploader
-                              onFileUploaded={(url) => handleAddVideo(download.id, url)}
-                              acceptedTypes={['video/*']}
-                              maxSize={100}
-                              folder="downloads/videos"
-                            />
-                          </div>
-                        )}
-                        
-                        <div className="space-y-2">
-                          {(download.videos || []).map((video, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white/5 p-2 rounded border border-white/20">
-                              <div className="flex items-center gap-2">
-                                <Video className="w-4 h-4 text-purple-400" />
-                                <span className="text-white text-sm">فيديو {index + 1}</span>
+                            
+                            {showImageUploader === download.id && (
+                              <div className="mb-2">
+                                <FileUploader
+                                  onFileUploaded={(url) => handleAddImage(download.id, url)}
+                                  acceptedTypes={['image/*']}
+                                  folder="downloads/images"
+                                />
                               </div>
-                              <button
-                                onClick={() => handleRemoveVideo(download.id, video)}
-                                className="text-red-400 hover:text-red-300"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
+                            )}
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                              {(download.images || []).map((image, index) => (
+                                <div key={index} className="relative group">
+                                  <img
+                                    src={image}
+                                    alt={`صورة ${index + 1}`}
+                                    className="w-full h-20 object-cover rounded border border-white/20"
+                                  />
+                                  <button
+                                    onClick={() => handleRemoveImage(download.id, image)}
+                                    className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
                             </div>
+                          </div>
+
+                          {/* Videos Section */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="block text-white text-sm font-medium">الفيديوهات</label>
+                              <Button
+                                size="sm"
+                                onClick={() => setShowVideoUploader(showVideoUploader === download.id ? null : download.id)}
+                                className="bg-purple-500 hover:bg-purple-600 text-xs"
+                              >
+                                <Video className="w-3 h-3 mr-1" />
+                                إضافة فيديو
+                              </Button>
+                            </div>
+                            
+                            {showVideoUploader === download.id && (
+                              <div className="mb-2">
+                                <FileUploader
+                                  onFileUploaded={(url) => handleAddVideo(download.id, url)}
+                                  acceptedTypes={['video/*']}
+                                  folder="downloads/videos"
+                                />
+                              </div>
+                            )}
+                            
+                            <div className="space-y-2">
+                              {(download.videos || []).map((video, index) => (
+                                <div key={index} className="flex items-center justify-between bg-white/5 p-2 rounded border border-white/20">
+                                  <div className="flex items-center gap-2">
+                                    <Video className="w-4 h-4 text-purple-400" />
+                                    <span className="text-white text-sm">فيديو {index + 1}</span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleRemoveVideo(download.id, video)}
+                                    className="text-red-400 hover:text-red-300"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-gray-300">{download.description}</p>
+                        
+                        {/* Features */}
+                        <div className="flex flex-wrap gap-1">
+                          {download.features.slice(0, 3).map((feature, index) => (
+                            <Badge key={index} variant="outline" className="text-xs border-white/20 text-gray-300">
+                              {feature}
+                            </Badge>
                           ))}
+                          {download.features.length > 3 && (
+                            <Badge variant="outline" className="text-xs border-white/20 text-gray-300">
+                              +{download.features.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex justify-between text-sm text-gray-400">
+                          <span>التنزيلات: {download.downloads.toLocaleString()}</span>
+                          <span>التقييم: {download.rating}</span>
+                          <span>الحجم: {download.size}</span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="passwords" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-white">إدارة كلمات مرور التنزيلات</h3>
+              <p className="text-gray-400 text-sm">إنشاء وإدارة كلمات مرور متخصصة للفئات المختلفة</p>
+              <div className="mt-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <p className="text-blue-300 text-sm">
+                  💡 يمكنك تخصيص كل كلمة مرور لفتح فئة أو عدة فئات محددة فقط
+                </p>
+              </div>
+            </div>
+            {canAccess('مبرمج') && (
+              <Button onClick={handleAddPassword} className="bg-blue-500 hover:bg-blue-600">
+                <Plus className="w-4 h-4 mr-2" />
+                إضافة كلمة مرور
+              </Button>
+            )}
+          </div>
+
+          <div className="grid gap-4">
+            {passwords.map((password) => {
+              const isCurrentlyEditingPassword = isEditingPassword === password.id;
+              const isPasswordVisible = showPassword === password.id;
+
+              return (
+                <Card key={password.id} className="bg-white/5 border-white/20">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                          <Key className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-white text-lg">{password.name}</CardTitle>
+                          <p className="text-gray-400 text-sm">
+                            الفئات المسموحة: {password.allowedCategories.join(', ')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className={`${password.isActive ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'} border`}>
+                          {password.isActive ? 'نشط' : 'معطل'}
+                        </Badge>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => togglePasswordVisibility(password.id)}
+                            className="text-white hover:bg-white/10"
+                          >
+                            {isPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditPassword(password)}
+                            className="text-white hover:bg-white/10"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          {canAccess('مدير عام') && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeletePassword(password.id)}
+                              className="text-red-400 hover:bg-red-500/20"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <p className="text-gray-300">{download.description}</p>
-                    
-                    {/* Features */}
-                    <div className="flex flex-wrap gap-1">
-                      {download.features.slice(0, 3).map((feature, index) => (
-                        <Badge key={index} variant="outline" className="text-xs border-white/20 text-gray-300">
-                          {feature}
-                        </Badge>
-                      ))}
-                      {download.features.length > 3 && (
-                        <Badge variant="outline" className="text-xs border-white/20 text-gray-300">
-                          +{download.features.length - 3}
-                        </Badge>
-                      )}
-                    </div>
+                  </CardHeader>
 
-                    <div className="flex justify-between text-sm text-gray-400">
-                      <span>التنزيلات: {download.downloads.toLocaleString()}</span>
-                      <span>التقييم: {download.rating}</span>
-                      <span>الحجم: {download.size}</span>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  <CardContent>
+                    {isCurrentlyEditingPassword ? (
+                      <div className="space-y-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">الاسم</label>
+                            <input
+                              type="text"
+                              value={passwordEditForm.name || ''}
+                              onChange={(e) => setPasswordEditForm({...passwordEditForm, name: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                              placeholder="مثال: كلمة مرور الألعاب"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-white text-sm font-medium mb-2">كلمة المرور</label>
+                            <input
+                              type="text"
+                              value={passwordEditForm.password || ''}
+                              onChange={(e) => setPasswordEditForm({...passwordEditForm, password: e.target.value})}
+                              className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                              placeholder="مثال: games123"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-white text-sm font-medium mb-2">الوصف</label>
+                          <textarea
+                            value={passwordEditForm.description || ''}
+                            onChange={(e) => setPasswordEditForm({...passwordEditForm, description: e.target.value})}
+                            className="w-full p-2 bg-white/10 border border-white/20 rounded text-white h-20 resize-none"
+                            placeholder="وصف استخدام كلمة المرور"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-white text-sm font-medium mb-3">
+                            الفئات المسموحة (يمكن اختيار أكثر من فئة)
+                          </label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {categories.map(category => (
+                              <div key={category} className="flex items-center space-x-2 bg-white/5 p-2 rounded border border-white/10">
+                                <input
+                                  type="checkbox"
+                                  id={`cat-${category}`}
+                                  checked={passwordEditForm.allowedCategories?.includes(category) || false}
+                                  onChange={(e) => handleCategoryToggle(category, e.target.checked)}
+                                  className="rounded border-white/20"
+                                />
+                                <label htmlFor={`cat-${category}`} className="text-white text-sm cursor-pointer">
+                                  {category}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-gray-400 text-xs mt-2">
+                            💡 اختر الفئات التي يمكن لحاملي هذه كلمة المرور الوصول إليها
+                          </p>
+                        </div>
+
+                        <div className="flex items-center space-x-2 bg-white/5 p-3 rounded border border-white/10">
+                          <input
+                            type="checkbox"
+                            id="active-status"
+                            checked={passwordEditForm.isActive || false}
+                            onChange={(e) => setPasswordEditForm({...passwordEditForm, isActive: e.target.checked})}
+                            className="rounded border-white/20"
+                          />
+                          <label htmlFor="active-status" className="text-white cursor-pointer">
+                            كلمة مرور نشطة
+                          </label>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button onClick={handleSavePassword} className="bg-green-500 hover:bg-green-600">
+                            حفظ
+                          </Button>
+                          <Button 
+                            onClick={() => {setIsEditingPassword(null); setPasswordEditForm({});}} 
+                            variant="outline" 
+                            className="border-white/20 text-white hover:bg-white/10"
+                          >
+                            إلغاء
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-4 text-sm text-gray-300">
+                          <div className="flex items-center gap-1">
+                            <Shield className="w-4 h-4" />
+                            <span>كلمة المرور: </span>
+                            <code className="bg-gray-800 px-2 py-1 rounded">
+                              {isPasswordVisible ? password.password : '••••••••'}
+                            </code>
+                          </div>
+                        </div>
+                        
+                        {password.description && (
+                          <p className="text-gray-300 text-sm">{password.description}</p>
+                        )}
+
+                        <div className="flex gap-4 text-sm text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <Users className="w-4 h-4" />
+                            <span>الاستخدامات: {password.usageCount}</span>
+                          </div>
+                          {password.lastUsed && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              <span>آخر استخدام: {new Date(password.lastUsed).toLocaleDateString('ar')}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="text-gray-400 text-sm mb-2">الفئات المسموحة:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {password.allowedCategories.map((category, index) => (
+                              <Badge key={index} variant="outline" className="text-xs border-blue-500/30 text-blue-300 bg-blue-500/10">
+                                {category}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
