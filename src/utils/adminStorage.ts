@@ -1,4 +1,3 @@
-
 // Main AdminStorage class that combines all services
 import AuthService from './auth';
 import CartService from './cartService';
@@ -67,6 +66,7 @@ class AdminStorage {
       description: 'موقع DARK للخدمات التقنية',
       colors: { primary: '#3b82f6', secondary: '#8b5cf6', accent: '#06b6d4' },
       globalTextSize: 'medium' as const,
+      downloadsPassword: 'dark123', // كلمة مرور التنزيلات الافتراضية
       backgroundSettings: { 
         type: 'color' as const, 
         value: '#000000',
@@ -180,7 +180,8 @@ class AdminStorage {
           },
           buttons: {
             download: "تنزيل",
-            filter: "تصفية"
+            filter: "تصفية",
+            login: "دخول"
           },
           labels: {
             size: "الحجم",
@@ -189,7 +190,8 @@ class AdminStorage {
             version: "الإصدار",
             lastUpdate: "آخر تحديث",
             features: "المميزات",
-            status: "الحالة"
+            status: "الحالة",
+            password: "كلمة المرور"
           },
           stats: {
             totalDownloads: "إجمالي التنزيلات",
@@ -198,7 +200,12 @@ class AdminStorage {
           },
           placeholders: {
             search: "البحث في التنزيلات...",
-            noResults: "لا توجد نتائج"
+            noResults: "لا توجد نتائج",
+            password: "أدخل كلمة المرور"
+          },
+          messages: {
+            loginRequired: "يجب إدخال كلمة المرور للوصول للتنزيلات",
+            wrongPassword: "كلمة مرور خاطئة"
           }
         }
       }
