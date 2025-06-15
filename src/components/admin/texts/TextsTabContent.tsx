@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { SiteSettings } from '../../../types/admin';
 import TextEditor from '../TextEditor';
