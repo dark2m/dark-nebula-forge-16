@@ -95,12 +95,26 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
       : "bg-red-500/20 text-red-400 border-red-500/30";
   };
 
+  const handleCategoryToggle = (category: string, isChecked: boolean) => {
+    const current = editForm.allowedCategories || [];
+    if (isChecked) {
+      setEditForm({...editForm, allowedCategories: [...current, category]});
+    } else {
+      setEditForm({...editForm, allowedCategories: current.filter(c => c !== category)});
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">إدارة كلمات مرور التنزيلات</h2>
           <p className="text-gray-400">إنشاء وإدارة كلمات مرور متخصصة للفئات المختلفة</p>
+          <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-blue-300 text-sm">
+              💡 يمكنك تخصيص كل كلمة مرور لفتح فئة أو عدة فئات محددة فقط
+            </p>
+          </div>
         </div>
         {canAccess('مبرمج') && (
           <Button onClick={handleAdd} className="bg-blue-500 hover:bg-blue-600">
@@ -126,7 +140,7 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
                     <div>
                       <CardTitle className="text-white text-lg">{password.name}</CardTitle>
                       <p className="text-gray-400 text-sm">
-                        الفئات: {password.allowedCategories.join(', ')}
+                        الفئات المسموحة: {password.allowedCategories.join(', ')}
                       </p>
                     </div>
                   </div>
@@ -177,6 +191,7 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
                           value={editForm.name || ''}
                           onChange={(e) => setEditForm({...editForm, name: e.target.value})}
                           className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                          placeholder="مثال: كلمة مرور الألعاب"
                         />
                       </div>
                       <div>
@@ -186,6 +201,7 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
                           value={editForm.password || ''}
                           onChange={(e) => setEditForm({...editForm, password: e.target.value})}
                           className="w-full p-2 bg-white/10 border border-white/20 rounded text-white"
+                          placeholder="مثال: games123"
                         />
                       </div>
                     </div>
@@ -196,42 +212,45 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
                         value={editForm.description || ''}
                         onChange={(e) => setEditForm({...editForm, description: e.target.value})}
                         className="w-full p-2 bg-white/10 border border-white/20 rounded text-white h-20 resize-none"
+                        placeholder="وصف استخدام كلمة المرور"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-white text-sm font-medium mb-2">الفئات المسموحة</label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <label className="block text-white text-sm font-medium mb-3">
+                        الفئات المسموحة (يمكن اختيار أكثر من فئة)
+                      </label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {categories.map(category => (
-                          <label key={category} className="flex items-center space-x-2 text-white">
+                          <div key={category} className="flex items-center space-x-2 bg-white/5 p-2 rounded border border-white/10">
                             <input
                               type="checkbox"
+                              id={`cat-${category}`}
                               checked={editForm.allowedCategories?.includes(category) || false}
-                              onChange={(e) => {
-                                const current = editForm.allowedCategories || [];
-                                if (e.target.checked) {
-                                  setEditForm({...editForm, allowedCategories: [...current, category]});
-                                } else {
-                                  setEditForm({...editForm, allowedCategories: current.filter(c => c !== category)});
-                                }
-                              }}
-                              className="mr-2"
+                              onChange={(e) => handleCategoryToggle(category, e.target.checked)}
+                              className="rounded border-white/20"
                             />
-                            <span>{category}</span>
-                          </label>
+                            <label htmlFor={`cat-${category}`} className="text-white text-sm cursor-pointer">
+                              {category}
+                            </label>
+                          </div>
                         ))}
                       </div>
+                      <p className="text-gray-400 text-xs mt-2">
+                        💡 اختر الفئات التي يمكن لحاملي هذه كلمة المرور الوصول إليها
+                      </p>
                     </div>
 
-                    <div>
-                      <label className="flex items-center space-x-2 text-white">
-                        <input
-                          type="checkbox"
-                          checked={editForm.isActive || false}
-                          onChange={(e) => setEditForm({...editForm, isActive: e.target.checked})}
-                          className="mr-2"
-                        />
-                        <span>نشط</span>
+                    <div className="flex items-center space-x-2 bg-white/5 p-3 rounded border border-white/10">
+                      <input
+                        type="checkbox"
+                        id="active-status"
+                        checked={editForm.isActive || false}
+                        onChange={(e) => setEditForm({...editForm, isActive: e.target.checked})}
+                        className="rounded border-white/20"
+                      />
+                      <label htmlFor="active-status" className="text-white cursor-pointer">
+                        كلمة مرور نشطة
                       </label>
                     </div>
 
@@ -277,12 +296,15 @@ const DownloadPasswordsTab: React.FC<DownloadPasswordsTabProps> = ({ canAccess }
                       )}
                     </div>
 
-                    <div className="flex flex-wrap gap-1">
-                      {password.allowedCategories.map((category, index) => (
-                        <Badge key={index} variant="outline" className="text-xs border-white/20 text-gray-300">
-                          {category}
-                        </Badge>
-                      ))}
+                    <div>
+                      <p className="text-gray-400 text-sm mb-2">الفئات المسموحة:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {password.allowedCategories.map((category, index) => (
+                          <Badge key={index} variant="outline" className="text-xs border-blue-500/30 text-blue-300 bg-blue-500/10">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

@@ -101,7 +101,7 @@ const Downloads = () => {
     if (isAuthenticated) {
       filterDownloads();
     }
-  }, [downloads, searchTerm, selectedCategory, isAuthenticated]);
+  }, [downloads, searchTerm, selectedCategory, isAuthenticated, userPasswordData]);
 
   const loadDownloads = async () => {
     try {
@@ -119,10 +119,12 @@ const Downloads = () => {
     let filtered = downloads || [];
 
     // فلترة حسب الفئات المسموحة لكلمة المرور
-    if (userPasswordData && userPasswordData.allowedCategories) {
+    if (userPasswordData && userPasswordData.allowedCategories && userPasswordData.allowedCategories.length > 0) {
+      console.log('Filtering by password categories:', userPasswordData.allowedCategories);
       filtered = filtered.filter(item => 
         userPasswordData.allowedCategories.includes(item.category)
       );
+      console.log('Filtered downloads:', filtered);
     }
 
     if (selectedCategory !== 'all') {
@@ -143,6 +145,7 @@ const Downloads = () => {
     const passwordData = DownloadPasswordService.validatePassword(passwordInput);
     
     if (passwordData) {
+      console.log('Login successful with password data:', passwordData);
       setIsAuthenticated(true);
       setUserPasswordData(passwordData);
       setError('');
@@ -319,14 +322,28 @@ const Downloads = () => {
       <div className="relative z-10 pt-20 pb-12">
         <div className="container mx-auto px-6">
           
-          {/* Header */}
-          <div className="text-center mb-12">
+          {/* Header with password info */}
+          <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent mb-4">
               {mainPageTexts.title}
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
               {mainPageTexts.subtitle}
             </p>
+            
+            {/* Display current access level */}
+            {userPasswordData && (
+              <div className="flex justify-center">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-2">
+                  <div className="flex items-center gap-2 text-green-300">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-sm">
+                      وصول لـ: {userPasswordData.allowedCategories?.join(', ') || 'جميع الفئات'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Stats Cards */}
