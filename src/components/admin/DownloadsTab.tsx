@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Book, Calendar, Mail, Phone, Search, Settings, Home, Key, Eye, EyeOff, Clock, Link, Upload } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Book, Calendar, Mail, Phone, Search, Settings, Home, Key, Eye, EyeOff, Clock, Link, Upload, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,17 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
   const [isEditingPassword, setIsEditingPassword] = useState<number | null>(null);
   const [passwordEditForm, setPasswordEditForm] = useState<Partial<DownloadPassword>>({});
   const [showPassword, setShowPassword] = useState<number | null>(null);
+
+  const [productUpdates, setProductUpdates] = useState<any[]>([]);
+  const [newUpdate, setNewUpdate] = useState({
+    title: '',
+    message: '',
+    isActive: true
+  });
+
+  useEffect(() => {
+    loadProductUpdates();
+  }, []);
 
   const availableIcons = [
     { name: 'Download', component: Download, label: 'تنزيل' },
@@ -303,6 +314,71 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
     }
   };
 
+  const loadProductUpdates = () => {
+    try {
+      const updates = JSON.parse(localStorage.getItem('productUpdates') || '[]');
+      setProductUpdates(updates);
+    } catch (error) {
+      console.error('Error loading product updates:', error);
+      setProductUpdates([]);
+    }
+  };
+
+  const saveProductUpdates = (updates: any[]) => {
+    localStorage.setItem('productUpdates', JSON.stringify(updates));
+    setProductUpdates(updates);
+  };
+
+  const addProductUpdate = () => {
+    if (!newUpdate.title.trim() || !newUpdate.message.trim()) {
+      toast({
+        title: "خطأ",
+        description: "يرجى ملء جميع الحقول",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const update = {
+      id: Date.now(),
+      ...newUpdate,
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedList = [update, ...productUpdates];
+    saveProductUpdates(updatedList);
+    setNewUpdate({ title: '', message: '', isActive: true });
+    
+    toast({
+      title: "تم الإضافة",
+      description: "تم إضافة التحديث بنجاح"
+    });
+  };
+
+  const deleteProductUpdate = (id: number) => {
+    const updatedList = productUpdates.filter(update => update.id !== id);
+    saveProductUpdates(updatedList);
+    
+    toast({
+      title: "تم الحذف",
+      description: "تم حذف التحديث بنجاح"
+    });
+  };
+
+  const toggleUpdateStatus = (id: number) => {
+    const updatedList = productUpdates.map(update =>
+      update.id === id 
+        ? { ...update, isActive: !update.isActive }
+        : update
+    );
+    saveProductUpdates(updatedList);
+    
+    toast({
+      title: "تم التحديث",
+      description: "تم تغيير حالة التحديث"
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -312,17 +388,20 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
         </div>
       </div>
 
-      <Tabs defaultValue="downloads" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-white/10">
-          <TabsTrigger value="downloads" className="text-white data-[state=active]:bg-blue-500">
+      <Tabs defaultValue="products" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-white/5 border border-white/20">
+          <TabsTrigger value="products" className="text-white data-[state=active]:bg-white/10">
             المنتجات
           </TabsTrigger>
-          <TabsTrigger value="passwords" className="text-white data-[state=active]:bg-blue-500">
+          <TabsTrigger value="passwords" className="text-white data-[state=active]:bg-white/10">
             كلمات المرور
+          </TabsTrigger>
+          <TabsTrigger value="updates" className="text-white data-[state=active]:bg-white/10">
+            تحديثات المنتجات
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="downloads" className="space-y-4">
+        <TabsContent value="products" className="space-y-6 mt-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-white">إدارة المنتجات</h3>
             {canAccess('مبرمج') && (
@@ -713,7 +792,7 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
           </div>
         </TabsContent>
 
-        <TabsContent value="passwords" className="space-y-4">
+        <TabsContent value="passwords" className="space-y-6 mt-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-white">إدارة كلمات مرور التنزيلات</h3>
@@ -921,6 +1000,125 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
               );
             })}
           </div>
+        </TabsContent>
+
+        <TabsContent value="updates" className="space-y-6 mt-6">
+          <Card className="bg-white/5 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                إدارة تحديثات المنتجات
+              </CardTitle>
+              <CardDescription className="text-gray-300">
+                إضافة وإدارة تحديثات المنتجات التي تظهر للمستخدمين
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Add New Update Form */}
+              <div className="bg-white/5 border border-white/20 rounded-lg p-4 space-y-4">
+                <h3 className="text-white font-semibold">إضافة تحديث جديد</h3>
+                
+                <div className="grid gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      عنوان التحديث
+                    </label>
+                    <Input
+                      value={newUpdate.title}
+                      onChange={(e) => setNewUpdate({...newUpdate, title: e.target.value})}
+                      placeholder="مثال: تحديث منتج البيباس"
+                      className="bg-white/5 border-white/20 text-white"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      رسالة التحديث
+                    </label>
+                    <Input
+                      value={newUpdate.message}
+                      onChange={(e) => setNewUpdate({...newUpdate, message: e.target.value})}
+                      placeholder="مثال: البيباس محدث الآن بميزات جديدة"
+                      className="bg-white/5 border-white/20 text-white"
+                    />
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={newUpdate.isActive}
+                      onChange={(e) => setNewUpdate({...newUpdate, isActive: e.target.checked})}
+                      className="rounded"
+                    />
+                    <label htmlFor="isActive" className="text-gray-300 text-sm">
+                      نشط (سيظهر للمستخدمين)
+                    </label>
+                  </div>
+                </div>
+                
+                <Button onClick={addProductUpdate} className="w-full">
+                  إضافة التحديث
+                </Button>
+              </div>
+
+              {/* Updates List */}
+              <div className="space-y-4">
+                <h3 className="text-white font-semibold">التحديثات الحالية</h3>
+                
+                {productUpdates.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    لا توجد تحديثات حالياً
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {productUpdates.map((update) => (
+                      <div 
+                        key={update.id}
+                        className="bg-white/5 border border-white/20 rounded-lg p-4"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="text-white font-medium">{update.title}</h4>
+                              <Badge 
+                                variant={update.isActive ? "default" : "secondary"}
+                                className={update.isActive ? "bg-green-500/20 text-green-300" : "bg-gray-500/20 text-gray-300"}
+                              >
+                                {update.isActive ? "نشط" : "غير نشط"}
+                              </Badge>
+                            </div>
+                            <p className="text-gray-300 text-sm mb-2">{update.message}</p>
+                            <p className="text-gray-400 text-xs">
+                              تم الإنشاء: {new Date(update.createdAt).toLocaleDateString('ar-SA')}
+                            </p>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 ml-4">
+                            <Button
+                              onClick={() => toggleUpdateStatus(update.id)}
+                              variant="outline"
+                              size="sm"
+                              className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+                            >
+                              {update.isActive ? "إخفاء" : "إظهار"}
+                            </Button>
+                            <Button
+                              onClick={() => deleteProductUpdate(update.id)}
+                              variant="destructive"
+                              size="sm"
+                            >
+                              حذف
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

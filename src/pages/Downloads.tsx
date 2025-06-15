@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Download, Star, Filter, Package, TrendingUp, Award, Lock, MessageCircle, Users, Shield, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,6 +24,7 @@ const Downloads = () => {
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
   const [userPasswordData, setUserPasswordData] = useState<any>(null);
+  const [productUpdates, setProductUpdates] = useState<any[]>([]);
   
   const siteSettings = AdminStorage.getSiteSettings();
   
@@ -106,6 +106,7 @@ const Downloads = () => {
     console.log('Loaded categories:', loadedCategories);
     
     loadDownloads();
+    loadProductUpdates();
 
     // إضافة مستمعين للأحداث التي تؤدي إلى تسجيل الخروج التلقائي
     const handleBeforeUnload = () => {
@@ -159,6 +160,16 @@ const Downloads = () => {
     }
   };
 
+  const loadProductUpdates = () => {
+    try {
+      const updates = JSON.parse(localStorage.getItem('productUpdates') || '[]');
+      setProductUpdates(updates.filter((update: any) => update.isActive));
+    } catch (error) {
+      console.error('Error loading product updates:', error);
+      setProductUpdates([]);
+    }
+  };
+
   const filterDownloads = () => {
     let filtered = downloads || [];
 
@@ -201,6 +212,7 @@ const Downloads = () => {
       setError('');
       localStorage.setItem('downloadsAuth', 'true');
       localStorage.setItem('downloadsPasswordData', JSON.stringify(passwordData));
+      loadProductUpdates(); // تحميل التحديثات بعد تسجيل الدخول
     } else {
       setError(loginPageTexts.errorMessage);
     }
@@ -448,6 +460,44 @@ const Downloads = () => {
               </div>
             )}
           </div>
+
+          {/* Product Updates Section */}
+          {productUpdates.length > 0 && (
+            <div className="mb-8">
+              <Card className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 border-blue-400/30">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-blue-400" />
+                    تحديثات المنتجات
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {productUpdates.map((update) => (
+                      <div 
+                        key={update.id}
+                        className="bg-white/5 border border-white/20 rounded-lg p-4 hover:bg-white/10 transition-all duration-300"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-2 h-2 bg-green-400 rounded-full mt-2 animate-pulse"></div>
+                          <div className="flex-1">
+                            <h3 className="text-white font-semibold mb-1">{update.title}</h3>
+                            <p className="text-gray-300 text-sm">{update.message}</p>
+                            <p className="text-gray-400 text-xs mt-2">
+                              {new Date(update.createdAt).toLocaleDateString('ar-SA')}
+                            </p>
+                          </div>
+                          <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
+                            جديد
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           {/* Stats Cards */}
           <div className="grid md:grid-cols-3 gap-6 mb-12">
