@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X } from 'lucide-react';
+import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Book, Calendar, Mail, Phone, Search, Settings, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
