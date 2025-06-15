@@ -1,3 +1,4 @@
+
 export interface AdminUser {
   id: string;
   username: string;
@@ -9,6 +10,7 @@ export interface AdminUser {
   lastLogin?: string;
   createdAt: string;
   isActive: boolean;
+  permissions?: string[] | {[key: string]: boolean};
 }
 
 export interface CartItem {
@@ -21,12 +23,17 @@ export interface Product {
   id: number;
   name: string;
   description: string;
-  price: string;
+  price: string | number;
   image: string;
+  images?: string[];
+  videos?: string[];
   features: string[];
   category: string;
   isActive: boolean;
   createdAt: string;
+  rating?: number;
+  titleSize?: string;
+  textSize?: string;
 }
 
 export interface Tool {
@@ -39,7 +46,8 @@ export interface Tool {
   icon: string;
   visible: boolean;
   isActive: boolean;
-  category: 'security' | 'design' | 'general';
+  category: string;
+  customHtml?: string;
 }
 
 export interface NavigationItem {
@@ -78,9 +86,9 @@ export interface Design {
 }
 
 export interface Typography {
-  fontFamily: 'system' | 'serif' | 'mono';
-  headingWeight: 'normal' | 'bold';
-  bodyWeight: 'normal' | 'bold';
+  fontFamily: 'system' | 'serif' | 'mono' | 'inter' | 'roboto' | 'cairo' | 'tajawal';
+  headingWeight: 'normal' | 'bold' | 'medium' | 'semibold';
+  bodyWeight: 'normal' | 'bold' | 'medium' | 'semibold';
   lineHeight: 'tight' | 'normal' | 'relaxed';
 }
 
@@ -101,6 +109,7 @@ export interface HomePageTexts {
     title: string;
     description: string;
     icon: string;
+    visible?: boolean;
   }>;
 }
 
@@ -228,7 +237,7 @@ export interface SiteSettings {
   pageTexts: PageTexts;
 }
 
-// Legacy interface for backward compatibility - keeping the original complex structure
+// Legacy interface for backward compatibility
 export interface LegacySiteSettings {
   siteName: string;
   siteDescription: string;
@@ -318,6 +327,7 @@ export interface LegacySiteSettings {
     map: string;
     discord: string;
     telegram: string;
+    whatsapp?: string;
   };
   pageTexts: {
     home: HomePageTexts;
