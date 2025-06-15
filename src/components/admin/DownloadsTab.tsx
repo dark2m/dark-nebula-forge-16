@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
-import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Eye, Star, Wrench, Code, Users, Globe, Lock, Heart, Zap, Camera, Music, Video, Book, Calendar, Mail, Phone, Search, Settings, Home } from 'lucide-react';
+import { Download, Package, Shield, FileText, Plus, Edit, Trash2, Image, Video, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import FileUploader from '../FileUploader';
 import DownloadService from '../../utils/downloadService';
 import type { DownloadItem } from '../../types/downloads';
 
@@ -17,6 +17,8 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
   const [downloads, setDownloads] = useState<DownloadItem[]>(DownloadService.getDownloads());
   const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<Partial<DownloadItem>>({});
+  const [showImageUploader, setShowImageUploader] = useState<number | null>(null);
+  const [showVideoUploader, setShowVideoUploader] = useState<number | null>(null);
 
   const availableIcons = [
     { name: 'Download', component: Download, label: 'تنزيل' },
@@ -121,6 +123,48 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
     toast({
       title: "تم حذف المنتج",
       description: "تم حذف المنتج بنجاح"
+    });
+  };
+
+  const handleAddImage = (downloadId: number, imageUrl: string) => {
+    DownloadService.addImage(downloadId, imageUrl);
+    setDownloads(DownloadService.getDownloads());
+    setShowImageUploader(null);
+    
+    toast({
+      title: "تم إضافة الصورة",
+      description: "تم إضافة الصورة بنجاح"
+    });
+  };
+
+  const handleRemoveImage = (downloadId: number, imageUrl: string) => {
+    DownloadService.removeImage(downloadId, imageUrl);
+    setDownloads(DownloadService.getDownloads());
+    
+    toast({
+      title: "تم حذف الصورة",
+      description: "تم حذف الصورة بنجاح"
+    });
+  };
+
+  const handleAddVideo = (downloadId: number, videoUrl: string) => {
+    DownloadService.addVideo(downloadId, videoUrl);
+    setDownloads(DownloadService.getDownloads());
+    setShowVideoUploader(null);
+    
+    toast({
+      title: "تم إضافة الفيديو",
+      description: "تم إضافة الفيديو بنجاح"
+    });
+  };
+
+  const handleRemoveVideo = (downloadId: number, videoUrl: string) => {
+    DownloadService.removeVideo(downloadId, videoUrl);
+    setDownloads(DownloadService.getDownloads());
+    
+    toast({
+      title: "تم حذف الفيديو",
+      description: "تم حذف الفيديو بنجاح"
     });
   };
 
@@ -301,6 +345,98 @@ const DownloadsTab: React.FC<DownloadsTabProps> = ({ canAccess }) => {
                       >
                         إلغاء
                       </Button>
+                    </div>
+
+                    {/* Media Management */}
+                    <div className="space-y-4">
+                      <h4 className="text-white font-medium">إدارة الوسائط</h4>
+                      
+                      {/* Images Section */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-white text-sm font-medium">الصور</label>
+                          <Button
+                            size="sm"
+                            onClick={() => setShowImageUploader(showImageUploader === download.id ? null : download.id)}
+                            className="bg-green-500 hover:bg-green-600 text-xs"
+                          >
+                            <Image className="w-3 h-3 mr-1" />
+                            إضافة صورة
+                          </Button>
+                        </div>
+                        
+                        {showImageUploader === download.id && (
+                          <div className="mb-2">
+                            <FileUploader
+                              onFileUploaded={(url) => handleAddImage(download.id, url)}
+                              acceptedTypes={['image/*']}
+                              maxSize={10}
+                              folder="downloads/images"
+                            />
+                          </div>
+                        )}
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          {(download.images || []).map((image, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={image}
+                                alt={`صورة ${index + 1}`}
+                                className="w-full h-20 object-cover rounded border border-white/20"
+                              />
+                              <button
+                                onClick={() => handleRemoveImage(download.id, image)}
+                                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Videos Section */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-white text-sm font-medium">الفيديوهات</label>
+                          <Button
+                            size="sm"
+                            onClick={() => setShowVideoUploader(showVideoUploader === download.id ? null : download.id)}
+                            className="bg-purple-500 hover:bg-purple-600 text-xs"
+                          >
+                            <Video className="w-3 h-3 mr-1" />
+                            إضافة فيديو
+                          </Button>
+                        </div>
+                        
+                        {showVideoUploader === download.id && (
+                          <div className="mb-2">
+                            <FileUploader
+                              onFileUploaded={(url) => handleAddVideo(download.id, url)}
+                              acceptedTypes={['video/*']}
+                              maxSize={100}
+                              folder="downloads/videos"
+                            />
+                          </div>
+                        )}
+                        
+                        <div className="space-y-2">
+                          {(download.videos || []).map((video, index) => (
+                            <div key={index} className="flex items-center justify-between bg-white/5 p-2 rounded border border-white/20">
+                              <div className="flex items-center gap-2">
+                                <Video className="w-4 h-4 text-purple-400" />
+                                <span className="text-white text-sm">فيديو {index + 1}</span>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveVideo(download.id, video)}
+                                className="text-red-400 hover:text-red-300"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (

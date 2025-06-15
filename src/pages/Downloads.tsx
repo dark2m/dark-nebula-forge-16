@@ -10,6 +10,7 @@ import DownloadService from '../utils/downloadService';
 import AdminStorage from '../utils/adminStorage';
 import type { DownloadItem } from '../types/downloads';
 import type { DownloadsPageTexts } from '../types/admin';
+import DownloadPasswordService from '../utils/downloadPasswordService';
 
 const Downloads = () => {
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
@@ -20,6 +21,7 @@ const Downloads = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
   const [error, setError] = useState('');
+  const [userPasswordData, setUserPasswordData] = useState<any>(null);
   
   const siteSettings = AdminStorage.getSiteSettings();
   
@@ -86,8 +88,11 @@ const Downloads = () => {
   useEffect(() => {
     // التحقق من حالة تسجيل الدخول المحفوظة
     const savedAuth = localStorage.getItem('downloadsAuth');
-    if (savedAuth === 'true') {
+    const savedPasswordData = localStorage.getItem('downloadsPasswordData');
+    
+    if (savedAuth === 'true' && savedPasswordData) {
       setIsAuthenticated(true);
+      setUserPasswordData(JSON.parse(savedPasswordData));
     }
     loadDownloads();
   }, []);
@@ -111,7 +116,14 @@ const Downloads = () => {
   };
 
   const filterDownloads = () => {
-    let filtered = downloads || []; // تأكد من أن downloads ليس undefined
+    let filtered = downloads || [];
+
+    // فلترة حسب الفئات المسموحة لكلمة المرور
+    if (userPasswordData && userPasswordData.allowedCategories) {
+      filtered = filtered.filter(item => 
+        userPasswordData.allowedCategories.includes(item.category)
+      );
+    }
 
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(item => item.category === selectedCategory);
@@ -128,10 +140,14 @@ const Downloads = () => {
   };
 
   const handleLogin = () => {
-    if (passwordInput === downloadsPassword) {
+    const passwordData = DownloadPasswordService.validatePassword(passwordInput);
+    
+    if (passwordData) {
       setIsAuthenticated(true);
+      setUserPasswordData(passwordData);
       setError('');
       localStorage.setItem('downloadsAuth', 'true');
+      localStorage.setItem('downloadsPasswordData', JSON.stringify(passwordData));
     } else {
       setError(loginPageTexts.errorMessage);
     }

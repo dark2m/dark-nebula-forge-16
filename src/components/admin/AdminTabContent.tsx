@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProductsTab from './ProductsTab';
 import SiteControlTab from './SiteControlTab';
@@ -15,6 +14,7 @@ import ToolsTab from './ToolsTab';
 import CustomerSupportTab from './CustomerSupportTab';
 import DownloadsTab from './DownloadsTab';
 import DownloadsManagementTab from './DownloadsManagementTab';
+import DownloadPasswordsTab from './DownloadPasswordsTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
 interface AdminTabContentProps {
@@ -57,6 +57,13 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
       case 'downloads':
         return (
           <DownloadsTab
+            canAccess={canAccess}
+          />
+        );
+
+      case 'download-passwords':
+        return (
+          <DownloadPasswordsTab
             canAccess={canAccess}
           />
         );
