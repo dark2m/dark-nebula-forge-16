@@ -96,12 +96,18 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
 
   const loadCustomers = () => {
     const allCustomers = CustomerAuthService.getCustomers();
-    console.log('Original customers data:', allCustomers);
+    console.log('Loading customers with original data:', allCustomers);
     
     const enrichedCustomers: CustomerUser[] = allCustomers.map(customer => {
-      console.log('Customer data:', customer, 'Password:', customer.password);
+      console.log('Processing customer:', customer.email, 'with password:', customer.password);
+      
+      // تأكد من وجود كلمة السر وعدم كونها undefined
+      const customerPassword = customer.password || customer.hashedPassword || 'غير محفوظة';
+      console.log('Final password for', customer.email, ':', customerPassword);
+      
       return {
         ...customer,
+        password: customerPassword, // تأكد من حفظ كلمة السر
         createdAt: customer.registrationDate,
         isVerified: true,
         isBlocked: localStorage.getItem(`blocked_${customer.id}`) === 'true',
@@ -110,7 +116,7 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
       };
     });
     
-    console.log('Enriched customers:', enrichedCustomers);
+    console.log('Final enriched customers:', enrichedCustomers);
     setCustomers(enrichedCustomers);
   };
 
@@ -820,279 +826,6 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
           )}
         </Card>
       </div>
-    </div>
-  );
-
-  const renderCustomers = () => (
-    <div className="space-y-6">
-      <Card className="bg-white/5 backdrop-blur-md border-white/20">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-400" />
-            إدارة العملاء ({customers.length})
-          </CardTitle>
-          <div className="flex gap-2">
-            <Input
-              type="search"
-              placeholder="ابحث عن عميل..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-md bg-white/10 border-white/20 text-white"
-            />
-            <Button onClick={loadCustomers} size="sm" className="bg-blue-500/20 hover:bg-blue-500/30">
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="active" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-white/10">
-              <TabsTrigger value="active">العملاء النشطين</TabsTrigger>
-              <TabsTrigger value="all">جميع العملاء</TabsTrigger>
-              <TabsTrigger value="blocked">المحظورين</TabsTrigger>
-              <TabsTrigger value="attempts">محاولات الدخول</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="active" className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-white/10">
-                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
-                      <th className="text-right text-gray-300 p-2">الحالة</th>
-                      <th className="text-right text-gray-300 p-2">آخر ظهور</th>
-                      <th className="text-right text-gray-300 p-2">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCustomers.filter(c => c.isOnline).map((customer) => (
-                      <tr key={customer.id} className="border-white/10 hover:bg-white/5">
-                        <td className="text-white p-2">{customer.email}</td>
-                        <td className="p-2">
-                          <Badge variant="default" className="bg-green-500">متصل</Badge>
-                        </td>
-                        <td className="text-gray-300 p-2">{customer.lastSeen}</td>
-                        <td className="p-2">
-                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                            <Button
-                              onClick={() => handleBlockCustomer(customer.id)}
-                              variant="outline"
-                              size="icon"
-                              className="hover:bg-red-500/10 text-red-400"
-                            >
-                              <Ban className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              onClick={() => setSelectedCustomer(customer)}
-                              variant="outline"
-                              size="icon"
-                              className="hover:bg-blue-500/10 text-blue-400"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="all" className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-white/10">
-                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
-                      <th className="text-right text-gray-300 p-2">تاريخ التسجيل</th>
-                      <th className="text-right text-gray-300 p-2">الحالة</th>
-                      <th className="text-right text-gray-300 p-2">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCustomers.map((customer) => (
-                      <tr key={customer.id} className="border-white/10 hover:bg-white/5">
-                        <td className="text-white p-2">{customer.email}</td>
-                        <td className="text-gray-300 p-2">{customer.createdAt}</td>
-                        <td className="p-2">
-                          {customer.isOnline ? (
-                            <Badge variant="default" className="bg-green-500">متصل</Badge>
-                          ) : customer.isBlocked ? (
-                            <Badge variant="destructive">محظور</Badge>
-                          ) : (
-                            <Badge variant="secondary">غير متصل</Badge>
-                          )}
-                        </td>
-                        <td className="p-2">
-                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                            <Button
-                              onClick={() => handleBlockCustomer(customer.id)}
-                              variant="outline"
-                              size="icon"
-                              className="hover:bg-red-500/10 text-red-400"
-                            >
-                              {customer.isBlocked ? <UserCheck className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteCustomer(customer.id)}
-                              variant="destructive"
-                              size="icon"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="blocked" className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-white/10">
-                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
-                      <th className="text-right text-gray-300 p-2">تاريخ الحظر</th>
-                      <th className="text-right text-gray-300 p-2">الإجراءات</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {customers.filter(c => c.isBlocked).map((customer) => (
-                      <tr key={customer.id} className="border-white/10 hover:bg-white/5">
-                        <td className="text-white p-2">{customer.email}</td>
-                        <td className="text-gray-300 p-2">{customer.lastSeen}</td>
-                        <td className="p-2">
-                          <Button
-                            onClick={() => handleBlockCustomer(customer.id)}
-                            variant="outline"
-                            size="sm"
-                            className="hover:bg-green-500/10 text-green-400"
-                          >
-                            إلغاء الحظر
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {customers.filter(c => c.isBlocked).length === 0 && (
-                  <div className="text-center py-8">
-                    <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-400">لا يوجد عملاء محظورين</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="attempts" className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-white/10">
-                      <th className="text-right text-gray-300 p-2">الوقت</th>
-                      <th className="text-right text-gray-300 p-2">البريد الإلكتروني</th>
-                      <th className="text-right text-gray-300 p-2">النتيجة</th>
-                      <th className="text-right text-gray-300 p-2">عنوان IP</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loginAttempts.slice(0, 20).map((attempt) => (
-                      <tr key={attempt.id} className="border-white/10">
-                        <td className="text-gray-300 p-2">{attempt.timestamp}</td>
-                        <td className="text-white p-2">{attempt.email}</td>
-                        <td className="p-2">
-                          {attempt.success ? (
-                            <Badge variant="default" className="bg-green-500">نجح</Badge>
-                          ) : (
-                            <Badge variant="destructive">فشل</Badge>
-                          )}
-                        </td>
-                        <td className="text-gray-400 p-2">{attempt.ipAddress}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {loginAttempts.length === 0 && (
-                  <div className="text-center py-8">
-                    <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-400">لا توجد محاولات دخول</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {selectedCustomer && (
-        <Card className="bg-white/5 backdrop-blur-md border-white/20">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-white">تفاصيل العميل</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => setSelectedCustomer(null)}>
-              <X className="w-4 h-4 mr-2" />
-              إغلاق
-            </Button>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-gray-400 mb-2">البريد الإلكتروني</h4>
-                <p className="text-white">{selectedCustomer.email}</p>
-              </div>
-              <div>
-                <h4 className="text-gray-400 mb-2">تاريخ التسجيل</h4>
-                <p className="text-white">{selectedCustomer.createdAt}</p>
-              </div>
-              <div>
-                <h4 className="text-gray-400 mb-2">آخر ظهور</h4>
-                <p className="text-white">{selectedCustomer.lastSeen}</p>
-              </div>
-              <div>
-                <h4 className="text-gray-400 mb-2">الحالة</h4>
-                <p className="text-white">
-                  {selectedCustomer.isOnline ? 'متصل' : selectedCustomer.isBlocked ? 'محظور' : 'غير متصل'}
-                </p>
-              </div>
-              <div>
-                <h4 className="text-gray-400 mb-2">كلمة السر</h4>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={selectedCustomer.password || "غير متوفرة"}
-                    readOnly
-                    className="bg-white/10 border-white/20 text-white"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-gray-400 mb-2">معرف العميل</h4>
-                <p className="text-white">#{selectedCustomer.id}</p>
-              </div>
-            </div>
-            <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Lock className="w-4 h-4 text-blue-400" />
-                <span className="text-blue-400 font-medium">معلومات الأمان</span>
-              </div>
-              <p className="text-blue-300 text-sm">
-                يمكنك الآن رؤية كلمة سر العميل ومعلوماته الحساسة. تأكد من الحفاظ على سرية هذه المعلومات.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 
