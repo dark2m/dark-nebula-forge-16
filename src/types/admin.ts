@@ -19,13 +19,16 @@ export interface Product {
   rating?: number;
   images?: string[];
   videos?: string[];
+  textSize?: 'small' | 'medium' | 'large';
+  titleSize?: 'small' | 'medium' | 'large';
 }
 
 export interface AdminUser {
   id: number;
   username: string;
   email: string;
-  role: 'admin' | 'editor' | 'viewer';
+  password?: string;
+  role: 'مدير عام' | 'مبرمج' | 'مشرف';
   permissions: string[];
   lastLogin?: string;
   avatar?: string;
@@ -231,4 +234,3 @@ export interface SiteSettings {
   tools?: Tool[];
   pageTexts: PageTexts;
 }
-

@@ -13,6 +13,7 @@ const PasswordsTab = () => {
   const [newUser, setNewUser] = useState({
     username: '',
     password: '',
+    email: '',
     role: 'مشرف' as 'مدير عام' | 'مبرمج' | 'مشرف',
     permissions: {
       overview: true,
@@ -86,11 +87,20 @@ const PasswordsTab = () => {
       return;
     }
 
-    UserService.addAdminUser(newUser);
+    const newUserData = {
+      ...newUser,
+      email: newUser.email || `${newUser.username}@example.com`,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      permissions: Object.keys(defaultPermissions)
+    };
+
+    UserService.addAdminUser(newUserData);
     setUsers(UserService.getAdminUsers());
     setNewUser({ 
       username: '', 
       password: '', 
+      email: '',
       role: 'مشرف',
       permissions: defaultPermissions
     });
@@ -202,7 +212,7 @@ const PasswordsTab = () => {
           إضافة مستخدم جديد
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-2">
             <label className="block text-blue-300 text-sm font-semibold">اسم المستخدم</label>
             <div className="relative">
@@ -229,6 +239,17 @@ const PasswordsTab = () => {
                 placeholder="password123"
               />
             </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="block text-blue-300 text-sm font-semibold">البريد الإلكتروني</label>
+            <input
+              type="email"
+              value={newUser.email}
+              onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+              className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+              placeholder="admin@example.com"
+            />
           </div>
           
           <div className="space-y-2">

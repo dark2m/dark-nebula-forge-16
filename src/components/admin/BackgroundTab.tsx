@@ -36,7 +36,9 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
         starOpacity: 0.8,
         meteorOpacity: 0.6,
         starSize: 'medium',
-        meteorSize: 'medium'
+        meteorSize: 'medium',
+        meteorDirection: 'mixed',
+        meteorColors: ['#ffffff', '#00ff00', '#ff0000']
       }
     });
   };
@@ -57,6 +59,8 @@ const BackgroundTab: React.FC<BackgroundTabProps> = ({
     meteorOpacity: 0.6,
     starSize: 'medium',
     meteorSize: 'medium',
+    meteorDirection: 'mixed',
+    meteorColors: ['#ffffff', '#00ff00', '#ff0000'],
     ...siteSettings.backgroundSettings
   };
 
