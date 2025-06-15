@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, ExternalLink, MessageCircle, X, Trash2, Headphones } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -283,7 +282,7 @@ const GlobalCart = () => {
         </DialogContent>
       </Dialog>
 
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
         }
