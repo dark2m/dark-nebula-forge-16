@@ -16,7 +16,7 @@ import DownloadPasswordService from '../utils/downloadPasswordService';
 const Downloads = () => {
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
   const [filteredDownloads, setFilteredDownloads] = useState<DownloadItem[]>([]);
-  const [categories] = useState<string[]>(DownloadCategoriesService.getCategories());
+  const [categories, setCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -88,6 +88,12 @@ const Downloads = () => {
       setIsAuthenticated(true);
       setUserPasswordData(JSON.parse(savedPasswordData));
     }
+    
+    // تحديث الفئات عند تحميل الصفحة
+    const loadedCategories = DownloadCategoriesService.getCategories();
+    setCategories(loadedCategories);
+    console.log('Loaded categories:', loadedCategories);
+    
     loadDownloads();
   }, []);
 
