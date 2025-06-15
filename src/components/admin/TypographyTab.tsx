@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Type, Save, RotateCcw } from 'lucide-react';
 import SettingsService from '../../utils/settingsService';
@@ -44,7 +43,7 @@ const TypographyTab = () => {
     });
   };
 
-  const updateTitleSize = (size: 'small' | 'medium' | 'large' | 'xl') => {
+  const updateTitleSize = (size: 'sm' | 'md' | 'lg' | 'xl' | '2xl') => {
     setSettings({
       ...settings,
       titleSize: size
@@ -81,7 +80,7 @@ const TypographyTab = () => {
 
   const resetToDefault = () => {
     const defaultTypography = {
-      fontFamily: 'system',
+      fontFamily: 'system' as const,
       headingWeight: 'bold' as const,
       bodyWeight: 'normal' as const,
       lineHeight: 'normal' as const
@@ -128,12 +127,14 @@ const TypographyTab = () => {
             <label className="block text-gray-400 text-sm mb-2">نوع الخط</label>
             <select
               value={settings.typography.fontFamily}
-              onChange={(e) => updateTypography({ fontFamily: e.target.value })}
+              onChange={(e) => updateTypography({ fontFamily: e.target.value as 'system' | 'inter' | 'roboto' | 'cairo' | 'tajawal' })}
               className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
               <option value="system">خط النظام</option>
-              <option value="arabic">خط عربي</option>
-              <option value="modern">خط حديث</option>
+              <option value="inter">Inter</option>
+              <option value="roboto">Roboto</option>
+              <option value="cairo">Cairo</option>
+              <option value="tajawal">Tajawal</option>
             </select>
           </div>
 
@@ -141,12 +142,13 @@ const TypographyTab = () => {
             <label className="block text-gray-400 text-sm mb-2">سُمك العناوين</label>
             <select
               value={settings.typography.headingWeight}
-              onChange={(e) => updateTypography({ headingWeight: e.target.value as 'normal' | 'bold' | 'black' })}
+              onChange={(e) => updateTypography({ headingWeight: e.target.value as 'normal' | 'medium' | 'semibold' | 'bold' })}
               className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
               <option value="normal">عادي</option>
+              <option value="medium">متوسط</option>
+              <option value="semibold">نصف سميك</option>
               <option value="bold">سميك</option>
-              <option value="black">سميك جداً</option>
             </select>
           </div>
 
@@ -193,13 +195,14 @@ const TypographyTab = () => {
             <label className="block text-gray-400 text-sm mb-2">حجم العنوان الرئيسي</label>
             <select
               value={settings.titleSize}
-              onChange={(e) => updateTitleSize(e.target.value as 'small' | 'medium' | 'large' | 'xl')}
+              onChange={(e) => updateTitleSize(e.target.value as 'sm' | 'md' | 'lg' | 'xl' | '2xl')}
               className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
-              <option value="small">صغير</option>
-              <option value="medium">متوسط</option>
-              <option value="large">كبير</option>
+              <option value="sm">صغير</option>
+              <option value="md">متوسط</option>
+              <option value="lg">كبير</option>
               <option value="xl">كبير جداً</option>
+              <option value="2xl">كبير جداً جداً</option>
             </select>
           </div>
         </div>
@@ -245,7 +248,7 @@ const TypographyTab = () => {
         <h3 className="text-xl font-bold text-white mb-4">إدارة المميزات</h3>
         <div className="space-y-4">
           {settings.homePage.features.map((feature, index) => (
-            <div key={feature.id} className="border border-white/10 rounded-lg p-4">
+            <div key={index} className="border border-white/10 rounded-lg p-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                 <div>
                   <label className="block text-gray-400 text-sm mb-2">الأيقونة</label>
@@ -290,7 +293,7 @@ const TypographyTab = () => {
                   <label className="flex items-center space-x-2 rtl:space-x-reverse">
                     <input
                       type="checkbox"
-                      checked={feature.visible}
+                      checked={feature.visible !== false}
                       onChange={(e) => {
                         const newFeatures = [...settings.homePage.features];
                         newFeatures[index] = { ...feature, visible: e.target.checked };

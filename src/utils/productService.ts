@@ -48,7 +48,8 @@ class ProductService {
         description: 'رؤية الأعداء من خلال الجدران مع معلومات مفصلة',
         features: ['ESP للاعبين', 'ESP للأسلحة', 'ESP للسيارات', 'آمن 100%'],
         textSize: 'medium',
-        titleSize: 'large'
+        titleSize: 'large',
+        inStock: true
       },
       { 
         id: 2, 
@@ -60,7 +61,8 @@ class ProductService {
         description: 'رؤية واضحة في الظلام والأماكن المظلمة',
         features: ['رؤية ليلية متقدمة', 'كشف الأعداء المختبئين', 'تحسين الرؤية', 'آمن ومحدث'],
         textSize: 'medium',
-        titleSize: 'large'
+        titleSize: 'large',
+        inStock: true
       }
     ];
   }
@@ -119,7 +121,8 @@ class ProductService {
       videos: product.videos || [],
       features: product.features || [],
       textSize: product.textSize || 'medium',
-      titleSize: product.titleSize || 'large'
+      titleSize: product.titleSize || 'large',
+      inStock: product.inStock ?? true
     };
     
     const updatedProducts = [...products, newProduct];

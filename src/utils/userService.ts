@@ -17,7 +17,16 @@ class UserService {
     }
     
     const defaultUsers: AdminUser[] = [
-      { id: 1, username: 'dark', password: 'dark', role: 'مدير عام' },
+      { 
+        id: 1, 
+        username: 'dark', 
+        password: 'dark', 
+        role: 'مدير عام',
+        email: 'admin@example.com',
+        permissions: ['overview', 'products', 'users', 'passwords', 'tools', 'customerSupport', 'siteControl', 'texts', 'navigation', 'contact', 'design', 'preview', 'backup'],
+        isActive: true,
+        createdAt: new Date().toISOString()
+      },
     ];
     
     this.saveAdminUsers(defaultUsers);

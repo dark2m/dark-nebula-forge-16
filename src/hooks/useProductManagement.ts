@@ -54,7 +54,8 @@ export const useProductManagement = (
         description: 'وصف المنتج',
         features: [],
         textSize: 'medium',
-        titleSize: 'large'
+        titleSize: 'large',
+        inStock: true
       });
       
       toast({

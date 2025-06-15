@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Save, Settings, Palette, Type, Globe } from 'lucide-react';
 import SettingsService from '../../utils/settingsService';
@@ -108,13 +107,14 @@ const SettingsTab = () => {
             <label className="block text-gray-400 text-sm mb-2">حجم العنوان</label>
             <select
               value={settings.titleSize}
-              onChange={(e) => setSettings({...settings, titleSize: e.target.value as 'small' | 'medium' | 'large' | 'xl'})}
+              onChange={(e) => setSettings({...settings, titleSize: e.target.value as 'sm' | 'md' | 'lg' | 'xl' | '2xl'})}
               className="w-full bg-white/10 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
-              <option value="small">صغير</option>
-              <option value="medium">متوسط</option>
-              <option value="large">كبير</option>
+              <option value="sm">صغير</option>
+              <option value="md">متوسط</option>
+              <option value="lg">كبير</option>
               <option value="xl">كبير جداً</option>
+              <option value="2xl">كبير جداً جداً</option>
             </select>
           </div>
           <div className="md:col-span-2">

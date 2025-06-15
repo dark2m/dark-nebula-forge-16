@@ -184,12 +184,12 @@ const DesignTab = () => {
             <label className="block text-gray-400 text-sm mb-2">التباعد</label>
             <select
               value={settings.design.spacing}
-              onChange={(e) => updateDesign({ spacing: e.target.value as 'tight' | 'normal' | 'loose' })}
+              onChange={(e) => updateDesign({ spacing: e.target.value as 'compact' | 'normal' | 'relaxed' })}
               className="w-full bg-gray-800 text-white border border-white/20 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             >
-              <option value="tight" className="bg-gray-800 text-white">ضيق</option>
+              <option value="compact" className="bg-gray-800 text-white">ضيق</option>
               <option value="normal" className="bg-gray-800 text-white">عادي</option>
-              <option value="loose" className="bg-gray-800 text-white">واسع</option>
+              <option value="relaxed" className="bg-gray-800 text-white">واسع</option>
             </select>
           </div>
 
