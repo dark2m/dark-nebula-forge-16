@@ -139,9 +139,13 @@ export type Database = {
           description: string | null
           features: Json | null
           id: number
+          image: string | null
           images: Json | null
+          in_stock: boolean | null
+          is_active: boolean | null
           name: string
           price: number
+          rating: number | null
           text_size: string | null
           title_size: string | null
           updated_at: string | null
@@ -153,9 +157,13 @@ export type Database = {
           description?: string | null
           features?: Json | null
           id: number
+          image?: string | null
           images?: Json | null
+          in_stock?: boolean | null
+          is_active?: boolean | null
           name: string
           price?: number
+          rating?: number | null
           text_size?: string | null
           title_size?: string | null
           updated_at?: string | null
@@ -167,9 +175,13 @@ export type Database = {
           description?: string | null
           features?: Json | null
           id?: number
+          image?: string | null
           images?: Json | null
+          in_stock?: boolean | null
+          is_active?: boolean | null
           name?: string
           price?: number
+          rating?: number | null
           text_size?: string | null
           title_size?: string | null
           updated_at?: string | null
