@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, ExternalLink, MessageCircle, X, Trash2, Headphones, Package, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -98,27 +97,27 @@ const GlobalCart = () => {
       <div className="fixed bottom-6 right-6 z-50 md:top-20 md:bottom-auto md:right-6">
         <Button
           onClick={() => setIsCartOpen(true)}
-          className="relative bg-white/30 backdrop-blur-md hover:bg-white/40 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-white/30 rounded-full p-4 group"
+          className="relative bg-white/90 backdrop-blur-xl hover:bg-white shadow-2xl hover:shadow-3xl transition-all duration-300 border border-gray-200 rounded-full p-4 group"
           size="lg"
         >
-          <ShoppingCart className="w-6 h-6 text-black group-hover:scale-110 transition-transform duration-300" />
+          <ShoppingCart className="w-6 h-6 text-gray-800 group-hover:scale-110 transition-transform duration-300" />
           {totalItems > 0 && (
-            <Badge className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full min-w-6 h-6 text-sm flex items-center justify-center font-bold shadow-lg animate-pulse">
+            <Badge className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full min-w-6 h-6 text-sm flex items-center justify-center font-bold shadow-lg animate-pulse">
               {totalItems}
             </Badge>
           )}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </Button>
       </div>
 
       {/* White Glass Cart Dialog */}
       <Dialog open={isCartOpen} onOpenChange={setIsCartOpen}>
-        <DialogContent className="max-w-sm max-h-[75vh] overflow-hidden bg-white/20 backdrop-blur-xl border border-white/40 shadow-2xl rounded-2xl">
-          <DialogHeader className="pb-3">
+        <DialogContent className="max-w-md max-h-[80vh] overflow-hidden bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-2xl">
+          <DialogHeader className="pb-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl font-bold text-black flex items-center gap-3">
-                <div className="p-2 bg-white/30 rounded-full">
-                  <ShoppingCart className="w-5 h-5 text-black" />
+              <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                <div className="p-2 bg-blue-50 rounded-full">
+                  <ShoppingCart className="w-5 h-5 text-blue-600" />
                 </div>
                 {cartTexts?.cartTitle || 'السلة'}
               </DialogTitle>
@@ -126,41 +125,41 @@ const GlobalCart = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsCartOpen(false)}
-                className="text-black/70 hover:text-black hover:bg-white/20 p-2 rounded-full"
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full"
               >
                 <X className="w-5 h-5" />
               </Button>
             </div>
             {totalItems > 0 && (
-              <Badge className="bg-white/40 text-black border-white/60 px-3 py-1 text-sm w-fit rounded-full shadow-md">
+              <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1 text-sm w-fit rounded-full">
                 {totalItems} منتج
               </Badge>
             )}
           </DialogHeader>
           
           {totalItems === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="p-4 bg-white/20 rounded-full mb-4">
-                <ShoppingCart className="w-8 h-8 text-black/60" />
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="p-4 bg-gray-50 rounded-full mb-4">
+                <ShoppingCart className="w-8 h-8 text-gray-400" />
               </div>
-              <p className="text-black/70 text-base font-medium">
+              <p className="text-gray-600 text-base font-medium">
                 {cartTexts?.emptyCartMessage || 'السلة فارغة'}
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               <Tabs defaultValue="pubg" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3 bg-white/30 border border-white/50 p-1 rounded-xl shadow-inner">
+                <TabsList className="grid w-full grid-cols-3 bg-gray-50 border border-gray-200 p-1 rounded-xl">
                   {Object.entries(categoryNames).map(([key, name]) => (
                     <TabsTrigger 
                       key={key} 
                       value={key} 
-                      className="relative data-[state=active]:bg-white/60 data-[state=active]:text-black text-black/70 text-sm py-2 rounded-lg font-medium transition-all duration-200"
+                      className="relative data-[state=active]:bg-white data-[state=active]:text-gray-800 data-[state=active]:shadow-sm text-gray-600 text-sm py-2 rounded-lg font-medium transition-all duration-200"
                     >
                       <span className="mr-2">{categoryIcons[key as keyof typeof categoryIcons]}</span>
                       {name}
                       {cartItems[key]?.length > 0 && (
-                        <Badge className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full min-w-4 h-4 text-xs flex items-center justify-center shadow-md">
+                        <Badge className="absolute -top-1 -right-1 bg-blue-600 text-white rounded-full min-w-4 h-4 text-xs flex items-center justify-center">
                           {cartItems[key].length}
                         </Badge>
                       )}
@@ -169,26 +168,26 @@ const GlobalCart = () => {
                 </TabsList>
 
                 {Object.entries(categoryNames).map(([category, name]) => (
-                  <TabsContent key={category} value={category} className="space-y-3 mt-3">
+                  <TabsContent key={category} value={category} className="space-y-3 mt-4">
                     {cartItems[category]?.length === 0 ? (
-                      <div className="text-center py-6 bg-white/20 rounded-xl border border-white/30">
-                        <p className="text-black/60 text-sm">لا توجد منتجات</p>
+                      <div className="text-center py-8 bg-gray-50 rounded-xl border border-gray-100">
+                        <p className="text-gray-500 text-sm">لا توجد منتجات في {name}</p>
                       </div>
                     ) : (
                       <>
-                        <div className="space-y-3 max-h-36 overflow-y-auto pr-1">
+                        <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
                           {cartItems[category]?.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between p-3 bg-white/30 rounded-xl border border-white/40 shadow-sm hover:bg-white/40 transition-all duration-200">
+                            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-all duration-200">
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-black text-sm truncate mb-1">
+                                <h4 className="font-semibold text-gray-800 text-sm truncate mb-2">
                                   {item.name}
                                 </h4>
                                 <div className="flex items-center gap-2">
-                                  <Badge className="bg-green-500/80 text-white border-0 text-xs px-2 py-1 rounded-full">
+                                  <Badge className="bg-green-100 text-green-800 border-green-200 text-xs px-2 py-1 rounded-full">
                                     ${item.price}
                                   </Badge>
-                                  <Badge className="bg-blue-500/80 text-white border-0 text-xs px-2 py-1 rounded-full">
-                                    {item.quantity}
+                                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs px-2 py-1 rounded-full">
+                                    الكمية: {item.quantity}
                                   </Badge>
                                 </div>
                               </div>
@@ -196,7 +195,7 @@ const GlobalCart = () => {
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => removeFromCart(item.id, category)}
-                                className="ml-3 bg-red-500/80 hover:bg-red-600 text-white border-0 p-2 rounded-full shadow-md"
+                                className="ml-3 bg-red-100 hover:bg-red-200 text-red-600 border-0 p-2 rounded-full"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -204,36 +203,36 @@ const GlobalCart = () => {
                           ))}
                         </div>
                         
-                        <Separator className="bg-white/40 my-4" />
+                        <Separator className="bg-gray-200 my-4" />
                         
                         {/* Payment Methods */}
-                        <div className="space-y-3">
-                          <h4 className="text-center text-base font-bold text-black">
-                            طرق الدفع
+                        <div className="space-y-4">
+                          <h4 className="text-center text-base font-bold text-gray-800 mb-3">
+                            طرق الدفع والتواصل
                           </h4>
                           
-                          <div className="grid gap-2">
+                          <div className="grid gap-3">
                             <Button
                               onClick={handleDiscordPurchase}
-                              className="w-full bg-purple-500/80 hover:bg-purple-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200"
+                              className="w-full bg-purple-600 hover:bg-purple-700 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2"
                             >
-                              <ExternalLink className="w-4 h-4 mr-2" />
-                              ديسكورد
+                              <ExternalLink className="w-4 h-4" />
+                              الشراء عبر ديسكورد
                             </Button>
                             
                             <Button
                               onClick={handleWhatsAppPurchase}
-                              className="w-full bg-green-500/80 hover:bg-green-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200"
+                              className="w-full bg-green-600 hover:bg-green-700 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2"
                             >
-                              <MessageCircle className="w-4 h-4 mr-2" />
-                              واتساب
+                              <MessageCircle className="w-4 h-4" />
+                              الشراء عبر واتساب
                             </Button>
 
                             <Button
                               onClick={handleCustomerSupport}
-                              className="w-full bg-blue-500/80 hover:bg-blue-600 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200"
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white border-0 py-3 text-sm rounded-xl shadow-md transition-all duration-200 flex items-center justify-center gap-2"
                             >
-                              <Headphones className="w-4 h-4 mr-2" />
+                              <Headphones className="w-4 h-4" />
                               خدمة العملاء
                             </Button>
                           </div>
