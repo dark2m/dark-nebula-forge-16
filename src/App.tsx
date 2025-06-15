@@ -20,6 +20,7 @@ import CustomerSupport from "./pages/CustomerSupport";
 import Downloads from "./pages/Downloads";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import EmailVerification from "./pages/EmailVerification";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,9 @@ const App = () => (
             <Routes>
               {/* Auth Route */}
               <Route path="/auth" element={<AuthPage />} />
+              
+              {/* Email Verification Route */}
+              <Route path="/verify-email" element={<EmailVerification />} />
               
               {/* Protected Dashboard */}
               <Route path="/dashboard" element={

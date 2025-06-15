@@ -5,6 +5,8 @@ import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench, MessageCircle } 
 import { useIsMobile } from '../hooks/use-mobile';
 import AdminStorage from '../utils/adminStorage';
 import SettingsService from '../utils/settingsService';
+import TranslationService from '../utils/translationService';
+import LanguageSelector from './LanguageSelector';
 import { getTextContent } from '../utils/textUtils';
 
 const Navigation = () => {
@@ -12,7 +14,7 @@ const Navigation = () => {
   const isMobile = useIsMobile();
   const [siteSettings, setSiteSettings] = useState(SettingsService.getSiteSettings());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [navigationKey, setNavigationKey] = useState(0); // للإجبار على إعادة التحديث
+  const [navigationKey, setNavigationKey] = useState(0);
   
   useEffect(() => {
     // تحميل الإعدادات عند التحميل
@@ -28,7 +30,7 @@ const Navigation = () => {
     const handleSettingsUpdate = (event: CustomEvent) => {
       console.log('Navigation: Settings updated via event:', event.detail.settings);
       setSiteSettings(event.detail.settings);
-      setNavigationKey(prev => prev + 1); // إجبار إعادة التحديث
+      setNavigationKey(prev => prev + 1);
     };
 
     // الاستماع لتحديثات التنقل المحددة
@@ -39,8 +41,14 @@ const Navigation = () => {
       setNavigationKey(prev => prev + 1);
     };
 
+    // الاستماع لتغيير اللغة
+    const handleLanguageChange = () => {
+      setNavigationKey(prev => prev + 1);
+    };
+
     window.addEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
     window.addEventListener('navigationUpdated', handleNavigationUpdate as EventListener);
+    window.addEventListener('languageChanged', handleLanguageChange);
     
     // تحديث دوري للتأكد من عدم فقدان التغييرات
     const intervalUpdate = setInterval(() => {
@@ -55,6 +63,7 @@ const Navigation = () => {
     return () => {
       window.removeEventListener('settingsUpdated', handleSettingsUpdate as EventListener);
       window.removeEventListener('navigationUpdated', handleNavigationUpdate as EventListener);
+      window.removeEventListener('languageChanged', handleLanguageChange);
       clearInterval(intervalUpdate);
     };
   }, [siteSettings.navigation]);
@@ -92,7 +101,7 @@ const Navigation = () => {
     const items = siteSettings.navigation
       .filter(item => item.visible !== false)
       .map(item => ({
-        name: item.name,
+        name: TranslationService.translate(`nav.${item.name.toLowerCase().replace(/\s+/g, '_')}`),
         path: item.path,
         icon: iconMap[item.icon] || Home,
         id: item.id
@@ -142,8 +151,11 @@ const Navigation = () => {
             })}
           </div>
 
-          {/* Mobile Menu Button & Admin Login */}
+          {/* Mobile Menu Button, Language Selector & Admin Login */}
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
+            {/* Language Selector */}
+            <LanguageSelector />
+
             {/* Mobile Hamburger Menu */}
             {(isMobile || window.innerWidth <= 1024) && (
               <button
@@ -160,7 +172,7 @@ const Navigation = () => {
               className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
             >
               <User className="w-4 h-4" />
-              <span>الإدارة</span>
+              <span>{TranslationService.translate('nav.admin')}</span>
             </Link>
           </div>
         </div>
