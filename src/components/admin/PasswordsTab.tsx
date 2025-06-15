@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Eye, EyeOff, Plus, Trash2, Key, Save, Shield, User, Settings, Lock } from 'lucide-react';
-import UserService from '../../utils/userService';
+import { useSupabaseAdminUsers } from '../../hooks/useSupabaseAdminUsers';
 import { useToast } from '@/hooks/use-toast';
 import type { AdminUser } from '../../types/admin';
 
 const PasswordsTab = () => {
-  const [users, setUsers] = useState<AdminUser[]>([]);
+  const { users, isLoading, isSaving, addUser, updateUser, deleteUser } = useSupabaseAdminUsers();
   const [editedUsers, setEditedUsers] = useState<{[key: number]: Partial<AdminUser>}>({});
   const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
   const [expandedPermissions, setExpandedPermissions] = useState<{[key: number]: boolean}>({});
@@ -31,10 +32,6 @@ const PasswordsTab = () => {
     }
   });
   const { toast } = useToast();
-
-  useEffect(() => {
-    setUsers(UserService.getAdminUsers());
-  }, []);
 
   const defaultPermissions = {
     overview: true,
@@ -66,7 +63,7 @@ const PasswordsTab = () => {
     }));
   };
 
-  const addUser = () => {
+  const handleAddUser = async () => {
     if (!newUser.username || !newUser.password) {
       toast({
         title: "خطأ",
@@ -86,29 +83,29 @@ const PasswordsTab = () => {
       return;
     }
 
-    const newUserData = {
-      ...newUser,
-      name: newUser.username, // Add missing name property
-      email: newUser.email || `${newUser.username}@example.com`,
-      isActive: true,
-      lastLogin: new Date().toISOString(),
-      createdAt: new Date().toISOString(), // Add missing createdAt property
-      permissions: Object.keys(defaultPermissions)
-    };
+    try {
+      const newUserData = {
+        username: newUser.username,
+        password: newUser.password,
+        role: newUser.role,
+        name: newUser.username,
+        email: newUser.email || `${newUser.username}@example.com`,
+        isActive: true,
+        permissions: Object.keys(defaultPermissions)
+      };
 
-    UserService.addAdminUser(newUserData);
-    setUsers(UserService.getAdminUsers());
-    setNewUser({ 
-      username: '', 
-      password: '', 
-      email: '',
-      role: 'مشرف',
-      permissions: defaultPermissions
-    });
-    toast({
-      title: "تم إضافة المستخدم",
-      description: "تم إضافة المستخدم الجديد بنجاح"
-    });
+      await addUser(newUserData);
+      
+      setNewUser({ 
+        username: '', 
+        password: '', 
+        email: '',
+        role: 'مشرف',
+        permissions: defaultPermissions
+      });
+    } catch (error) {
+      // الخطأ سيتم التعامل معه في useSupabaseAdminUsers
+    }
   };
 
   const handleUserChange = (userId: number, field: string, value: any) => {
@@ -134,30 +131,20 @@ const PasswordsTab = () => {
     }));
   };
 
-  const saveUser = (userId: number) => {
+  const saveUser = async (userId: number) => {
     const changes = editedUsers[userId];
     if (changes) {
-      UserService.updateAdminUser(userId, changes);
-      setUsers(UserService.getAdminUsers());
+      await updateUser(userId, changes);
       setEditedUsers(prev => {
         const updated = { ...prev };
         delete updated[userId];
         return updated;
       });
-      toast({
-        title: "تم تحديث المستخدم",
-        description: "تم حفظ التغييرات بنجاح"
-      });
     }
   };
 
-  const deleteUser = (id: number) => {
-    UserService.deleteAdminUser(id);
-    setUsers(UserService.getAdminUsers());
-    toast({
-      title: "تم حذف المستخدم",
-      description: "تم حذف المستخدم بنجاح"
-    });
+  const handleDeleteUser = async (id: number) => {
+    await deleteUser(id);
   };
 
   const getUserValue = (user: AdminUser, field: string) => {
@@ -195,6 +182,23 @@ const PasswordsTab = () => {
     backup: 'النسخ الاحتياطي'
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+            إدارة كلمات المرور والأذونات
+          </h2>
+          <p className="text-gray-400">تحكم كامل في المستخدمين وصلاحياتهم</p>
+        </div>
+        <div className="text-center py-8">
+          <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-400">جاري تحميل المستخدمين...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="text-center">
@@ -224,6 +228,7 @@ const PasswordsTab = () => {
                 onChange={(e) => setNewUser({...newUser, username: e.target.value})}
                 className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-12 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
                 placeholder="admin"
+                disabled={isSaving}
               />
             </div>
           </div>
@@ -238,6 +243,7 @@ const PasswordsTab = () => {
                 onChange={(e) => setNewUser({...newUser, password: e.target.value})}
                 className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-12 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
                 placeholder="password123"
+                disabled={isSaving}
               />
             </div>
           </div>
@@ -250,6 +256,7 @@ const PasswordsTab = () => {
               onChange={(e) => setNewUser({...newUser, email: e.target.value})}
               className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
               placeholder="admin@example.com"
+              disabled={isSaving}
             />
           </div>
           
@@ -259,6 +266,7 @@ const PasswordsTab = () => {
               value={newUser.role}
               onChange={(e) => setNewUser({...newUser, role: e.target.value as 'مدير عام' | 'مبرمج' | 'مشرف'})}
               className="w-full bg-black/20 text-white border border-white/20 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+              disabled={isSaving}
             >
               <option value="مشرف" className="bg-gray-800 text-white">مشرف</option>
               <option value="مبرمج" className="bg-gray-800 text-white">مبرمج</option>
@@ -269,11 +277,21 @@ const PasswordsTab = () => {
         
         <div className="mt-6">
           <button
-            onClick={addUser}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            onClick={handleAddUser}
+            disabled={isSaving}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus className="w-5 h-5" />
-            إضافة المستخدم
+            {isSaving ? (
+              <>
+                <div className="animate-spin w-5 h-5 border-2 border-white/30 border-t-white rounded-full"></div>
+                جاري الإضافة...
+              </>
+            ) : (
+              <>
+                <Plus className="w-5 h-5" />
+                إضافة المستخدم
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -307,15 +325,17 @@ const PasswordsTab = () => {
                   {hasChanges(user.id) && (
                     <button
                       onClick={() => saveUser(user.id)}
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 text-sm font-semibold"
+                      disabled={isSaving}
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center gap-2 text-sm font-semibold disabled:opacity-50"
                     >
                       <Save className="w-4 h-4" />
                       حفظ التغييرات
                     </button>
                   )}
                   <button
-                    onClick={() => deleteUser(user.id)}
-                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white p-2 rounded-lg transition-all duration-300"
+                    onClick={() => handleDeleteUser(user.id)}
+                    disabled={isSaving}
+                    className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white p-2 rounded-lg transition-all duration-300 disabled:opacity-50"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -330,6 +350,7 @@ const PasswordsTab = () => {
                     value={getUserValue(user, 'username')}
                     onChange={(e) => handleUserChange(user.id, 'username', e.target.value)}
                     className="w-full bg-black/20 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-400 transition-all"
+                    disabled={isSaving}
                   />
                 </div>
                 
@@ -341,8 +362,10 @@ const PasswordsTab = () => {
                       value={getUserValue(user, 'password')}
                       onChange={(e) => handleUserChange(user.id, 'password', e.target.value)}
                       className="w-full bg-black/20 text-white border border-white/20 rounded-lg px-4 py-2 pr-12 focus:outline-none focus:border-blue-400 transition-all"
+                      disabled={isSaving}
                     />
                     <button
+                      type="button"
                       onClick={() => togglePasswordVisibility(user.id)}
                       className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
                     >
@@ -357,6 +380,7 @@ const PasswordsTab = () => {
                     value={getUserValue(user, 'role')}
                     onChange={(e) => handleUserChange(user.id, 'role', e.target.value)}
                     className="w-full bg-black/20 text-white border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-400 transition-all"
+                    disabled={isSaving}
                   >
                     <option value="مشرف" className="bg-gray-800 text-white">مشرف</option>
                     <option value="مبرمج" className="bg-gray-800 text-white">مبرمج</option>
@@ -391,6 +415,7 @@ const PasswordsTab = () => {
                             checked={hasPermission}
                             onChange={(e) => handlePermissionChange(user.id, key, e.target.checked)}
                             className="w-4 h-4 accent-blue-500"
+                            disabled={isSaving}
                           />
                           <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
                             {label}

@@ -20,7 +20,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          id: number
+          id?: never
           password: string
           role?: string
           updated_at?: string | null
@@ -28,7 +28,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          id?: number
+          id?: never
           password?: string
           role?: string
           updated_at?: string | null
