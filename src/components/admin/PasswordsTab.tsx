@@ -7,9 +7,9 @@ import type { AdminUser } from '../../types/admin';
 
 const PasswordsTab = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
-  const [editedUsers, setEditedUsers] = useState<{[key: number]: Partial<AdminUser>}>({});
-  const [showPasswords, setShowPasswords] = useState<{[key: number]: boolean}>({});
-  const [expandedPermissions, setExpandedPermissions] = useState<{[key: number]: boolean}>({});
+  const [editedUsers, setEditedUsers] = useState<{[key: string]: Partial<AdminUser>}>({});
+  const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
+  const [expandedPermissions, setExpandedPermissions] = useState<{[key: string]: boolean}>({});
   const [newUser, setNewUser] = useState({
     username: '',
     password: '',
@@ -53,14 +53,14 @@ const PasswordsTab = () => {
     backup: false
   };
 
-  const togglePasswordVisibility = (userId: number) => {
+  const togglePasswordVisibility = (userId: string) => {
     setShowPasswords(prev => ({
       ...prev,
       [userId]: !prev[userId]
     }));
   };
 
-  const togglePermissionsExpansion = (userId: number) => {
+  const togglePermissionsExpansion = (userId: string) => {
     setExpandedPermissions(prev => ({
       ...prev,
       [userId]: !prev[userId]
@@ -91,7 +91,7 @@ const PasswordsTab = () => {
       ...newUser,
       email: newUser.email || `${newUser.username}@example.com`,
       isActive: true,
-      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
       permissions: Object.keys(defaultPermissions)
     };
 
@@ -110,7 +110,7 @@ const PasswordsTab = () => {
     });
   };
 
-  const handleUserChange = (userId: number, field: string, value: any) => {
+  const handleUserChange = (userId: string, field: string, value: any) => {
     setEditedUsers(prev => ({
       ...prev,
       [userId]: {
@@ -120,7 +120,7 @@ const PasswordsTab = () => {
     }));
   };
 
-  const handlePermissionChange = (userId: number, permission: string, value: boolean) => {
+  const handlePermissionChange = (userId: string, permission: string, value: boolean) => {
     setEditedUsers(prev => ({
       ...prev,
       [userId]: {
@@ -133,7 +133,7 @@ const PasswordsTab = () => {
     }));
   };
 
-  const saveUser = (userId: number) => {
+  const saveUser = (userId: string) => {
     const changes = editedUsers[userId];
     if (changes) {
       UserService.updateAdminUser(userId, changes);
@@ -150,7 +150,7 @@ const PasswordsTab = () => {
     }
   };
 
-  const deleteUser = (id: number) => {
+  const deleteUser = (id: string) => {
     UserService.deleteAdminUser(id);
     setUsers(UserService.getAdminUsers());
     toast({
@@ -165,7 +165,7 @@ const PasswordsTab = () => {
       : user[field as keyof AdminUser];
   };
 
-  const hasChanges = (userId: number) => {
+  const hasChanges = (userId: string) => {
     return editedUsers[userId] && Object.keys(editedUsers[userId]).length > 0;
   };
 
@@ -295,7 +295,7 @@ const PasswordsTab = () => {
                     <User className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="text-white font-bold text-lg">المستخدم #{user.id}</h4>
+                    <h4 className="text-white font-bold text-lg">المستخدم {user.id}</h4>
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getRoleColor(getUserValue(user, 'role'))}`}>
                       {getUserValue(user, 'role')}
                     </span>

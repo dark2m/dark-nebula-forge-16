@@ -50,7 +50,7 @@ class AdminStorage {
   static getSiteSettings() {
     const settings = SettingsService.getSiteSettings();
     // التأكد من وجود جميع الخصائص المطلوبة
-    if (!settings || !settings.pageTexts || !settings.backgroundSettings) {
+    if (!settings || !settings.pageTexts || !settings.backgroundSettings || !settings.tools) {
       return this.getDefaultSiteSettings();
     }
     return settings;
@@ -116,6 +116,56 @@ class AdminStorage {
         spacing: 'normal' as const,
         animations: true
       },
+      tools: [
+        {
+          id: 1,
+          name: 'مولد كلمات المرور',
+          title: 'مولد كلمات المرور',
+          description: 'أنشئ كلمات مرور قوية وآمنة',
+          buttonText: 'إنشاء كلمة مرور',
+          url: '',
+          icon: '🔐',
+          visible: true,
+          isActive: true,
+          category: 'security'
+        },
+        {
+          id: 2,
+          name: 'محول الألوان',
+          title: 'محول الألوان',
+          description: 'تحويل بين صيغ الألوان المختلفة',
+          buttonText: 'استخدام المحول',
+          url: '',
+          icon: '🎨',
+          visible: true,
+          isActive: true,
+          category: 'design'
+        },
+        {
+          id: 3,
+          name: 'ضاغط الصور',
+          title: 'ضاغط الصور',
+          description: 'قلل حجم الصور مع الحفاظ على الجودة',
+          buttonText: 'ضغط الصور',
+          url: '',
+          icon: '📷',
+          visible: true,
+          isActive: true,
+          category: 'general'
+        },
+        {
+          id: 4,
+          name: 'مولد الجيميل',
+          title: 'مولد الجيميل',
+          description: 'إنشاء جميع الاختلافات الممكنة لعناوين Gmail باستخدام النقاط',
+          buttonText: 'استخدام المولد',
+          url: '/gmail-generator',
+          icon: '📧',
+          visible: true,
+          isActive: true,
+          category: 'general'
+        }
+      ],
       pageTexts: {
         home: {
           heroTitle: 'مرحباً بك في DARK',
@@ -164,48 +214,53 @@ class AdminStorage {
           addToCartButton: 'أضف للسلة',
           removeButton: 'حذف'
         },
+        tools: {
+          title: 'أدوات الموقع',
+          subtitle: 'مجموعة من الأدوات المفيدة والمتقدمة'
+        },
         downloads: {
-          title: "مركز التنزيلات",
-          subtitle: "احصل على أفضل الأدوات والبرامج المتخصصة مجاناً",
-          categories: {
-            all: "الكل",
-            games: "ألعاب",
-            tools: "أدوات", 
-            design: "تصميم",
-            programming: "برمجة",
-            music: "موسيقى",
-            video: "فيديو",
-            books: "كتب",
-            security: "أمان"
+          loginPage: {
+            title: 'المشتركين فقط',
+            subtitle: 'تواصل مع خدمة العملاء للحصول على رمز الدخول',
+            passwordLabel: 'رمز الدخول',
+            passwordPlaceholder: 'أدخل رمز الدخول',
+            loginButton: 'دخول',
+            contactSupport: 'تواصل مع خدمة العملاء',
+            errorMessage: 'رمز دخول خاطئ'
           },
-          buttons: {
-            download: "تنزيل",
-            filter: "تصفية",
-            login: "دخول"
-          },
-          labels: {
-            size: "الحجم",
-            downloads: "التنزيلات",
-            rating: "التقييم",
-            version: "الإصدار",
-            lastUpdate: "آخر تحديث",
-            features: "المميزات",
-            status: "الحالة",
-            password: "كلمة المرور"
-          },
-          stats: {
-            totalDownloads: "إجمالي التنزيلات",
-            availableFiles: "ملفات متاحة",
-            averageRating: "متوسط التقييم"
-          },
-          placeholders: {
-            search: "البحث في التنزيلات...",
-            noResults: "لا توجد نتائج",
-            password: "أدخل كلمة المرور"
-          },
-          messages: {
-            loginRequired: "يجب إدخال كلمة المرور للوصول للتنزيلات",
-            wrongPassword: "كلمة مرور خاطئة"
+          mainPage: {
+            title: 'مركز التنزيلات',
+            subtitle: 'احصل على أفضل الأدوات والبرامج المتخصصة',
+            categories: {
+              all: 'الكل',
+              games: 'ألعاب',
+              tools: 'أدوات',
+              design: 'تصميم',
+              programming: 'برمجة',
+              music: 'موسيقى',
+              video: 'فيديو',
+              books: 'كتب',
+              security: 'أمان'
+            },
+            buttons: {
+              download: 'تنزيل',
+              filter: 'تصفية'
+            },
+            labels: {
+              size: 'الحجم',
+              downloads: 'التنزيلات',
+              rating: 'التقييم',
+              version: 'الإصدار'
+            },
+            stats: {
+              totalDownloads: 'إجمالي التنزيلات',
+              availableFiles: 'ملفات متاحة',
+              averageRating: 'متوسط التقييم'
+            },
+            placeholders: {
+              search: 'البحث في التنزيلات...',
+              noResults: 'لا توجد نتائج'
+            }
           }
         }
       }

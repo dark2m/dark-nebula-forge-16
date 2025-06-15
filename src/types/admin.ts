@@ -245,4 +245,3 @@ export interface SiteSettings {
   downloadsPassword: string;
   pageTexts: PageTexts;
 }
-
