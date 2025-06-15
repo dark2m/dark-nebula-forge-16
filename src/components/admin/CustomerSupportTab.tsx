@@ -96,14 +96,21 @@ const CustomerSupportTab: React.FC<CustomerSupportTabProps> = ({
 
   const loadCustomers = () => {
     const allCustomers = CustomerAuthService.getCustomers();
-    const enrichedCustomers: CustomerUser[] = allCustomers.map(customer => ({
-      ...customer,
-      createdAt: customer.registrationDate,
-      isVerified: true,
-      isBlocked: localStorage.getItem(`blocked_${customer.id}`) === 'true',
-      isOnline: localStorage.getItem(`online_${customer.id}`) === 'true',
-      lastSeen: localStorage.getItem(`lastSeen_${customer.id}`) || 'غير معروف'
-    }));
+    console.log('Original customers data:', allCustomers);
+    
+    const enrichedCustomers: CustomerUser[] = allCustomers.map(customer => {
+      console.log('Customer data:', customer, 'Password:', customer.password);
+      return {
+        ...customer,
+        createdAt: customer.registrationDate,
+        isVerified: true,
+        isBlocked: localStorage.getItem(`blocked_${customer.id}`) === 'true',
+        isOnline: localStorage.getItem(`online_${customer.id}`) === 'true',
+        lastSeen: localStorage.getItem(`lastSeen_${customer.id}`) || 'غير معروف'
+      };
+    });
+    
+    console.log('Enriched customers:', enrichedCustomers);
     setCustomers(enrichedCustomers);
   };
 
