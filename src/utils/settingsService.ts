@@ -1,4 +1,3 @@
-
 import { SiteSettings } from '../types/admin';
 
 class SettingsService {
@@ -62,7 +61,6 @@ class SettingsService {
     }
   }
 
-  // دالة للتحقق من سلامة البيانات
   static validateSettings(settings: SiteSettings): boolean {
     try {
       // التحقق من الحقول الأساسية
@@ -89,7 +87,6 @@ class SettingsService {
     }
   }
 
-  // دالة لإصلاح البيانات التالفة
   static repairSettings(settings: SiteSettings): SiteSettings {
     const defaults = this.getDefaultSettings();
     
@@ -132,6 +129,7 @@ class SettingsService {
         { id: 'web', name: 'برمجة مواقع', path: '/web-development', icon: 'Code', visible: true },
         { id: 'discord', name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: 'Bot', visible: true },
         { id: 'tools', name: 'الأدوات', path: '/tool', icon: 'Wrench', visible: true },
+        { id: 'downloads', name: 'التنزيلات', path: '/download', icon: 'Download', visible: true },
         { id: 'customer-support', name: 'خدمة العملاء', path: '/sport', icon: 'MessageCircle', visible: true }
       ],
       contactInfo: {
