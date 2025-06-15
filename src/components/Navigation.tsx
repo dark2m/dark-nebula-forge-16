@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench, MessageCircle } from 'lucide-react';
@@ -151,9 +150,9 @@ const Navigation = () => {
             })}
           </div>
 
-          {/* Mobile Menu Button, Language Selector & Admin Login */}
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
-            {/* Language Selector */}
+          {/* Right side controls */}
+          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+            {/* Language Selector - positioned better */}
             <LanguageSelector />
 
             {/* Mobile Hamburger Menu */}
@@ -172,7 +171,7 @@ const Navigation = () => {
               className="glow-button flex items-center space-x-2 rtl:space-x-reverse"
             >
               <User className="w-4 h-4" />
-              <span>{TranslationService.translate('nav.admin')}</span>
+              <span className="hidden sm:block">{TranslationService.translate('nav.admin')}</span>
             </Link>
           </div>
         </div>
