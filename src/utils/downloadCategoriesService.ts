@@ -1,4 +1,3 @@
-
 class DownloadCategoriesService {
   private static readonly STORAGE_KEY = 'download_categories';
 
@@ -13,7 +12,7 @@ class DownloadCategoriesService {
     }
     
     // الفئات الافتراضية
-    return ['ألعاب', 'أدوات', 'تصميم', 'برمجة', 'موسيقى', 'فيديو', 'كتب', 'أمان'];
+    return ['ألعاب', 'أدوات', 'تصميم', 'برمجة', 'موسيقى', 'فيديو', 'كتب', 'أمان', 'بيباس', 'هكر'];
   }
 
   static saveCategories(categories: string[]): void {
