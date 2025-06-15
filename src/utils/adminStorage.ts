@@ -80,7 +80,16 @@ class AdminStorage {
         meteorColors: ['#4ecdc4', '#45b7d1', '#ffeaa7', '#fd79a8', '#a8e6cf', '#81ecec'],
         animationSpeed: 'normal' as const
       },
-      navigation: [],
+      navigation: [
+        { id: 'home', name: 'الرئيسية', path: '/', icon: 'Home', visible: true },
+        { id: 'official', name: 'الصفحة الرئيسية', path: '/official', icon: 'User', visible: true },
+        { id: 'pubg', name: 'هكر ببجي موبايل', path: '/pubg-hacks', icon: 'Shield', visible: true },
+        { id: 'web', name: 'برمجة مواقع', path: '/web-development', icon: 'Code', visible: true },
+        { id: 'discord', name: 'برمجة بوتات ديسكورد', path: '/discord-bots', icon: 'Bot', visible: true },
+        { id: 'tools', name: 'الأدوات', path: '/tool', icon: 'Wrench', visible: true },
+        { id: 'downloads', name: 'التنزيلات', path: '/download', icon: 'Download', visible: true },
+        { id: 'support', name: 'خدمة العملاء', path: '/sport', icon: 'MessageCircle', visible: true }
+      ],
       contactInfo: {
         telegram: '',
         discord: '',
