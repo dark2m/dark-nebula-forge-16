@@ -32,6 +32,7 @@ export const useFileUpload = () => {
       const userId = isAdmin ? 'admin' : (adminUser?.id || user?.id || 'anonymous');
       const fileName = `${userId}/${folder}/${Date.now()}.${fileExt}`;
 
+      // Remove size restrictions - upload any file size
       const { data, error } = await supabase.storage
         .from('user-files')
         .upload(fileName, file, {
