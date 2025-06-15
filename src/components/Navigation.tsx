@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Code, Bot, User, Users, Home, Menu, X, Wrench, MessageCircle } from 'lucide-react';
@@ -164,7 +163,7 @@ const Navigation = () => {
             )}
 
             {/* Admin Login and Language Selector Container */}
-            <div className="flex flex-col items-center space-y-1">
+            <div className="flex flex-col items-center space-y-2">
               {/* Admin Login */}
               <Link
                 to="/admin/login"
@@ -175,9 +174,7 @@ const Navigation = () => {
               </Link>
               
               {/* Language Selector - positioned below admin button */}
-              <div className="scale-75">
-                <LanguageSelector />
-              </div>
+              <LanguageSelector />
             </div>
           </div>
         </div>
