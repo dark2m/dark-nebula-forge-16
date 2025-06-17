@@ -1,18 +1,18 @@
 
 import React from 'react';
 import ProductsTab from './ProductsTab';
-import SiteControlTab from './SiteControlTab';
-import TextsTab from './TextsTab';
-import NavigationTab from './NavigationTab';
+import SiteControlTabWithSupabase from './SiteControlTabWithSupabase';
+import TextsTabWithSupabase from './TextsTabWithSupabase';
+import NavigationTabWithSupabase from './NavigationTabWithSupabase';
 import ContactTab from './ContactTab';
-import DesignTab from './DesignTab';
+import DesignTabWithSupabase from './DesignTabWithSupabase';
 import LivePreviewTab from './LivePreviewTab';
 import BackupTab from './BackupTab';
 import OverviewTab from './OverviewTab';
 import UsersTab from './UsersTab';
 import PasswordsTab from './PasswordsTab';
 import ToolsTab from './ToolsTab';
-import CustomerSupportTab from './CustomerSupportTab';
+import CustomerSupportTabWithSupabase from './CustomerSupportTabWithSupabase';
 import DownloadsTab from './DownloadsTab';
 import type { Product, SiteSettings } from '../../types/admin';
 
@@ -67,49 +67,19 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         return <PasswordsTab />;
 
       case 'tools':
-        return (
-          <ToolsTab
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
-            saveSiteSettings={saveSiteSettings}
-          />
-        );
+        return <ToolsTab />;
 
       case 'customer-support':
-        return (
-          <CustomerSupportTab
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
-            saveSiteSettings={saveSiteSettings}
-          />
-        );
+        return <CustomerSupportTabWithSupabase />;
 
       case 'site-control':
-        return (
-          <SiteControlTab
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
-            saveSiteSettings={saveSiteSettings}
-          />
-        );
+        return <SiteControlTabWithSupabase />;
 
       case 'texts':
-        return (
-          <TextsTab
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
-            saveSiteSettings={saveSiteSettings}
-          />
-        );
+        return <TextsTabWithSupabase />;
 
       case 'navigation':
-        return (
-          <NavigationTab
-            siteSettings={siteSettings}
-            setSiteSettings={setSiteSettings}
-            saveSiteSettings={saveSiteSettings}
-          />
-        );
+        return <NavigationTabWithSupabase />;
 
       case 'contact':
         return (
@@ -121,7 +91,7 @@ const AdminTabContent: React.FC<AdminTabContentProps> = ({
         );
 
       case 'design':
-        return <DesignTab />;
+        return <DesignTabWithSupabase />;
 
       case 'preview':
         return <LivePreviewTab siteSettings={siteSettings} />;

@@ -21,33 +21,28 @@ export const useAdminOverviewData = () => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  // تحميل البيانات من قاعدة البيانات
+  // تحميل البيانات من جدول sales_overview
   const loadSalesData = async () => {
     try {
       setIsLoading(true);
       
       const { data, error } = await supabase
-        .from('site_settings')
-        .select('settings_data')
-        .eq('id', 'sales_overview')
+        .from('sales_overview')
+        .select('*')
+        .eq('id', 'sales_data')
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
-      if (data?.settings_data) {
-        // تحويل آمن من Json إلى SalesOverviewData
-        const rawData = data.settings_data as unknown;
-        if (rawData && typeof rawData === 'object' && rawData !== null) {
-          const typedData = rawData as Record<string, unknown>;
-          setSalesData({
-            totalSales: typeof typedData.totalSales === 'number' ? typedData.totalSales : 0,
-            monthlyRevenue: typeof typedData.monthlyRevenue === 'number' ? typedData.monthlyRevenue : 0,
-            pendingOrders: typeof typedData.pendingOrders === 'number' ? typedData.pendingOrders : 0,
-            completedOrders: typeof typedData.completedOrders === 'number' ? typedData.completedOrders : 0
-          });
-        }
+      if (data) {
+        setSalesData({
+          totalSales: Number(data.total_sales) || 0,
+          monthlyRevenue: Number(data.monthly_revenue) || 0,
+          pendingOrders: Number(data.pending_orders) || 0,
+          completedOrders: Number(data.completed_orders) || 0
+        });
       }
     } catch (error) {
       console.error('Error loading sales data:', error);
@@ -61,24 +56,19 @@ export const useAdminOverviewData = () => {
     }
   };
 
-  // حفظ البيانات في قاعدة البيانات
+  // حفظ البيانات في جدول sales_overview
   const saveSalesData = async (newData: SalesOverviewData) => {
     try {
       setIsSaving(true);
       
-      // تحويل البيانات إلى Json متوافق مع Supabase
-      const jsonData = {
-        totalSales: newData.totalSales,
-        monthlyRevenue: newData.monthlyRevenue,
-        pendingOrders: newData.pendingOrders,
-        completedOrders: newData.completedOrders
-      } as const;
-
       const { error } = await supabase
-        .from('site_settings')
+        .from('sales_overview')
         .upsert({
-          id: 'sales_overview',
-          settings_data: jsonData
+          id: 'sales_data',
+          total_sales: newData.totalSales,
+          monthly_revenue: newData.monthlyRevenue,
+          pending_orders: newData.pendingOrders,
+          completed_orders: newData.completedOrders
         }, {
           onConflict: 'id'
         });
